@@ -1,0 +1,85 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+
+# Environment & Credentials (CRITICAL - DO NOT COMMIT)
+.env
+.env.local
+.env.*.local
+*.env
+**/.env
+
+# Service Account Keys (CRITICAL - DO NOT COMMIT)
+*.json
+!package.json
+!tsconfig.json
+!.vscode/*.json
+service-account*.json
+*-key.json
+credentials.json
+*-credentials.json
+
+# API Keys & Secrets (CRITICAL - DO NOT COMMIT)
+*secret*
+*SECRET*
+*apikey*
+*api_key*
+*.pem
+*.key
+*.cert
+
+# Notion Tokens
+notion-token.txt
+*notion*token*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+sessions/
+
+# Generated content
+images/
+*.png
+*.jpg
+*.jpeg
+
+# Memory & Analytics
+memory/
+analytics/
+profiles/
+resources/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+test_*.py
+reproduce_*.py
+list_*.py
+debug_*.py
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Backup files
+*.bak
+*.backup
+*~

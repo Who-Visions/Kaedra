@@ -1,0 +1,71 @@
+﻿python : Traceback 
+(most recent call 
+last):
+At line:1 char:1
++ python deploy.py 
+2>&1 | Out-File 
+-Encoding UTF8 deplo
+yment_full.txt;  ...
++ ~~~~~~~~~~~~~~~~~~
+~~~
+    + CategoryInfo  
+            : NotS  
+  pecified: (Trac   
+ eback (most rec    
+ent call last):    
+:String) [], Re    
+moteException
+    + FullyQualifie 
+   dErrorId : Nati  
+  veCommandError
+ 
+  File "C:\Users\sup
+er\Watchtower\Dav1d\
+dav1d 
+brain\deploy.py", 
+line 121, in deploy
+    remote_agent = r
+easoning_engines.Rea
+soningEngine.create(
+                   ^
+^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sup
+er\AppData\Roaming\P
+ython\Python311\site
+-packages\vertexai\r
+easoning_engines\_re
+asoning_engines.py",
+ line 266, in create
+    _validate_stagin
+g_bucket_or_raise(st
+aging_bucket)
+  File "C:\Users\sup
+er\AppData\Roaming\P
+ython\Python311\site
+-packages\vertexai\r
+easoning_engines\_re
+asoning_engines.py",
+ line 521, in _valid
+ate_staging_bucket_o
+r_raise
+    raise 
+ValueError("Please 
+provide a 
+`staging_bucket` in 
+`vertexai.init(...)`
+")
+ValueError: Please 
+provide a 
+`staging_bucket` in 
+`vertexai.init(...)`
+[*] Initializing Vertex AI...
+    Project: gen-lang-client-0285887798
+    Location: us-east4
+
+[*] Creating DAV1D agent...
+
+[*] Deploying to Reasoning Engine...
+    Display Name: Dav1d-v010-Digital-Avatar
+
+[FAIL] DEPLOYMENT FAILED: Please provide a `staging_bucket` in `vertexai.init(...)`
