@@ -13,8 +13,19 @@ google-api-python-client>=2.100.0
 googlemaps>=4.10.0
 google-cloud-texttospeech>=2.14.0
 google-cloud-speech>=2.21.0
+google-auth-oauthlib>=1.1.0
+google-auth-httplib2>=0.1.1
 
 # Server dependencies
 flask>=3.0.0
 flask-cors>=4.0.0
 gunicorn>=21.2.0
+
+# Notion Integration
+notion-client>=2.2.1
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+
+# Browser Automation
+playwright>=1.40.0
