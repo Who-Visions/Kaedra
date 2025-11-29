@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+sessions/
+
+# Generated content
+images/
+*.png
+*.jpg
+*.jpeg
+
+# Memory & Analytics
+memory/
+analytics/
+profiles/
+resources/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+test_*.py
+reproduce_*.py
+list_*.py
+debug_*.py
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

@@ -1,0 +1,15 @@
+{
+  "name": "dav1d-brain",
+  "version": "1.0.0",
+  "description": "**Public-facing digital mirror of Dave Meralus**   **AI with Dav3 × Who Visions LLC**",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^24.10.1"
+  }
+}
