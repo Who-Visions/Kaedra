@@ -18,7 +18,7 @@ LOCATION = os.getenv("LOCATION", "us-east4")
 
 client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
 
-PROFILE_PATH = os.path.join("resources", "profiles", "dav1d.txt")
+PROFILE_PATH = os.path.join(os.path.expanduser("~"), ".dav1d", "resources", "profiles", "dav1d.txt")
 LOGS_DIR = os.path.join(os.path.expanduser("~"), ".dav1d", "chat_logs")
 
 def get_latest_log():

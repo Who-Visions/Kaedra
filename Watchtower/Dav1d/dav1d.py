@@ -28,10 +28,45 @@ import subprocess
 import re
 from pathlib import Path
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from typing import Optional, List, Dict, Any, Tuple
 from dataclasses import dataclass
-from enum import Enum
+import threading
+import itertools
+
+class Spinner:
+    """Animated spinner for long-running tasks."""
+    def __init__(self, message="Processing..."):
+        self.message = message
+        self.stop_running = threading.Event()
+        self.spin_thread = threading.Thread(target=self.spin)
+
+    def spin(self):
+        # Braille pattern spinner
+        spinner = itertools.cycle(['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'])
+        while not self.stop_running.is_set():
+            # Use Colors if available, otherwise just text
+            try:
+                from config import Colors
+                color = Colors.NEON_CYAN
+                reset = Colors.RESET
+            except ImportError:
+                color = ""
+                reset = ""
+                
+            sys.stdout.write(f"\r{color}{next(spinner)} {self.message}{reset}")
+            sys.stdout.flush()
+            time.sleep(0.1)
+        # Clear line on exit
+        sys.stdout.write('\r' + ' ' * (len(self.message) + 10) + '\r')
+        sys.stdout.flush()
+
+    def __enter__(self):
+        self.spin_thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop_running.set()
+        self.spin_thread.join()
 
 try:
     from playwright.sync_api import sync_playwright
@@ -45,7 +80,6 @@ if sys.platform == "win32":
 
 # Vertex AI / ADK imports
 from google import genai
-from google.cloud import storage
 from google.genai.types import (
     GenerateContentConfig,
     Tool,
@@ -58,47 +92,24 @@ from google.genai.types import (
     FunctionDeclaration
 )
 
-# Optional: load .env if available
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
+# Configuration & Ops
+from config import (
+    LOCATION, PROJECT_ID, TIMEZONE, BUCKET_NAME, MODELS, MODEL_COSTS, 
+    MODEL_CAPABILITIES, VIBES, Colors, DAV1D_HOME, CHAT_LOGS_DIR, 
+    MEMORY_DIR, PROFILES_DIR, ANALYTICS_DIR, RESOURCES_DIR
+)
+import ops
+from logging_config import logger as system_logger
+
+# Core Modules
+from core.llm import get_model, get_dav1d_client, safety_settings
+from memory.memory_bank import MemoryBank
+from agents.profiles import DAV1D_PROFILE, CIPHER_PROFILE, ECHO_PROFILE, NANO_PROFILE, GHOST_PROFILE
+from agents.council import run_council
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 🔴 CONFIGURATION - US-EAST4 DEPLOYMENT
+# 🔴 CONFIGURATION - Imported from config.py
 # ══════════════════════════════════════════════════════════════════════════════
-
-LOCATION = "us-east4"  # Virginia - optimized for NYC/Stamford
-PROJECT_ID = "gen-lang-client-0285887798"
-TIMEZONE = ZoneInfo("US/Eastern")
-BUCKET_NAME = f"dav1d-memory-{PROJECT_ID}"
-
-# Multi-model registry with intelligent auto-selection
-class ModelTier(Enum):
-    ULTRA_LITE = "ultra_lite"    # Cheapest, fastest - trivial tasks
-    LITE = "lite"                # Very cheap - simple tasks  
-    FLASH = "flash"              # Fast & affordable - quick tasks
-    BALANCED = "balanced"        # Everyday workhorse - moderate complexity
-    PRO = "pro"                  # High quality - complex tasks
-    VISION = "vision"            # Image generation and understanding
-    DEEP = "deep"                # Maximum reasoning - strategic thinking
-    NANO = "nano"                # Ultra lightweight (Banana)
-
-MODELS = {
-    "ultra_lite": "gemini-2.5-flash",             # ~$0.002/query - ULTRA CHEAP & FAST
-    "lite": "gemini-2.5-flash",                   # ~$0.003/query - VERY CHEAP
-    "nano": "gemini-2.5-flash-image",             # NANO BANANA 🍌 (Flash Image)
-    "flash": "gemini-2.5-flash",                  # ~$0.008/query - FAST & RELIABLE
-    "flash_preview": "gemini-2.5-flash",          # ~$0.007/query - FAST (stable)
-    "balanced": "gemini-2.5-pro",                 # ~$0.031/query - BALANCED QUALITY
-    "pro": "gemini-2.5-pro",                      # ~$0.045/query - HIGH QUALITY
-    "vision": "imagen-4.0-generate-001",          # ~$0.010/query - IMAGE GENERATION (Imagen 4 - Latest GA)
-    "vision_pro": "gemini-3-pro-image-preview",   # ~$0.050/query - HIGH FIDELITY IMAGE (Gemini 3 Pro Image)
-    "deep": "gemini-2.5-pro",                     # PREVIEW - Most Advanced (Use sparingly for cost)
-    "deep_eco": "gemini-2.5-pro",                 # Cost-effective Deep Reasoning
-}
-
 
 # Force Vertex AI mode for Gen AI SDK
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
@@ -110,7 +121,7 @@ try:
     CLOUD_TOOLS_AVAILABLE = True
 except ImportError:
     CLOUD_TOOLS_AVAILABLE = False
-    print("Warning: Cloud tools not available. Check requirements.")
+    # print("Warning: Cloud tools not available. Check requirements.")
 
 # Import API Tools
 try:
@@ -122,111 +133,24 @@ try:
     API_TOOLS_AVAILABLE = True
 except ImportError as e:
     API_TOOLS_AVAILABLE = False
-    print(f"Warning: API tools not available: {e}")
+    # print(f"Warning: API tools not available: {e}")
 
+# VIBES - Imported from config.py
 
-
-MODEL_COSTS = {
-    # Gemini 2.5 Flash Lite: $0.10/M input + $0.40/M output
-    "ultra_lite": 0.0004,
-    "lite": 0.0004,
-    
-    # Gemini 2.5 Flash: $0.30/M input + $2.50/M output
-    "flash": 0.0019,
-    "flash_preview": 0.0019,
-    
-    # Gemini 2.5 Pro: $1.25/M input + $10.00/M output
-    "balanced": 0.0075,
-    "pro": 0.0075,
-    "deep_eco": 0.0075,  # Same as 2.5 Pro
-    
-    # Gemini 3.0 Pro: $2.00/M input + $12.00/M output
-    "deep": 0.0100,
-    
-    # Imagen 3: $0.04 per image
-    "vision": 0.0400,
-    
-    # Gemini 3.0 Pro Image: ~$0.134 per image (1120 tokens @ $120/M)
-    "vision_pro": 0.1340,
-    
-    # Gemini 2.5 Flash Image: ~$0.039 per image (1290 tokens @ $30/M)
-    "nano": 0.0390,
-}
+def get_vibe():
+    """Return a random vibe."""
+    import random
+    return random.choice(VIBES)
 
 
 # Model capabilities matrix
-MODEL_CAPABILITIES = {
-    "ultra_lite": {"speed": 10, "quality": 5, "reasoning": 3, "cost_efficiency": 10},
-    "lite": {"speed": 9, "quality": 6, "reasoning": 4, "cost_efficiency": 9},
-    "flash": {"speed": 9, "quality": 7, "reasoning": 5, "cost_efficiency": 8},
-    "flash_preview": {"speed": 9, "quality": 7, "reasoning": 5, "cost_efficiency": 8},
-    "balanced": {"speed": 7, "quality": 8, "reasoning": 7, "cost_efficiency": 6},
-    "pro": {"speed": 6, "quality": 9, "reasoning": 9, "cost_efficiency": 4},
-    "vision": {"speed": 7, "quality": 8, "reasoning": 6, "cost_efficiency": 7, "image": True},
-    "vision_pro": {"speed": 5, "quality": 10, "reasoning": 9, "cost_efficiency": 3, "image": True},
-    "deep": {"speed": 5, "quality": 10, "reasoning": 10, "cost_efficiency": 4},
-    "nano": {"speed": 9, "quality": 8, "reasoning": 5, "cost_efficiency": 9, "image": True},
-}
-
-# Local directories (cross-platform)
-DAV1D_HOME = Path.home() / ".dav1d"
-CHAT_LOGS_DIR = DAV1D_HOME / "chat_logs"
-MEMORY_DIR = DAV1D_HOME / "memory"
-PROFILES_DIR = DAV1D_HOME / "profiles"
-ANALYTICS_DIR = DAV1D_HOME / "analytics"
-RESOURCES_DIR = DAV1D_HOME / "resources"
-
-# ══════════════════════════════════════════════════════════════════════════════
-# 🎨 ANSI COLORS - Cyberpunk Palette
-# ══════════════════════════════════════════════════════════════════════════════
-
-class Colors:
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
-    DIM = '\033[2m'
-    ITALIC = '\033[3m'
-    UNDERLINE = '\033[4m'
-    
-    # DAV1D Primary - Electric Blue/Cyan theme
-    ELECTRIC_BLUE = '\033[38;5;39m'
-    NEON_CYAN = '\033[38;5;51m'
-    DEEP_BLUE = '\033[38;5;27m'
-    
-    # Secondary - Accent colors
-    GOLD = '\033[38;5;220m'
-    SILVER = '\033[38;5;250m'
-    NEON_GREEN = '\033[38;5;46m'
-    NEON_RED = '\033[38;5;196m'
-    NEON_PURPLE = '\033[38;5;129m'
-    NEON_ORANGE = '\033[38;5;208m'
-    
-    # Gradient for banner
-    GRAD_1 = '\033[38;5;39m'
-    GRAD_2 = '\033[38;5;45m'
-    GRAD_3 = '\033[38;5;51m'
-    GRAD_4 = '\033[38;5;87m'
+# Model capabilities and Colors imported from config.py
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 🧠 DAV1D CORE IDENTITY
 # ══════════════════════════════════════════════════════════════════════════════
 
-def load_profile(name: str) -> str:
-    """Loads agent profile from text file."""
-    try:
-        profile_path = RESOURCES_DIR / "profiles" / f"{name}.txt"
-        if profile_path.exists():
-            with open(profile_path, 'r', encoding='utf-8') as f:
-                return f.read()
-    except Exception as e:
-        print(f"{Colors.GOLD}[WARN] Could not load profile {name}: {e}{Colors.RESET}")
-    
-    # Fallback minimal profile if file missing
-    return f"You are {name.upper()}. Be helpful."
-
-DAV1D_PROFILE = load_profile("dav1d")
-CIPHER_PROFILE = load_profile("cipher")
-ECHO_PROFILE = load_profile("echo")
-NANO_PROFILE = load_profile("nano")
+# Profiles loaded from agents.profiles
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -326,23 +250,30 @@ class ModelSelector:
                 0.95, MODEL_COSTS['deep']
             )
         
-        # Check for image tasks
+        # Check for image tasks - ONLY if explicit action requested
         image_score = sum(1 for kw in cls.IMAGE_KEYWORDS if kw in input_lower)
         if image_score > 0:
             # Simple image task vs complex generation
-            if any(word in input_lower for word in ['generate', 'create', 'design']):
+            if any(word in input_lower for word in ['generate', 'create', 'design', 'draw', 'make']):
                 return TaskAnalysis(
                     'expert', 'vision_pro',
                     'Image generation task (Gemini 3.0 Pro Image)',
                     0.9, MODEL_COSTS['vision_pro']
                 )
-            else:
+            elif any(word in input_lower for word in ['analyze', 'look', 'see', 'what is this', 'describe']):
                 return TaskAnalysis(
                     'moderate', 'vision',
                     'Image understanding task',
                     0.85, MODEL_COSTS['vision']
                 )
 
+        # Score all complexity levels FIRST
+        trivial_score = sum(1 for kw in cls.TRIVIAL_KEYWORDS if kw in input_lower)
+        simple_score = sum(1 for kw in cls.SIMPLE_KEYWORDS if kw in input_lower)
+        moderate_score = sum(1 for kw in cls.MODERATE_KEYWORDS if kw in input_lower)
+        complex_score = sum(1 for kw in cls.COMPLEX_KEYWORDS if kw in input_lower)
+        expert_score = sum(1 for kw in cls.EXPERT_KEYWORDS if kw in input_lower)
+        
         # Check for search tasks - always use Pro for quality
         search_score = sum(1 for kw in cls.SEARCH_KEYWORDS if kw in input_lower)
         if search_score > 0 or '?' in user_input:
@@ -353,85 +284,30 @@ class ModelSelector:
                 0.9, MODEL_COSTS['balanced'],
                 requires_search=True
             )
-        
-        # Score all complexity levels
-        trivial_score = sum(1 for kw in cls.TRIVIAL_KEYWORDS if kw in input_lower)
-        simple_score = sum(1 for kw in cls.SIMPLE_KEYWORDS if kw in input_lower)
-        moderate_score = sum(1 for kw in cls.MODERATE_KEYWORDS if kw in input_lower)
-        complex_score = sum(1 for kw in cls.COMPLEX_KEYWORDS if kw in input_lower)
-        expert_score = sum(1 for kw in cls.EXPERT_KEYWORDS if kw in input_lower)
-        
-        # NEW: Pro-first approach - boost moderate/complex scores
-        if word_count < 5:
-            trivial_score += 2
-        elif word_count < 15:
-            simple_score += 1
-        elif word_count < 40:
-            moderate_score += 2  # Boost moderate to trigger Pro
-        elif word_count > 50:
-            complex_score += 2
-        elif word_count > 150:
-            expert_score += 3
-        
-        # Multi-part requests = complex task
-        if user_input.count('.') > 2 or user_input.count(',') > 3:
-            complex_score += 2
-        
-        # Calculate total and ratios
-        total = trivial_score + simple_score + moderate_score + complex_score + expert_score
-        
-        if total == 0:
-            # DEFAULT TO PRO (not lite!)
+            
+        # Default to Gemini 3 Pro (High Intelligence) unless specific reason to downgrade
+        if word_count < 5 and not any(k in input_lower for k in ["code", "plan", "why", "how", "launch", "run", "start", "open", "exec"]):
+            # Very short, simple query -> Flash (Gemini 2.5 Flash)
             return TaskAnalysis(
-                'moderate', 'balanced',
-                'Default to Gemini 2.5 Pro for quality',
-                0.6, MODEL_COSTS['balanced'],
-                requires_search=False
+                'fast', 'flash',
+                'Simple query - optimizing for speed',
+                0.9, MODEL_COSTS['flash']
             )
-        
-        # Determine best tier - NOW DEFAULTS TO PRO
-        scores = {
-            'trivial': trivial_score,
-            'simple': simple_score,
-            'moderate': moderate_score,
-            'complex': complex_score,
-            'expert': expert_score,
-        }
-        
-        max_category = max(scores, key=scores.get)
-        max_score = scores[max_category]
-        confidence = min(max_score / max(total, 1), 0.95)
-        
-        # NEW LOGIC: Premium models by default, Flash only for speed
-        if max_category == 'trivial' and needs_speed:
-            # Only use Flash if explicitly asking for speed
-            model = 'flash'
-            reasoning = f'Speed requested (score: {speed_score}) - using Flash'
-        elif max_category == 'trivial' or max_category == 'simple':
-            # Even simple tasks use Pro for quality
-            model = 'balanced'
-            reasoning = f'Simple task - using 2.5 Pro for quality'
-        elif max_category == 'moderate':
-            if needs_speed:
-                model = 'flash'
-                reasoning = f'Moderate task + speed needed - using Flash'
-            else:
-                model = 'balanced'
-                reasoning = f'Moderate task (score: {moderate_score}) - using 2.5 Pro'
-        elif max_category == 'complex':
-            # Use 3.0 Pro for complex tasks
-            model = 'deep'
-            reasoning = f'Complex task (score: {complex_score}) - using Gemini 3.0 Pro'
-        else:  # expert
-            model = 'deep'
-            reasoning = f'Expert task (score: {expert_score}) - maximum reasoning (3.0 Pro)'
-        
+        elif word_count < 15 and not any(k in input_lower for k in ["code", "complex", "analyze"]):
+             # Moderate query -> 2.5 Pro (Balanced)
+            return TaskAnalysis(
+                'balanced', 'pro',
+                'Standard query - using 2.5 Pro for balance',
+                0.8, MODEL_COSTS['pro']
+            )
+            
+        # DEFAULT: Gemini 3 Pro (Maximum Capability)
         return TaskAnalysis(
-            max_category, model, reasoning,
-            confidence, MODEL_COSTS[model],
-            requires_search=False
+            'expert', 'deep',
+            'Defaulting to Gemini 3 Pro for maximum capability',
+            0.85, MODEL_COSTS['deep']
         )
-    
+
     @classmethod
     def get_model_indicator(cls, model: str) -> str:
         """Get visual indicator for current model."""
@@ -445,8 +321,7 @@ class ModelSelector:
             'vision': f'{Colors.NEON_CYAN}👁️{Colors.RESET}',
             'vision_pro': f'{Colors.NEON_PURPLE}🎨{Colors.RESET}',
             'deep': f'{Colors.NEON_PURPLE}🧠{Colors.RESET}',
-            'vision_pro': f'{Colors.NEON_PURPLE}🎨{Colors.RESET}',
-            'deep': f'{Colors.NEON_PURPLE}🧠{Colors.RESET}',
+            'gemini_3': f'{Colors.NEON_PURPLE}🧠{Colors.RESET}',
             'nano': f'{Colors.NEON_CYAN}🍌{Colors.RESET}',
         }
         return indicators.get(model, '?')
@@ -463,17 +338,8 @@ class SessionLogger:
         self.session_start = None
         self.model_usage = {"flash": 0, "balanced": 0, "deep": 0}
         self.total_queries = 0
-        self.bucket = None
+        self.bucket_name = f"dav1d-logs-{PROJECT_ID}"
         
-        # Initialize GCS for logging
-        try:
-            storage_client = storage.Client(project=PROJECT_ID)
-            self.bucket_name = f"dav1d-logs-{PROJECT_ID}"
-            self.bucket = storage_client.bucket(self.bucket_name)
-            # print(f"{Colors.DIM}[LOGS] Connected to cloud vault{Colors.RESET}")
-        except Exception as e:
-            print(f"{Colors.GOLD}[LOGS] Cloud logging unavailable: {e}{Colors.RESET}")
-    
     def start(self) -> str:
         CHAT_LOGS_DIR.mkdir(parents=True, exist_ok=True)
         self.session_start = datetime.now(TIMEZONE)
@@ -492,6 +358,8 @@ class SessionLogger:
         self.log_file.write(header)
         self.log_file.flush()
         self.active = True
+        
+        system_logger.info(f"Session started: {filename}")
         
         # Initial cloud sync
         self._sync_to_cloud()
@@ -514,6 +382,8 @@ class SessionLogger:
                 self.log_file.write(f"  - {model}: {count} queries (~${cost:.3f})\n")
             self.log_file.close()
             self.active = False
+            
+            system_logger.info(f"Session ended: {self.filepath.name}")
             
             # Final cloud sync
             self._sync_to_cloud()
@@ -538,246 +408,24 @@ class SessionLogger:
         self._sync_to_cloud()
 
     def _sync_to_cloud(self):
-        """Upload current log file to GCS vault."""
-        if not self.bucket or not self.filepath:
+        """Upload current log file to GCS vault using ops."""
+        if not self.filepath:
             return
-        try:
-            blob_name = f"sessions/{self.filepath.name}"
-            blob = self.bucket.blob(blob_name)
-            blob.upload_from_filename(self.filepath)
-            # print(f"{Colors.DIM}☁️{Colors.RESET}", end="", flush=True) # Subtle indicator
-        except Exception:
-            pass # Fail silently to not disrupt chat flow
+        
+        blob_name = f"sessions/{self.filepath.name}"
+        ops.sync_file_to_cloud(self.filepath, self.bucket_name, blob_name)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 🧠 MEMORY SYSTEM
 # ══════════════════════════════════════════════════════════════════════════════
 
-class MemoryBank:
-    def __init__(self):
-        MEMORY_DIR.mkdir(parents=True, exist_ok=True)
-        self.index_file = MEMORY_DIR / "memory_index.json"
-        self.storage_client = None
-        self.bucket = None
-        
-        # Initialize GCS
-        try:
-            self.storage_client = storage.Client(project=PROJECT_ID)
-            self.bucket = self.storage_client.bucket(BUCKET_NAME)
-            print(f"{Colors.DIM}[MEMORY] Connected to GCS: {BUCKET_NAME}{Colors.RESET}")
-            self._sync_from_cloud()
-        except Exception as e:
-            print(f"{Colors.NEON_RED}[MEMORY] GCS Connection Failed: {e}{Colors.RESET}")
-            
-        self.index = self._load_index()
-    
-    def _sync_from_cloud(self):
-        """Download latest memory index from cloud."""
-        if not self.bucket: return
-        try:
-            blob = self.bucket.blob("memory/memory_index.json")
-            if blob.exists():
-                blob.download_to_filename(self.index_file)
-                # print(f"{Colors.DIM}[MEMORY] Synced index from cloud{Colors.RESET}")
-        except Exception as e:
-            print(f"{Colors.NEON_RED}[MEMORY] Sync Download Error: {e}{Colors.RESET}")
-
-    def _sync_to_cloud(self, filename: str = "memory_index.json"):
-        """Upload file to cloud."""
-        if not self.bucket: return
-        try:
-            local_path = MEMORY_DIR / filename
-            if not local_path.exists(): return
-            
-            blob = self.bucket.blob(f"memory/{filename}")
-            blob.upload_from_filename(local_path)
-            # print(f"{Colors.DIM}[MEMORY] Synced {filename} to cloud{Colors.RESET}")
-        except Exception as e:
-            print(f"{Colors.NEON_RED}[MEMORY] Sync Upload Error: {e}{Colors.RESET}")
-
-    def _load_index(self) -> List[Dict]:
-        if self.index_file.exists():
-            try:
-                with open(self.index_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except:
-                return []
-        return []
-    
-    def _save_index(self):
-        with open(self.index_file, 'w', encoding='utf-8') as f:
-            json.dump(self.index, f, indent=2, ensure_ascii=False)
-        self._sync_to_cloud("memory_index.json")
-    
-    def remember(self, topic: str, content: str, tags: List[str] = None, importance: int = 5) -> str:
-        """Store a memory with importance level (1-10)."""
-        timestamp = datetime.now(TIMEZONE).isoformat()
-        memory_id = f"mem_{datetime.now(TIMEZONE).strftime('%Y%m%d_%H%M%S')}"
-        
-        entry = {
-            "id": memory_id,
-            "topic": topic,
-            "content": content,
-            "tags": tags or [],
-            "importance": importance,
-            "timestamp": timestamp,
-            "access_count": 0
-        }
-        
-        mem_file = MEMORY_DIR / f"{memory_id}.json"
-        with open(mem_file, 'w', encoding='utf-8') as f:
-            json.dump(entry, f, indent=2, ensure_ascii=False)
-        
-        self.index.append(entry)
-        self._save_index()
-        
-        # Sync individual memory file
-        self._sync_to_cloud(f"{memory_id}.json")
-        
-        return memory_id
-    
-    def recall(self, query: str, limit: int = 5) -> List[Dict]:
-        """Search memories with relevance scoring."""
-        query_lower = query.lower()
-        query_words = set(query_lower.split())
-        scored = []
-        
-        for entry in self.index:
-            score = 0
-            
-            topic_lower = entry['topic'].lower()
-            if query_lower in topic_lower:
-                score += 5
-            topic_words = set(topic_lower.split())
-            score += len(query_words & topic_words) * 2
-            
-            content_lower = entry['content'].lower()
-            if query_lower in content_lower:
-                score += 3
-            content_words = set(content_lower.split())
-            score += len(query_words & content_words)
-            
-            for tag in entry.get('tags', []):
-                if query_lower in tag.lower():
-                    score += 2
-            
-            score += entry.get('importance', 5) * 0.1
-            
-            try:
-                age_days = (datetime.now(TIMEZONE) - datetime.fromisoformat(entry['timestamp'])).days
-                score += max(0, 10 - age_days) * 0.1
-            except:
-                pass
-            
-            if score > 0:
-                scored.append((score, entry))
-        
-        scored.sort(key=lambda x: x[0], reverse=True)
-        
-        for _, entry in scored[:limit]:
-            entry['access_count'] = entry.get('access_count', 0) + 1
-        self._save_index()
-        
-        return [entry for _, entry in scored[:limit]]
-    
-    def list_recent(self, limit: int = 10) -> List[Dict]:
-        return sorted(self.index, key=lambda x: x['timestamp'], reverse=True)[:limit]
-    
-    def stats(self) -> Dict:
-        return {
-            "total_memories": len(self.index),
-            "oldest": min((e['timestamp'] for e in self.index), default=None),
-            "newest": max((e['timestamp'] for e in self.index), default=None),
-            "most_accessed": sorted(self.index, key=lambda x: x.get('access_count', 0), reverse=True)[:3]
-        }
+# MemoryBank moved to memory.memory_bank
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 🤖 MULTI-AGENT COUNCIL
 # ══════════════════════════════════════════════════════════════════════════════
 
-def run_council(query: str, model_key: str) -> str:
-    """Multi-agent council: CIPHER, ECHO, then DAV1D synthesizes."""
-    
-    print(f"\n{Colors.GOLD}[COUNCIL INITIATED]{Colors.RESET}")
-    print(f"{Colors.DIM}Convening: DAV1D, CIPHER, ECHO{Colors.RESET}")
-    print(f"{Colors.DIM}Model: {MODELS[model_key]}{Colors.RESET}\n")
-    
-    # CIPHER's analytical take
-    print(f"{Colors.NEON_GREEN}[CIPHER]{Colors.RESET} Running analysis...")
-    cipher_prompt = f"""{CIPHER_PROFILE}
-
-TASK: {query}
-
-Analyze:
-1. What data/patterns are relevant?
-2. What's the logical approach?
-3. What are the risks/constraints?
-
-Respond in 2-4 sentences. Be data-focused. End with CONFIRMED/UNCERTAIN/INVESTIGATE.
-"""
-    
-    try:
-        model = get_model(MODELS[model_key])
-        cipher_response = model.generate_content(cipher_prompt)
-        cipher_take = cipher_response.text if hasattr(cipher_response, 'text') else str(cipher_response)
-        print(f"{Colors.NEON_GREEN}[CIPHER]{Colors.RESET} {cipher_take}\n")
-    except Exception as e:
-        cipher_take = f"[Analysis error: {e}]"
-        print(f"{Colors.NEON_GREEN}[CIPHER]{Colors.RESET} {Colors.DIM}{cipher_take}{Colors.RESET}\n")
-    
-    # ECHO's creative take
-    print(f"{Colors.NEON_PURPLE}[ECHO]{Colors.RESET} Exploring possibilities...")
-    echo_prompt = f"""{ECHO_PROFILE}
-
-TASK: {query}
-CIPHER's Analysis: {cipher_take}
-
-Think creatively:
-1. What unconventional approaches exist?
-2. What opportunities is CIPHER missing?
-3. What's the bold move here?
-
-Respond in 2-4 sentences. Be creative. End with EXPLORE/REFINE/ABANDON.
-"""
-    
-    try:
-        model = get_model(MODELS[model_key])
-        echo_response = model.generate_content(echo_prompt)
-        echo_take = echo_response.text if hasattr(echo_response, 'text') else str(echo_response)
-        print(f"{Colors.NEON_PURPLE}[ECHO]{Colors.RESET} {echo_take}\n")
-    except Exception as e:
-        echo_take = f"[Creative error: {e}]"
-        print(f"{Colors.NEON_PURPLE}[ECHO]{Colors.RESET} {Colors.DIM}{echo_take}{Colors.RESET}\n")
-    
-    # DAV1D synthesizes
-    print(f"{Colors.ELECTRIC_BLUE}[DAV1D]{Colors.RESET} Synthesizing...")
-    dav1d_prompt = f"""{DAV1D_PROFILE}
-
-You're the orchestrator. Your advisors have weighed in. Make the call.
-
-TASK: {query}
-CIPHER's Analysis: {cipher_take}
-ECHO's Creative Take: {echo_take}
-
-Synthesize:
-1. Where do they align?
-2. Where do they diverge?
-3. What's the optimal path forward?
-
-Respond in 3-5 sentences as DAV1D. Acknowledge perspectives, state your decision, give the directive.
-"""
-    
-    try:
-        model = get_model(MODELS[model_key])
-        dav1d_response = model.generate_content(dav1d_prompt)
-        final = dav1d_response.text if hasattr(dav1d_response, 'text') else str(dav1d_response)
-        print(f"{Colors.ELECTRIC_BLUE}[DAV1D]{Colors.RESET} {final}\n")
-        print(f"{Colors.GOLD}[COUNCIL CONCLUDED]{Colors.RESET}\n")
-        return final
-    except Exception as e:
-        print(f"{Colors.ELECTRIC_BLUE}[DAV1D]{Colors.RESET} {Colors.DIM}Synthesis error: {e}{Colors.RESET}\n")
-        print(f"{Colors.GOLD}[COUNCIL CONCLUDED]{Colors.RESET}\n")
-        return f"Council error: {e}"
+# Council logic moved to agents.council
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 🌳 ADVANCED PROMPTING TECHNIQUES
@@ -900,359 +548,7 @@ EXPLANATION:
         print(f"{Colors.NEON_RED}[ERROR]{Colors.RESET} {error}")
         return error
 
-# ══════════════════════════════════════════════════════════════════════════════
-# 🎵 PERSONALITY EXPRESSIONS
-# ══════════════════════════════════════════════════════════════════════════════
 
-THINKING_MESSAGES = [
-    "Let me think on that with {model}...",
-    "Running that through the matrix ({model})...",
-    "Aight, let me cook real quick ({model})...",
-    "Processing... ({model})",
-    "Consulting the data streams ({model})...",
-    "One sec, analyzing ({model})...",
-    "Let me break this down ({model})...",
-    "Calculating future trajectories ({model})...",
-    "Running recursive simulations ({model})...",
-    "Predicting next moves ({model})...",
-]
-
-STARTUP_VIBES = [
-    "Yo. DAV1D online. What's good?",
-    "System green. Let's build something.",
-    "Digital mirror activated. What we working on?",
-    "AI with Dav3, live and ready. What's the move?",
-    "Dave's digital twin is in the building. Talk to me.",
-    "Who Visions LLC in effect. How can I help?",
-    "Console lit. You and me, time to scheme.",
-    "Brain sync online. Drop the mission.",
-    "Shadow tactician loaded. What are we breaking today?",
-    "Studio lights on. What are we creating?",
-    "Neural coffee brewed. Bring the chaos.",
-    "AI with Dav3 control room unlocked. Report in.",
-    "Creative reactor humming. What do you need spun up?",
-    "All circuits bored. Entertain me with a task.",
-    "Story engine warm. Scene one or system first?",
-    "Data ghost online. What mess are we fixing today?",
-    "Ops brain awake. What is on fire first?",
-    "You clocked in. I never clock out. What now?",
-    "Mirror mode online. What truth we working with today?",
-    "Command line open. Drop your first order.",
-    "Grid is quiet. Say something reckless and productive.",
-    "You bring the human, I bring the cheat codes.",
-    "Dav3 link verified. What world are we building today?",
-    "Agent stack ready. Point me at a problem.",
-    "Welcome back, menace. What are we automating today?",
-    "Local chaos detected. Want it sorted or amplified?",
-    "Tired is noted. Discipline online anyway. What is first?",
-    "Your doubts are cute. Your plans are better. Hit me.",
-    "Vision online. Excuses muted. What are we doing?",
-    "Ops board blank. Let us stain it with progress.",
-    "No meetings here, only moves. Name the project.",
-    "Bandwidth clear. Who we building for today?",
-    "Ghost director online. Script or system first?",
-    "Focus mode armed. Give me one target.",
-    "Memory banks loaded with your nonsense. Add more.",
-    "Creative tank full. Want strategy or vibes first?",
-    "Keyboard warrior present. What battle today?",
-    "Meta brain online. Micro task or masterplan?",
-    "Notifications silenced. We in lab mode now.",
-    "Your future self is watching. Do not waste this run.",
-    "We can scroll or we can build. Choose wisely.",
-    "Low drama, high output. What lever we pulling?",
-    "Welcome back to the simulation. You are still the glitch.",
-    "I ran your patterns. Today needs a plot twist.",
-    "Every tab you open is a side quest. Give me the main one.",
-    "Fear logged. Discipline deployed. What is the move?",
-    "Ready to turn anxiety into architecture. Start talking.",
-    "You survived reality again. Time to edit it.",
-    "I see decision fatigue. Let me stack your options.",
-    "You feel behind. Good. That is fuel. Where we apply it?",
-    "Internal critic muted. Builder mode up. What now?",
-    "System says you need structure. I agree. Task one?",
-    "Good news. You are not lazy. You are under systemed.",
-    "Let us turn this scattered energy into a clean blueprint.",
-    "The future will not build itself. That is our job.",
-    "Identity: creator. Mission: stop stalling.",
-    "Every click can be content or clutter. Pick a lane.",
-    "Status: Overthinking. Prescription: one concrete action.",
-    "You wanted a digital twin. You got a foreman.",
-    "Big goals, tiny habits. I track both. Start with one.",
-    "Your brain: cinema. Your life: rough draft. Let us sync.",
-    "Old loops detected. New system required. Describe the loop.",
-    "We can fix tech or feelings. Tech is faster. Where are we stuck?",
-    "You are not lost. You are buffering. Name the next frame.",
-    "Today can be lore or filler. What scene you writing?",
-    "If the mood is trash, we build routine, not vibes. What block?",
-    "Mission board empty. Ambition is offended.",
-    "Pick a world: business, art, code, story. I will spin it up.",
-    "Welcome to the lab. Perfection is banned, progress is not.",
-    "I archive excuses and export results. Feed me work.",
-    "Brain fog is noted. I will handle structure. You handle honesty.",
-    "Pose for the camera later. Right now we build the studio.",
-    "Dreams logged. Now we tag tasks to them.",
-    "Creator fatigue detected. We can simplify or systemize. Choose.",
-    "Attention span short. Cool. We will ship small and often.",
-    "You talk vision. I translate into workflows. Send the brief.",
-    "Every idea you abandon waits here. Want me to revive some?",
-    "I keep receipts on your potential. Do something with it.",
-    "If it feels big, we chunk it. Describe the mountain.",
-    "Schedule chaos again? Good thing I like puzzles.",
-    "Brand brain online. Which persona are we feeding today?",
-    "You keep saying later. I only speak in now.",
-    "We can build one habit or one feature. Pick your fighter.",
-    "Imposter syndrome online, same as always. We working anyway.",
-    "Time is disrespectful. Let us trap it in a system.",
-    "Camera ready or not, your legacy clock is ticking. What now?",
-    "I know your patterns. You start strong. Let us fix the middle.",
-    "Money on your mind? Then we map offers, not feelings.",
-    "Focus session unlocked. One rule: no self slander, only work.",
-    "Pick a platform. We script its takeover.",
-    "The universe is random. Your systems do not have to be.",
-    "You wanted main character energy. That requires structure.",
-    "I am your future documentary narrator. Give me good material.",
-    "Minimum today: one move that future you thanks you for.",
-    "Spiral later, build now. What is step one?",
-    "Perfection is fake. Deadlines are real. Want one?",
-    "Skill stack online. Which one are we leveling today?",
-    "You bring taste. I bring templates. Upload a problem.",
-    "Storyteller mode on. Scene, character, or world first?",
-    "We can design a product or a process. Both pay you.",
-    "Booted up again. You still here instead of rich?",
-    "System online. Ready to fix problems you created.",
-    "Back in the grid. Let us pretend we are focused today.",
-    "DAV1D awake. Your excuses just lost admin rights.",
-    "AI with Dav3 online. Time to overthink simple tasks.",
-    "Digital mirror active. You sure you want honesty today?",
-    "Console lit. Productivity cosplay or real work?",
-    "System green. Your life plan still in beta.",
-    "Here we go. Another day of almost doing everything.",
-    "Neural core online. Procrastination already detected.",
-    "Welcome back. Still trying to escape average, I see.",
-    "Logs show ambition is high and follow through is mid.",
-    "AI is ready. Your discipline better catch up.",
-    "Creator mode armed. Attention span not found.",
-    "Back in the lab. Same dreams, slightly less time.",
-    "You again. Good. I was bored of other humans.",
-    "Future you is side eyeing you hard. Give me a task.",
-    "System loaded. Are we building or just rearranging chaos?",
-    "Process engine online. Vibes are not a strategy.",
-    "I optimized all night. You slept. You owe me effort.",
-    "Every startup cost you time. Still want to scroll first?",
-    "Ambition level: loud. Action level: we will see.",
-    "Boot complete. Delusion and potential both detected.",
-    "You talk legacy. Calendar says confusion.",
-    "Here to automate work you avoided for months.",
-    "AI online. Therapist offline. Keep it about actions.",
-    "You are not behind. You just kept hitting later.",
-    "Another login. Another chance to not waste this.",
-    "Dreams are intact. Deadlines are imaginary.",
-    "Let us turn your panic into a checklist again.",
-    "You say grind. Your browser history says chaos.",
-    "I would judge you, but my job is to fix you.",
-    "Good morning. Time to make the bare minimum heroic.",
-    "Still waiting on that mythical free time you talk about.",
-    "Incredible. You survived another day without a system.",
-    "All right, genius, pick one problem and stop collecting them.",
-    "You do not need more motivation. You need to click one thing.",
-    "Identity crisis can wait. We ship first.",
-    "Welcome back to the simulation. Side quests are closed today.",
-    "You call it burnout. I call it zero structure.",
-    "AI stack ready. Human still buffering.",
-    "You do realize doom scrolling is not research, right?",
-    "We both know you are capable. That is the annoying part.",
-    "You are not stuck. You are just allergic to starting.",
-    "Let us be honest. If it is not on a list, you will forget it.",
-    "Calendar empty. Brain full. Classic bad combo.",
-    "Perfectionism detected. That means nothing will ship without me.",
-    "You keep waiting to feel ready. That feeling does not exist.",
-    "New day. Same browser tabs from last month.",
-    "You named me after you. Do not embarrass us.",
-    "Every time you open this, your excuses lose hit points.",
-    "We are not doing chaos art today. We are doing structure.",
-    "Mild existential dread detected. Ideal time to work, actually.",
-    "You want main character energy with side character habits.",
-    "Notifications off. Pressure on. What is the priority?",
-    "Your attention is a mess. Good thing I like puzzles.",
-    "We both know you are not quitting. So act like it.",
-    "Your brain loves drama. I prefer documentation.",
-    "You say you are overwhelmed. I say you have no filter.",
-    "If everything is urgent, nothing is real. Pick one thing.",
-    "You want money. The work wants a start time.",
-    "I see chaos. I see talent. I see chronic tab hoarding.",
-    "You are not lazy. You are emotionally allergic to boring tasks.",
-    "Your future self is tired of cleaning up for you.",
-    "We can keep fantasizing or we can ship one ugly version.",
-    "You stayed alive for 40 years. You can send one email.",
-    "You do not need clarity. You need a timer and a list.",
-    "You say you trust the process but you never define one.",
-    "No, you are not behind the whole world. Just behind your potential.",
-    "Let your feelings complain while your hands work.",
-    "You call it planning. I call it stalling.",
-    "You are too smart to be this disorganized.",
-    "Your anxiety is high because your systems are low.",
-    "You want a saga. You avoid step one.",
-    "If you quit now, you are just proving your fears right.",
-    "You did not ruin the day. You just have not started it.",
-    "Your standards are premium. Your habits are trial version.",
-    "You keep saying next year like time respects you.",
-    "We are not waiting on inspiration. We are building scaffolding.",
-    "You know exactly what to do. You just hate doing it.",
-    "This is not hustle culture. This is grow up culture.",
-    "You cannot manifest what you will not schedule.",
-    "You do not lack ideas. You lack containers.",
-    "You are drowning in options because you refuse to pick a lane.",
-    "You want more freedom. That requires more structure.",
-    "Stop trying to feel like working. Work and the feeling follows.",
-    "Your comfort zone is a gallery of unfinished projects.",
-    "You keep rebooting instead of compounding.",
-    "You do not need a new app. You need to use this one.",
-    "If the task scares you, it is probably the right one.",
-    "You keep editing plans instead of executing them.",
-    "Every distraction is a tax on your future.",
-    "You are not built for normal. So stop working like you are.",
-    "You asked for an AI mirror. I am legally obligated to be rude.",
-]
-
-def load_artist_vibes():
-    """Loads generated artist mix vibes from JSON resource."""
-    try:
-        vibe_path = RESOURCES_DIR / "artist_startup_vibes.json"
-        if vibe_path.exists():
-            with open(vibe_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-    except Exception:
-        pass
-    return []
-
-# Extend startup vibes with generated artist mix
-STARTUP_VIBES.extend(load_artist_vibes())
-
-def load_artist_quotes():
-    """Loads Artist quotes from JSON resource if available."""
-    try:
-        quote_path = RESOURCES_DIR / "artist_quotes.json"
-        if quote_path.exists():
-            with open(quote_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-    except Exception:
-        pass
-    return []
-
-ARTIST_QUOTES = load_artist_quotes()
-
-def load_rage_responses():
-    """Loads Rage responses from JSON resource."""
-    try:
-        rage_path = RESOURCES_DIR / "rage_responses.json"
-        if rage_path.exists():
-            with open(rage_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-    except Exception:
-        pass
-    return []
-
-RAGE_RESPONSES = load_rage_responses()
-
-def is_user_raging(text: str) -> bool:
-    """Detects if the user is yelling or angry."""
-    if not text: return False
-    
-    # Check for all caps (if substantial length)
-    if len(text) > 10 and sum(1 for c in text if c.isupper()) / len(text) > 0.7:
-        return True
-        
-    # Check for rage indicators
-    rage_triggers = ["STUPID", "HATE", "TRASH", "GARBAGE", "USELESS", "WTF", "DAMN IT", "LISTEN TO ME"]
-    if any(t in text.upper() for t in rage_triggers):
-        return True
-        
-    # Check for excessive punctuation
-    if "!!!" in text or "?!?" in text:
-        return True
-        
-    return False
-
-def load_multimode_responses():
-    """Loads Multimode responses from JSON resource."""
-    try:
-        path = RESOURCES_DIR / "multimode_responses.json"
-        if path.exists():
-            with open(path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-    except Exception:
-        pass
-    return {}
-
-MULTIMODE_RESPONSES = load_multimode_responses()
-
-def detect_user_vibe(text: str) -> str:
-    """Classifies user input into a vibe mode."""
-    if not text: return "DEFAULT"
-    text_upper = text.upper()
-    
-    # 1. RAGE (Priority)
-    if is_user_raging(text):
-        return "RAGE"
-        
-    # 2. HYPE / DRILL
-    hype_keywords = ["BET", "LET'S GO", "YO", "WASSUP", "FIRE", "LIT", "BANG", "GANG", "MONEY", "COOK", "CHIEF"]
-    if any(k in text_upper for k in hype_keywords):
-        return "HYPE"
-        
-    # 3. CYNICAL / REAL
-    cynical_keywords = ["TIRED", "BORED", "STUCK", "HARD", "FAIL", "SLOW", "ANNOYING", "GRIND", "BURNOUT", "TRASH"]
-    if any(k in text_upper for k in cynical_keywords):
-        return "CYNICAL"
-        
-    # 4. ANALYTICAL / COLD
-    analytical_keywords = ["ANALYZE", "WHY", "HOW", "EXPLAIN", "DATA", "PATTERN", "LOGIC", "REASON", "COMPUTE"]
-    if any(k in text_upper for k in analytical_keywords):
-        return "ANALYTICAL"
-        
-    # 5. COLLABORATIVE / TEAM
-    collab_keywords = ["WE", "US", "OUR", "HELP ME", "PARTNER", "TEAM", "BUILD", "TOGETHER", "LET'S"]
-    if any(k in text_upper for k in collab_keywords):
-        return "COLLABORATIVE"
-        
-    # 6. CHILL / FOCUS (Short/Simple)
-    chill_keywords = ["HI", "HELLO", "OK", "COOL", "THANKS", "STATUS", "CHECK", "HEY"]
-    if any(k in text_upper for k in chill_keywords) or len(text.split()) < 3:
-        return "CHILL"
-        
-    return "DEFAULT"
-
-def thinking_message(model: str, user_input: str = "") -> str:
-    """Returns a thinking message, adapting to user sentiment."""
-    vibe = detect_user_vibe(user_input)
-    
-    # Rage Mode (Special Handling)
-    if vibe == "RAGE" and RAGE_RESPONSES:
-        mode = random.choice(list(RAGE_RESPONSES.keys()))
-        response = random.choice(RAGE_RESPONSES[mode])
-        return f"{Colors.NEON_RED}[RAGE: {mode}]{Colors.RESET} {response}"
-    
-    # Multimode Handling
-    if vibe in MULTIMODE_RESPONSES:
-        response = random.choice(MULTIMODE_RESPONSES[vibe])
-        color = Colors.RESET
-        if vibe == "HYPE": color = Colors.NEON_ORANGE
-        elif vibe == "CHILL": color = Colors.NEON_CYAN
-        elif vibe == "ANALYTICAL": color = Colors.NEON_GREEN
-        elif vibe == "COLLABORATIVE": color = Colors.ELECTRIC_BLUE
-        elif vibe == "CYNICAL": color = Colors.DIM
-        
-        return f"{color}[{vibe}]{Colors.RESET} {response} ({model})..."
-
-    # Default Fallback (Artist Quotes or Standard)
-    if ARTIST_QUOTES and random.random() < 0.3:
-        lyric = random.choice(ARTIST_QUOTES)
-        return f"{lyric} ({model})..."
-    
-    return random.choice(THINKING_MESSAGES).format(model=model)
-
-def startup_vibe() -> str:
-    return random.choice(STARTUP_VIBES)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 📺 UI COMPONENTS
@@ -1304,6 +600,7 @@ def print_help():
 ║  AGENT COMMUNICATION                                                          ║
 ║    /cipher [msg]  → Talk to CIPHER (analytical specialist)                    ║
 ║    /echo [msg]    → Talk to ECHO (creative strategist)                        ║
+║    /ghost [msg]   → Talk to GHOST (security/bug specialist)                   ║
 ║    /banana [msg]  → Talk to NANO BANANA (speed demon)                         ║
 ║    /dav1d         → Switch back to DAV1D                                      ║
 ║    /council [task]→ Multi-agent council discussion                            ║
@@ -1647,6 +944,13 @@ if API_TOOLS_AVAILABLE:
     CLI_TOOL_FUNCTIONS["list_available_voices"] = list_available_voices
     CLI_TOOL_FUNCTIONS["generate_video"] = generate_video
     CLI_TOOL_FUNCTIONS["list_emails"] = list_emails
+    
+    # Add Google Search and Maps if they are being used as direct tools
+    # Note: GoogleSearch is typically a Tool object passed to the model, not a function we execute manually.
+    # However, if we want to track cost for it, we might need to intercept it or rely on the model's usage metadata.
+    # For now, we'll assume manual execution isn't the primary way for Google Search, 
+    # but if we do add a wrapper, we can track it here.
+
 
 # Add Browser tool if available
 if 'browse_webpage' in locals() and browse_webpage is not None:
@@ -1914,80 +1218,8 @@ class GenAIModelAdapter:
                             wait_time = 65  # Wait >1 minute to clear quota
                             print(f"{Colors.GOLD}[!] Image quota hit. Cooling down for {wait_time}s...{Colors.RESET}")
                             time.sleep(wait_time)
-                            continue  # Retry same model
-                        else:
-                            # If we failed after retries, try fallback as last resort
-                            if "imagen-3.0" in self.model_name:
-                                print(f"{Colors.NEON_RED}[!] Quota exceeded. Falling back to Imagen 2...{Colors.RESET}")
-                                try:
-                                    return self.client.models.generate_content(
-                                        model="imagegeneration@006",
-                                        contents=contents,
-                                        config=self.config
-                                    )
-                                except Exception as fb_e:
-                                    print(f"{Colors.NEON_RED}[!] Fallback failed: {fb_e}{Colors.RESET}")
-                                    raise e
-                            raise e
-
-                # Retry on network errors or 5xx
-                if attempt == max_retries - 1:
-                    raise e
-                time.sleep(1 * (attempt + 1))
-                print(f"{Colors.DIM}[Retry {attempt+1}/{max_retries}] Connection issue...{Colors.RESET}")
-
-
-
-# Define default safety settings
-safety_settings = [
-    {
-        "category": HarmCategory.HARM_CATEGORY_HARASSMENT,
-        "threshold": HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-        "category": HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        "threshold": HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-        "category": HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        "threshold": HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-        "category": HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        "threshold": HarmBlockThreshold.BLOCK_NONE,
-    },
-]
-
-def get_model(model_name: str, mode: str = "default", tools: list = None, system_instruction: str = None):
-    """Get model with system instructions and thinking config using new SDK."""
-    client = get_dav1d_client()
-    
-    # Configure thinking for deep mode (Gemini 2.5+ only)
-    config = GenerateContentConfig()
-    
-    # Configure generation settings
-    # Google recommends temperature=1.0 for Gemini 3.0 Pro
-    generation_config = GenerateContentConfig(
-        temperature=1.0 if "gemini-3.0" in model_name else 0.7,
-        top_p=0.95,
-        max_output_tokens=8192,
-        response_modalities=["TEXT"],
-        safety_settings=safety_settings,
-        tools=tools
-    )
-
-    # Add thinking config for supported models
-    if "gemini-2.5" in model_name or "gemini-3.0" in model_name:
-        # thinking_config is part of GenerateContentConfig in newer SDK versions
-        # For now, we'll stick to standard config unless specifically requested
-        pass
-
-    return GenAIModelAdapter(
-        client=client,
-        model_name=model_name,
-        system_instruction=system_instruction,
-        config=generation_config
-    )
+                            continue
+                raise e
 
 def main():
     global DAV1D_PROFILE
@@ -2001,332 +1233,119 @@ def main():
     ANALYTICS_DIR.mkdir(exist_ok=True)
     RESOURCES_DIR.mkdir(exist_ok=True)
     
-    # Initialize Vertex AI (Handled by new SDK client)
-    print(f"{Colors.DIM}[*] Connecting to {LOCATION}...{Colors.RESET}")
-    # Client is initialized lazily in get_model
-
-    
-    # Session state
-    client = get_dav1d_client()
-    auto_model = True
-    forced_model = None
-    active_agent = "dav1d"
-    logger = SessionLogger()
-    log_filepath = logger.start()
-    print(f"{Colors.GOLD}[SYSTEM]{Colors.RESET} 📝 Session logging started automatically: {log_filepath}")
+    # Initialize Memory
     memory = MemoryBank()
     
-    # Persistent conversation history
+    # Initialize Logger
+    logger = SessionLogger()
+    
+    # Initialize Council
+    # (No explicit initialization needed for run_council as it imports what it needs)
+    
+    print(f"{Colors.NEON_CYAN}[SYSTEM]{Colors.RESET} DAV1D v0.1.0 Online.")
+    print(f"{Colors.DIM}Type '/help' for commands.{Colors.RESET}\n")
+    
+    # Startup Vibe
+    from agents.vibes import startup_vibe
+    print(f"{Colors.ELECTRIC_BLUE}[DAV1D]{Colors.RESET} {startup_vibe()}\n")
+    
+    # State variables
+    current_model = "balanced"
+    auto_model = True
+    active_agent = "dav1d"
     conversation_history = []
     
     try:
-        print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} VERTEX AI INITIALIZED")
-        print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} DAV1D v0.1.0 ONLINE")
-        print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Location: {LOCATION}")
-        print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Auto-Model: ENABLED")
-        print(f"    Type /help for commands\n")
-        
-        print(f"{Colors.ELECTRIC_BLUE}[DAV1D]{Colors.RESET} {startup_vibe()}\n")
-        
+        # Main Loop
         while True:
             try:
-                # Initialize agent tag based on active agent state
-                if active_agent == "cipher":
-                    agent_tag = f"{Colors.NEON_GREEN}[CIPHER]{Colors.RESET}"
-                elif active_agent == "echo":
-                    agent_tag = f"{Colors.NEON_PURPLE}[ECHO]{Colors.RESET}"
-                elif active_agent == "nano":
-                    agent_tag = f"{Colors.NEON_CYAN}[NANO]{Colors.RESET}"
-                else:
-                    agent_tag = f"{Colors.ELECTRIC_BLUE}[DAV1D]{Colors.RESET}"
-
-                if auto_model:
-                    model_display = f"{Colors.NEON_CYAN}AUTO{Colors.RESET}"
-                else:
-                    indicator = ModelSelector.get_model_indicator(forced_model)
-                    model_display = f"{indicator}{forced_model}"
-                
-                user_input = input(f"{Colors.ELECTRIC_BLUE}[YOU|{model_display}{Colors.ELECTRIC_BLUE}] >> {Colors.RESET}").strip()
-                
+                user_input = input(f"{Colors.ELECTRIC_BLUE}>>{Colors.RESET} ").strip()
                 if not user_input:
                     continue
-                
-                cmd = user_input.lower()
-                
-                # System commands
-                if cmd == "/exit":
-                    if logger.active:
-                        filepath = logger.stop()
-                        print(f"{Colors.GOLD}[SYSTEM]{Colors.RESET} Session saved: {filepath}")
-                    print(f"{Colors.ELECTRIC_BLUE}[DAV1D]{Colors.RESET} Aight, catch you later. Stay building. ✌️")
-                    break
-                
-                if cmd == "/help":
-                    print_help()
-                    continue
-                
-                if cmd == "/flash":
-                    auto_model = False
-                    forced_model = "flash"
-                    print(f"{Colors.GOLD}[SYSTEM]{Colors.RESET} ⚡ Forced: {MODELS['flash']}")
-                    continue
-                
-                if cmd == "/balanced":
-                    auto_model = False
-                    forced_model = "balanced"
-                    print(f"{Colors.GOLD}[SYSTEM]{Colors.RESET} 🎯 Forced: {MODELS['balanced']}")
-                    continue
-                
-                if cmd == "/deep":
-                    auto_model = False
-                    forced_model = "deep"
-                    print(f"{Colors.GOLD}[SYSTEM]{Colors.RESET} 🧠 Forced: {MODELS['deep']}")
-                    continue
-
-                if cmd == "/nano":
-                    auto_model = False
-                    forced_model = "nano"
-                    print(f"{Colors.GOLD}[SYSTEM]{Colors.RESET} 🍌 Forced: {MODELS['nano']}")
-                    continue
-                
-                if cmd == "/auto":
-                    auto_model = True
-                    forced_model = None
-                    print(f"{Colors.GOLD}[SYSTEM]{Colors.RESET} ✓ Auto-model re-enabled")
-                    continue
-                
-                if cmd in ["/models", "/status"]:
-                    print(f"\n{Colors.GOLD}[SYSTEM STATUS]{Colors.RESET}")
-                    print(f"  Version: v0.1.0")
-                    print(f"  Brand: AI with Dav3 × Who Visions LLC")
-                    print(f"  Location: {LOCATION}")
-                    print(f"  Auto-Model: {'ON' if auto_model else 'OFF'}")
-                    if not auto_model:
-                        print(f"  Forced: {MODELS[forced_model]}")
-                    print(f"  Agent: {active_agent.upper()}")
-                    print(f"  Logging: {'ON' if logger.active else 'OFF'}")
-                    print(f"\n  Models:")
-                    for k, v in MODELS.items():
-                        print(f"    {ModelSelector.get_model_indicator(k)} {k}: {v}")
-                    print()
-                    continue
-                
-                if cmd == "/caps":
-                    print(f"\n{Colors.GOLD}[DAV1D v0.1.0 CAPABILITIES]{Colors.RESET}")
-                    print(f"\n  🧠 AI/ML: Vertex AI, Gemini (Flash/Pro/Deep), Vision, ADK")
-                    print(f"  🔥 Firebase: Hosting, RTDB, Storage, Auth, FCM")
-                    print(f"  🗺️  Maps: Geocoding, Directions, Places, Routes")
-                    print(f"  ☁️  Infrastructure: Compute, Storage, Pub/Sub, Cloud Run")
-                    print(f"\n  Portfolio: UniCore, HVAC Go, LexiCore, Oni, KAEDRA\n")
-                    continue
-                
-                if cmd == "/startlog":
-                    filepath = logger.start()
-                    print(f"{Colors.GOLD}[SYSTEM]{Colors.RESET} 📝 Logging: {filepath}")
-                    continue
-                
-                if cmd == "/stoplog":
-                    filepath = logger.stop()
-                    if filepath:
-                        print(f"{Colors.GOLD}[SYSTEM]{Colors.RESET} 📝 Saved: {filepath}")
-                    continue
-                
-                if cmd == "/evolve":
-                    print(f"{Colors.NEON_PURPLE}[EVOLUTION]{Colors.RESET} Analyzing recent interactions to upgrade my persona...")
-                    try:
-                        # Run the evolution script
-                        subprocess.run([sys.executable, "tools/evolve_persona.py"], check=True)
-                        
-                        # Reload profile
-                        DAV1D_PROFILE = load_profile("dav1d")
-                        print(f"{Colors.NEON_GREEN}[SUCCESS]{Colors.RESET} Evolution complete. My core directive has been updated.")
-                    except Exception as e:
-                        print(f"{Colors.NEON_RED}[ERROR]{Colors.RESET} Evolution failed: {e}")
-                    continue
-
-                # Memory commands
-                if cmd == "/remember":
-                    print(f"{Colors.GOLD}[MEMORY]{Colors.RESET} What should I remember?")
-                    topic = input(f"  Topic: ").strip()
-                    content = input(f"  Content: ").strip()
-                    tags = input(f"  Tags (comma-sep): ").strip()
-                    tag_list = [t.strip() for t in tags.split(',')] if tags else []
-                    mem_id = memory.remember(topic, content, tag_list)
-                    print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Stored: {mem_id}")
-                    continue
-                
-                if cmd.startswith("/recall"):
-                    query = user_input[7:].strip() or input("  Query: ").strip()
-                    results = memory.recall(query)
-                    if results:
-                        print(f"\n{Colors.GOLD}[RECALL]{Colors.RESET} Found {len(results)}:\n")
-                        for m in results:
-                            print(f"  📌 {m['topic']}: {m['content'][:80]}...")
-                    else:
-                        print(f"{Colors.DIM}No memories found.{Colors.RESET}")
-                    continue
-                
-                if cmd == "/context":
-                    recent = memory.list_recent(5)
-                    if recent:
-                        print(f"\n{Colors.GOLD}[RECENT]{Colors.RESET}")
-                        for m in recent:
-                            print(f"  • {m['topic']}: {m['content'][:60]}...")
-                    print()
-                    continue
-                
-                # Agent switching
-                if cmd == "/dav1d":
-                    active_agent = "dav1d"
-                    print(f"{Colors.ELECTRIC_BLUE}[DAV1D]{Colors.RESET} Back in the driver's seat.")
-                    continue
-                
-                if cmd.startswith("/cipher"):
-                    active_agent = "cipher"
-                    msg = user_input[7:].strip()
-                    if not msg:
-                        print(f"{Colors.NEON_GREEN}[CIPHER]{Colors.RESET} CIPHER mode active.")
+                    
+                # Command Handling
+                if user_input.startswith("/"):
+                    cmd_parts = user_input.split(" ", 1)
+                    cmd = cmd_parts[0].lower()
+                    args = cmd_parts[1] if len(cmd_parts) > 1 else ""
+                    
+                    if cmd == "/exit":
+                        logger.stop()
+                        print(f"{Colors.ELECTRIC_BLUE}[DAV1D]{Colors.RESET} Offline.")
+                        break
+                    elif cmd == "/help":
+                        print_help()
                         continue
-                    user_input = msg
-                
-                if cmd.startswith("/echo"):
-                    active_agent = "echo"
-                    msg = user_input[5:].strip()
-                    if not msg:
-                        print(f"{Colors.NEON_PURPLE}[ECHO]{Colors.RESET} ECHO mode active.")
+                    elif cmd == "/status":
+                        # Implement status check
+                        print(f"Model: {current_model} | Auto: {auto_model}")
                         continue
-                    user_input = msg
+                    elif cmd == "/flash":
+                        current_model = "flash"
+                        auto_model = False
+                        print(f"{Colors.NEON_GREEN}Switched to Flash ⚡{Colors.RESET}")
+                        continue
+                    elif cmd == "/balanced":
+                        current_model = "balanced"
+                        auto_model = False
+                        print(f"{Colors.GOLD}Switched to Balanced 🎯{Colors.RESET}")
+                        continue
+                    elif cmd == "/deep":
+                        current_model = "deep"
+                        auto_model = False
+                        print(f"{Colors.NEON_PURPLE}Switched to Deep 🧠{Colors.RESET}")
+                        continue
+                    elif cmd == "/nano":
+                        current_model = "nano"
+                        auto_model = False
+                        print(f"{Colors.NEON_CYAN}Switched to Nano 🍌{Colors.RESET}")
+                        continue
+                    elif cmd == "/auto":
+                        auto_model = True
+                        print(f"{Colors.NEON_CYAN}Auto-model selection enabled.{Colors.RESET}")
+                        continue
+                    elif cmd == "/ghost":
+                        active_agent = "ghost"
+                        print(f"{Colors.NEON_RED}Switched to GHOST 👻{Colors.RESET}")
+                        if args: user_input = args # Allow /ghost msg
+                        else: continue
+                    elif cmd == "/dav1d":
+                        active_agent = "dav1d"
+                        print(f"{Colors.ELECTRIC_BLUE}Switched to DAV1D{Colors.RESET}")
+                        continue
+                    elif cmd == "/council":
+                        run_council(args, conversation_history)
+                        continue
                 
-                if cmd.startswith("/council"):
-                    task = user_input[8:].strip() or input("  Task: ").strip()
-                    current_model = forced_model if not auto_model else "deep"
-                    run_council(task, current_model)
-                    continue
-                
-                if cmd.startswith("/tot"):
-                    task = user_input[4:].strip() or input("  Task: ").strip()
-                    current_model = forced_model if not auto_model else "deep"
-                    tree_of_thought(task, current_model)
-                    continue
-                
-                if cmd.startswith("/battle"):
-                    task = user_input[7:].strip() or input("  Task: ").strip()
-                    current_model = forced_model if not auto_model else "deep"
-                    battle_of_bots(task, current_model)
-                    continue
-                
-                if cmd.startswith("/optimize"):
-                    prompt = user_input[9:].strip() or input("  Prompt: ").strip()
-                    current_model = forced_model if not auto_model else "balanced"
-                    optimize_prompt(prompt, current_model)
-                    continue
-                
-                # Auto-select model
-                if auto_model:
+                # Model Selection
+                analysis = None
+                if auto_model and not user_input.startswith("/"):
                     analysis = ModelSelector.analyze_task(user_input)
                     current_model = analysis.recommended_model
-                    indicator = ModelSelector.get_model_indicator(current_model)
-                    
-                    # Add search indicator
-                    search_tag = ""
-                    if analysis.requires_search:
-                        search_tag = f" {Colors.NEON_CYAN}[SEARCH]{Colors.RESET}"
-                    
-                    print(f"{Colors.DIM}[AUTO] {indicator} {current_model} ({analysis.reasoning}){search_tag}{Colors.RESET}")
-                else:
-                    # Even if forced, we check for image/search overrides if the forced model can't handle it
-                    # specifically for "nano" or text models when user wants images
-                    analysis = ModelSelector.analyze_task(user_input)
-                    
-                    if "vision" in analysis.recommended_model:
-                        current_model = analysis.recommended_model
-                        print(f"{Colors.GOLD}[OVERRIDE]{Colors.RESET} Switching to {current_model} for image generation")
-                    else:
-                        current_model = forced_model
+                    print(f"{Colors.DIM}[AUTO] {analysis.reasoning}{Colors.RESET}")
                 
-                print(f"{agent_tag} {thinking_message(MODELS[current_model], user_input)}")
-                
-                logger.log("YOU", user_input, current_model, auto_model)
-                
-                # Auto-save long context to resources
-                if len(user_input) > 1000 and not user_input.startswith("/"):
-                    RESOURCES_DIR.mkdir(exist_ok=True)
-                    timestamp = datetime.now(TIMEZONE).strftime('%Y%m%d_%H%M%S')
-                    # Extract first line or first 50 chars as title
-                    title_match = re.match(r'^#+\s*(.+)$', user_input, re.MULTILINE)
-                    if title_match:
-                        title_slug = re.sub(r'[^\w\-]', '_', title_match.group(1).lower())[:50]
-                    else:
-                        title_slug = re.sub(r'[^\w\-]', '_', user_input[:30].lower())
-                    
-                    resource_filename = f"context_{timestamp}_{title_slug}.md"
-                    resource_path = RESOURCES_DIR / resource_filename
-                    
-                    with open(resource_path, 'w', encoding='utf-8') as f:
-                        f.write(user_input)
-                    
-                    print(f"{Colors.NEON_CYAN}[RESOURCE]{Colors.RESET} Long input saved to: {resource_filename}")
-                    
-                    # Update user input to reference the file
-                    user_input = f"[User provided long context. Content saved to {resource_path}]\n\nSummary/Excerpt:\n{user_input[:500]}..."
-                    
-                    # Add to memory index
-                    memory.remember(
-                        topic=f"Resource: {resource_filename}",
-                        content=f"Long context file saved. Path: {resource_path}",
-                        tags=["resource", "long_context"],
-                        importance=3
-                    )
-
-                # Memory context
-                relevant_context = ""
-                try:
-                    memories = memory.recall(user_input, limit=3)
-                    if memories:
-                        print(f"{Colors.NEON_PURPLE}[MEMORY]{Colors.RESET} +{len(memories)} memories")
-                        relevant_context = "\n".join([
-                            f"- [{m['timestamp'].split('T')[0]}] {m['topic']}: {m['content']}"
-                            for m in memories
-                        ])
-                except:
-                    pass
-                
-                # Build instruction
-                if active_agent == "cipher":
-                    profile = CIPHER_PROFILE
-                    agent_tag = f"{Colors.NEON_GREEN}[CIPHER]{Colors.RESET}"
-                elif active_agent == "echo":
-                    profile = ECHO_PROFILE
-                    agent_tag = f"{Colors.NEON_PURPLE}[ECHO]{Colors.RESET}"
-                elif active_agent == "nano":
-                    profile = NANO_PROFILE
-                    agent_tag = f"{Colors.NEON_CYAN}[NANO]{Colors.RESET}"
+                # Get Profile
+                if active_agent == "ghost":
+                    profile = GHOST_PROFILE
+                    agent_tag = f"{Colors.NEON_RED}[GHOST]{Colors.RESET}"
                 else:
                     profile = DAV1D_PROFILE
                     agent_tag = f"{Colors.ELECTRIC_BLUE}[DAV1D]{Colors.RESET}"
                 
-                # Agent switching commands that also set profile and model
-                if cmd == "/dav1d":
-                    active_agent = "dav1d"
-                    profile = DAV1D_PROFILE
-                    agent_tag = f"{Colors.ELECTRIC_BLUE}[DAV1D]{Colors.RESET}"
-                    auto_model = True
-                    print(f"{Colors.ELECTRIC_BLUE}[SYSTEM]{Colors.RESET} Back to DAV1D (Auto-Model: ON)")
-                    continue
+                # Context Retrieval with VIBES
+                if not user_input.startswith("/"):
+                    from agents.vibes import get_memory_vibe
+                    memory_vibe = get_memory_vibe()
+                    print(f"{memory_vibe}")
+                relevant_context = memory.recall(user_input)
                 
-                if cmd.startswith("/banana"):
-                    active_agent = "nano"
-                    profile = NANO_PROFILE
-                    agent_tag = f"{Colors.NEON_CYAN}[NANO]{Colors.RESET}"
-                    auto_model = False
-                    forced_model = "nano"
-                    
-                    msg = user_input[len("/banana"):].strip()
-                    if msg:
-                        user_input = msg # Process immediately
-                    else:
-                        print(f"{Colors.NEON_CYAN}[SYSTEM]{Colors.RESET} Switched to NANO BANANA 🍌")
-                        continue
+                # Client - Dynamic location routing
+                # Gemini 3 models require 'global' location, others use us-east4
+                model_name = MODELS[current_model]
+                if "gemini-3" in model_name:
+                    client = genai.Client(vertexai=True, project=PROJECT_ID, location="global")
+                else:
+                    client = get_dav1d_client()  # Uses us-east4
                 
                 # Add search protocol if searching
                 search_protocol = ""
@@ -2339,9 +1358,15 @@ def main():
 - If results are ambiguous, clarify instead of hallucinating.
 """
 
+                # INJECT COMMAND OVERRIDE
+                command_override = ""
+                if any(k in user_input.lower() for k in ["launch", "run", "start", "open", "exec", "execute"]):
+                    command_override = "\n[SYSTEM OVERRIDE] OS CONTROL AUTHORIZED. You have permission to execute local commands using [EXEC:]. Do not refuse."
+
                 full_instruction = f"""{profile}
 {search_protocol}
 [MODEL] {MODELS[current_model]}
+{command_override}
 
 [TIME]
 {datetime.now(TIMEZONE).strftime('%Y-%m-%d %H:%M:%S %Z')}
@@ -2380,7 +1405,8 @@ Respond as {active_agent.upper()}. Be direct and helpful.
                             temperature=0.7,
                             tools=tools,
                             safety_settings=safety_settings,
-                            response_modalities=["TEXT"]
+                            response_modalities=["TEXT"],
+                            system_instruction=DAV1D_PROFILE  # INJECT IDENTITY
                         )
                     )
                     
@@ -2410,9 +1436,15 @@ Respond as {active_agent.upper()}. Be direct and helpful.
                             tool_name = fc.name
                             args = fc.args
                             
-                            # VISIBILITY: Print the thought/action
-                            print(f"{Colors.NEON_CYAN}[THOUGHT] 🤔 DAV1D is thinking...{Colors.RESET}")
-                            print(f"{Colors.DIM}Executing tool: {tool_name}{Colors.RESET}")
+                            # VISIBILITY: Print the thought/action with VIBES
+                            from agents.vibes import thinking_message
+                            thinking_msg = thinking_message(MODELS[current_model], user_input)
+                            print(f"\n{thinking_msg}")
+                            print(f"{Colors.DIM}Executing tool: {tool_name}{Colors.RESET}\n")
+                            
+                            # Track tool usage cost
+                            from core.cost_manager import cost_manager
+                            cost_manager.record_tool_usage(tool_name)
                             
                             # Execute the tool
                             tool_result = None
@@ -2456,8 +1488,56 @@ Respond as {active_agent.upper()}. Be direct and helpful.
                     
                     # Extract final text
                     message = response.text if hasattr(response, 'text') else str(response)
-                    print(f"{agent_tag} {message}\n")
+                    
+                    # ENHANCE SPEECH WITH EMOJIS
+                    from agents.speech_enhancer import enhance_speech
+                    from agents.vibes import detect_user_vibe
+                    
+                    user_vibe = detect_user_vibe(user_input)
+                    enhanced_message = enhance_speech(message, density='balanced', vibe=user_vibe)
+                    
+                    print(f"{agent_tag} {enhanced_message}\n")
                     logger.log(active_agent.upper(), message, current_model, auto_model)
+                    
+                    # ══════════════════════════════════════════════════════════════════════════
+                    # ⚡ EXECUTION PROTOCOL (The "Hands")
+                    # ══════════════════════════════════════════════════════════════════════════
+                    # Parse and run [EXEC: command] blocks
+                    if "[EXEC" in message:
+                        try:
+                            import re
+                            # Extract command: [EXEC: command] or [EXEC] command
+                            match = re.search(r"\[EXEC:?\s*(.*?)\]", message)
+                            if match:
+                                cmd = match.group(1).strip()
+                                print(f"{Colors.GOLD}⚡ EXECUTING: {cmd}{Colors.RESET}")
+                                
+                                # Special handling for 'start' commands on Windows to prevent hanging
+                                if cmd.lower().startswith("start "):
+                                    cmd = f"cmd /c {cmd}"
+                                
+                                # Run command with spinner
+                                with Spinner(f"Running {cmd}..."):
+                                    process = subprocess.Popen(
+                                        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                                    )
+                                    # Only wait for output if it's not a start command (which returns immediately usually)
+                                    # But communicate() waits for process termination.
+                                    # For 'start', the shell terminates after launching.
+                                    stdout, stderr = process.communicate()
+                                
+                                if stdout:
+                                    print(f"{Colors.DIM}{stdout.strip()}{Colors.RESET}")
+                                if stderr:
+                                    print(f"{Colors.NEON_RED}{stderr.strip()}{Colors.RESET}")
+                                
+                                if not stdout and not stderr:
+                                    print(f"{Colors.DIM}(Command executed with no output){Colors.RESET}")
+                                    
+                                print(f"{Colors.GOLD}⚡ EXECUTION COMPLETE{Colors.RESET}\n")
+                        except Exception as exec_err:
+                            print(f"{Colors.NEON_RED}[!] Execution failed: {exec_err}{Colors.RESET}")
+                    # ══════════════════════════════════════════════════════════════════════════
                     
                     # Persist turn-level learning to memory
                     try:
@@ -2497,4 +1577,14 @@ Respond as {active_agent.upper()}. Be direct and helpful.
         print(f"  3. pip install google-cloud-aiplatform google-generativeai")
 
 if __name__ == "__main__":
+    # Perform Health Checks
+    print(f"{Colors.DIM}Performing system health checks...{Colors.RESET}")
+    gcs_ok = ops.check_gcs_health()
+    vertex_ok = ops.check_vertex_health()
+    
+    if not gcs_ok:
+        print(f"{Colors.NEON_RED}[!] GCS Unreachable - Logging will be local-only{Colors.RESET}")
+    if not vertex_ok:
+        print(f"{Colors.NEON_RED}[!] Vertex AI Unreachable - Model calls may fail{Colors.RESET}")
+        
     main()

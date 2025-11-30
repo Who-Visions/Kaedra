@@ -57,9 +57,12 @@ images/
 
 # Memory & Analytics
 memory/
+!memory/*.py
+!memory/__init__.py
 analytics/
 profiles/
 resources/
+!resources/profiles/*.txt
 
 # OS
 .DS_Store
