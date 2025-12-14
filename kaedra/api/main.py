@@ -159,6 +159,36 @@ async def get_a2a_card_alias():
     """Alias for A2A Card."""
     return A2A_CARD
 
+@app.get("/.well-known/agent.json")
+async def get_agent_card_standard():
+    """
+    Standard Agent Identity Card for Who Visions Fleet.
+    Compliant with /.well-known/agent.json specification.
+    """
+    return {
+        "name": "Kaedra",
+        "version": "0.0.6",
+        "description": "Shadow Tactician. Strategic intelligence partner for Who Visions LLC. Speaks authentic AAVE, thinks tactically, orchestrates multi-agent operations.",
+        "capabilities": [
+            "strategic-planning",
+            "intelligence-synthesis",
+            "multi-agent-coordination",
+            "text-generation",
+            "code-analysis"
+        ],
+        "endpoints": {
+            "chat": "/v1/chat",
+            "health": "/"
+        },
+        "extensions": {
+            "color": "neon pink",
+            "role": "Orchestrator",
+            "personality": "AAVE, tactical, uncensored",
+            "deploy_region": LOCATION,
+            "reasoning_engine": "projects/69017097813/locations/us-central1/reasoningEngines/423129457763549184"
+        }
+    }
+
 # -------------------------------------------------------------------------
 # RUNNER
 # -------------------------------------------------------------------------
