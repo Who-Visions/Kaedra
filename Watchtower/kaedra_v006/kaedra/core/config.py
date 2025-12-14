@@ -53,7 +53,15 @@ DEFAULT_VEO_MODEL = "veo-3.1"
 # LOCAL DIRECTORIES
 # ══════════════════════════════════════════════════════════════════════════════
 
-KAEDRA_HOME = Path.home() / ".kaedra"
+# Detect if running in cloud/container environment
+IS_CLOUD_RUN = os.getenv("K_SERVICE") is not None
+IS_REASONING_ENGINE = os.getenv("AIP_MODE") is not None or os.path.exists("/tmp")
+
+if os.name == 'nt':  # Windows (Local)
+    KAEDRA_HOME = Path.home() / ".kaedra"
+else:  # Linux/Cloud
+    KAEDRA_HOME = Path("/tmp/.kaedra")
+
 CHAT_LOGS_DIR = KAEDRA_HOME / "chat_logs"
 MEMORY_DIR = KAEDRA_HOME / "memory"
 PROFILES_DIR = KAEDRA_HOME / "profiles"
@@ -61,8 +69,13 @@ CONFIG_DIR = KAEDRA_HOME / "config"
 VIDEO_DIR = KAEDRA_HOME / "videos"
 
 # Create directories on import
-for dir_path in [KAEDRA_HOME, CHAT_LOGS_DIR, MEMORY_DIR, PROFILES_DIR, CONFIG_DIR, VIDEO_DIR]:
-    dir_path.mkdir(parents=True, exist_ok=True)
+try:
+    for dir_path in [KAEDRA_HOME, CHAT_LOGS_DIR, MEMORY_DIR, PROFILES_DIR, CONFIG_DIR, VIDEO_DIR]:
+        dir_path.mkdir(parents=True, exist_ok=True)
+except Exception as e:
+    # If we fail to create dirs (e.g. read-only fs), just warn
+    print(f"[WARN] Failed to create directories: {e}")
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ANSI COLORS

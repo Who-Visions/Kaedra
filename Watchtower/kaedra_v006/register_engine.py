@@ -2,46 +2,51 @@
 import os
 import time
 from typing import Optional, Dict, List
-from kaedra.agents.kaedra import KaedraAgent
-from kaedra.services.prompt import PromptService
-from kaedra.services.memory import MemoryService
 from kaedra.core.config import PROJECT_ID, LOCATION
 import vertexai
 from vertexai.preview import reasoning_engines
 
-# Set up the environment
+# Set up the environment (Local)
 STAGING_BUCKET = "gs://gen-lang-client-0939852539-kaedra-staging"
 vertexai.init(project=PROJECT_ID, location=LOCATION, staging_bucket=STAGING_BUCKET)
 
 class KaedraEngine:
     """
     Kaedra Shadow Tactician - Reasoning Engine Wrapper
-# ... (rest of class is fine, skipping strictly for brevity in replacement if possible, but replace tool needs context)
-# Actually, I will just rewrite the init and the main block.
     
     This class wraps the Kaedra Agent for deployment to Vertex AI Reasoning Engine.
     It exposes the standard agent interface + A2A capabilities.
     """
     
-    def __init__(self):
-        """Initialize the engine with services."""
-        print(f"[*] Initializing Kaedra Engine for {PROJECT_ID} in {LOCATION}...")
-        self.project_id = PROJECT_ID
-        self.location = LOCATION
+    def __init__(self, project_id: str = PROJECT_ID, location: str = LOCATION):
+        """
+        Initialize the engine configuration ONLY.
+        NO heavy objects (clients, models) here to ensure pickling works.
+        """
+        self.project_id = project_id
+        self.location = location
+        self.agent = None
         
-        # Initialize Services
-        # Note: In Reasoning Engine, we might need to handle credentials/init carefully.
-        # But locally executed init usually works for the container env too if set up right.
-        # We explicitly re-init internal components with the right project
+    def set_up(self):
+        """
+        Initialize the heavy services.
+        This runs ON THE CLOUD instance (and lazily locally if needed).
+        """
+        print(f"[*] Setting up Kaedra Engine for {self.project_id} in {self.location}...")
+        
+        # Imports here to avoid top-level dependency issues during unpickling if environment varies
+        import vertexai
+        from kaedra.services.prompt import PromptService
+        from kaedra.services.memory import MemoryService
+        from kaedra.agents.kaedra import KaedraAgent
+        
+        # Re-init Vertex AI in the remote environment
         vertexai.init(project=self.project_id, location=self.location)
         
         self.prompt_service = PromptService(project=self.project_id, location=self.location)
         self.memory_service = MemoryService() 
         self.agent = KaedraAgent(self.prompt_service, self.memory_service)
-        
-    def set_up(self):
-        """Pre-load steps if necessary."""
-        pass
+        print("[+] Kaedra Agent initialized successfully.")
 
     def a2a_card(self) -> Dict:
         """Return the Agent-to-Agent (A2A) Card."""
@@ -71,19 +76,14 @@ class KaedraEngine:
     def chat(self, message: str, context: Optional[str] = None) -> Dict:
         """
         Chat with Kaedra (v1/chat equivalent).
-        
-        Args:
-            message: The user's message
-            context: Optional added context
-            
-        Returns:
-            Dict containing response and metadata
         """
+        # Ensure setup (for local testing mainly, RE calls set_up automaticall usually but good to be safe)
+        if hasattr(self, 'agent') and self.agent is None:
+            self.set_up()
+            
         # Synchronous execution for the engine wrapper
-        # The Reasoning Engine runtime handles async, but the methods are usually standard def
-        
-        # We need to run the async agent method synchronously
         import asyncio
+        import time
         
         print(f"[Query] {message[:50]}...")
         if context:
@@ -112,8 +112,10 @@ if __name__ == "__main__":
     print(f"[*] Staging Bucket: {STAGING_BUCKET}")
     
     # 1. Define the remote app
+    # We pass the class instance. It will be pickled.
+    # self.agent is None at this point, so it pickles fine.
     remote_app = reasoning_engines.ReasoningEngine.create(
-        KaedraEngine(),
+        KaedraEngine(project_id=PROJECT_ID, location=LOCATION),
         requirements=[
             "google-cloud-aiplatform>=1.50.0",
             "google-generativeai>=0.5.0",
