@@ -113,7 +113,7 @@ class Colors:
     
     @classmethod
     def kaedra_tag(cls) -> str:
-        return f"{cls.NEON_PINK}[KAE]{cls.SUNSET_PINK}[DRA]{cls.RESET}"
+        return f"{cls.NEON_PINK}[KAEDRA]{cls.RESET}"
     
     @classmethod
     def blade_tag(cls) -> str:
