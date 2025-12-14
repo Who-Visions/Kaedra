@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kaedra"
+version = "0.0.6"
+description = "KAEDRA - Shadow Tactician AI Assistant"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Who Visions LLC", email = "dev@whovisions.com"}
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "google-cloud-aiplatform>=1.50.0",
+    "google-generativeai>=0.5.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+tui = [
+    "textual>=0.40.0",
+    "rich>=13.0.0",
+]
+notion = [
+    "notion-client>=2.0.0",
+]
+
+[project.scripts]
+kaedra = "kaedra.interface.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/whovisions/kaedra"
+Documentation = "https://github.com/whovisions/kaedra#readme"
+Repository = "https://github.com/whovisions/kaedra"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["kaedra*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]
