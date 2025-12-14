@@ -10,11 +10,11 @@ from pathlib import Path
 # GCP CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
 
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "gen-lang-client-0285887798")
-LOCATION = os.getenv("KAEDRA_LOCATION", "us-east4")
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "gen-lang-client-0939852539")
+LOCATION = os.getenv("KAEDRA_LOCATION", "us-central1")
 AGENT_RESOURCE_NAME = os.getenv(
     "KAEDRA_AGENT_RESOURCE",
-    "projects/627440283840/locations/us-east4/reasoningEngines/4454869272027463680"
+    "projects/69017097813/locations/us-central1/reasoningEngines/4285529088187170816"
 )
 
 # ══════════════════════════════════════════════════════════════════════════════
