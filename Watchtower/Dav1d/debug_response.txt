@@ -1,1 +1,0 @@
-{'status': 'error', 'message': 'Error: 404 Publisher Model `projects/gen-lang-client-0285887798/locations/us-east4/publishers/google/models/gemini-1.5-pro-002` was not found or your project does not have access to it. Please ensure you are using a valid model version. For more information, see: https://cloud.google.com/vertex-ai/generative-ai/docs/learn/model-versions'}
