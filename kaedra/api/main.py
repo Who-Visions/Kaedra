@@ -2,6 +2,7 @@ import os
 import time
 from typing import Optional, Dict, Any, List
 from fastapi import FastAPI, HTTPException, Body
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -18,6 +19,17 @@ app = FastAPI(
     title="Kaedra API",
     description="Shadow Tactician Agent API",
     version="0.0.6"
+)
+
+# -------------------------------------------------------------------------
+# CORS MIDDLEWARE - Allow cross-origin requests
+# -------------------------------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins (adjust for production if needed)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
 )
 
 # -------------------------------------------------------------------------
