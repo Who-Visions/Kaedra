@@ -18,6 +18,15 @@ AGENT_RESOURCE_NAME = os.getenv(
 )
 
 # ══════════════════════════════════════════════════════════════════════════════
+# BIGQUERY VECTOR STORE
+# ══════════════════════════════════════════════════════════════════════════════
+
+BIGQUERY_DATASET = os.getenv("KAEDRA_BQ_DATASET", "kaedra_memory")
+BIGQUERY_TABLE = os.getenv("KAEDRA_BQ_TABLE", "embeddings")
+EMBEDDING_MODEL = "gemini-embedding-001"
+ENABLE_SEMANTIC_SEARCH = os.getenv("KAEDRA_SEMANTIC_SEARCH", "true").lower() == "true"
+
+# ══════════════════════════════════════════════════════════════════════════════
 # MODEL REGISTRY
 # ══════════════════════════════════════════════════════════════════════════════
 

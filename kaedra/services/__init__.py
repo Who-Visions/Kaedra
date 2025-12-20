@@ -1,4 +1,4 @@
-"""KAEDRA Services - Memory, Logging, Prompt handling, Web fetching, and Video generation."""
+"""KAEDRA Services - Memory, Logging, Prompt handling, Web fetching, Video generation, and Vector search."""
 
 from .memory import MemoryService, MemoryEntry
 from .logging import LoggingService, SessionInfo
@@ -13,6 +13,14 @@ except ImportError:
     VideoService = None
     VideoResult = None
 
+try:
+    from .vector_store import BigQueryVectorStore, get_vector_store
+    VECTOR_STORE_AVAILABLE = True
+except ImportError:
+    VECTOR_STORE_AVAILABLE = False
+    BigQueryVectorStore = None
+    get_vector_store = None
+
 __all__ = [
     'MemoryService', 'MemoryEntry',
     'LoggingService', 'SessionInfo',
@@ -22,3 +30,7 @@ __all__ = [
 
 if VIDEO_AVAILABLE:
     __all__.extend(['VideoService', 'VideoResult'])
+
+if VECTOR_STORE_AVAILABLE:
+    __all__.extend(['BigQueryVectorStore', 'get_vector_store'])
+
