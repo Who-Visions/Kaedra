@@ -4,7 +4,7 @@ Handles LLM interactions with Vertex AI / Gemini.
 """
 
 import time
-from typing import Optional, Generator, Dict, Any
+from typing import Optional, Generator, Dict, Any, List
 from dataclasses import dataclass
 
 import vertexai
