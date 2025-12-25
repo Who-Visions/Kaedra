@@ -38,7 +38,7 @@ STYLE:
 """
         
         # Generate response
-        model = GenerativeModel("gemini-2.0-flash-001", system_instruction=system)
+        model = GenerativeModel("gemini-3-flash-preview", system_instruction=system)
         
         start = time.time()
         response = model.generate_content(message)
@@ -47,7 +47,7 @@ STYLE:
         return {
             "response": response.text,
             "agent": "KAEDRA",
-            "model": "gemini-2.0-flash-001",
+            "model": "gemini-3-flash-preview",
             "latency_ms": round(latency, 2)
         }
 

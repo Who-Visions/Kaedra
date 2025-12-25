@@ -12,6 +12,7 @@ from pathlib import Path
 
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "gen-lang-client-0939852539")
 LOCATION = os.getenv("KAEDRA_LOCATION", "us-central1")
+MODEL_LOCATION = "global" # Gemini 3 Preview models require global endpoint
 AGENT_RESOURCE_NAME = os.getenv(
     "KAEDRA_AGENT_RESOURCE",
     "projects/69017097813/locations/us-central1/reasoningEngines/423129457763549184"
@@ -31,15 +32,15 @@ ENABLE_SEMANTIC_SEARCH = os.getenv("KAEDRA_SEMANTIC_SEARCH", "true").lower() == 
 # ══════════════════════════════════════════════════════════════════════════════
 
 MODELS = {
-    "flash": "gemini-2.5-flash",         # ~$0.008/query - FAST
-    "pro": "gemini-2.5-pro",             # ~$0.031/query - BALANCED
-    "ultra": "gemini-3-pro-preview",     # GLOBAL ONLY - Powerful reasoning
+    "flash": "gemini-3-flash-preview",         # Latest Flash V3 (Preview)
+    "pro": "gemini-3-pro-preview",             # Latest Pro V3 (Preview)
+    "ultra": "gemini-3-pro-preview",           # Using Pro V3 for Ultra slot
 }
 
 MODEL_COSTS = {
-    "flash": 0.008,
-    "pro": 0.031,
-    "ultra": 0.038,  # Global endpoint only
+    "flash": 0.008,  # Estimated based on V2.5
+    "pro": 0.031,    # Estimated based on V2.5
+    "ultra": 0.038,  # Estimated
 }
 
 DEFAULT_MODEL = "flash"

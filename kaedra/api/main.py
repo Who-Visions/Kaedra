@@ -9,11 +9,22 @@ from dotenv import load_dotenv
 # Import Kaedra core components
 from kaedra.services.prompt import PromptService
 from kaedra.services.memory import MemoryService
+from kaedra.services.research import ResearchService
+from kaedra.services.web import WebService
 from kaedra.agents.kaedra import KaedraAgent
-from kaedra.core.config import PROJECT_ID, LOCATION
+from kaedra.core.config import PROJECT_ID, LOCATION, AGENT_RESOURCE_NAME
+from kaedra.core.google_tools import GOOGLE_TOOLS
+from kaedra.core.tools import FreeToolsRegistry
 
 # Load environment variables
 load_dotenv()
+
+# Service Metadata
+SERVICE_NAME = "kaedra-shadow-tactician"
+SERVICE_ICON = "🌑"
+SERVICE_ROLE = "Shadow Tactician"
+SERVICE_DESCRIPTION = "Strategic intelligence partner for Who Visions LLC. Speaks authentic AAVE, thinks tactically, orchestrates multi-agent operations."
+CLOUD_RUN_URL = "https://kaedra-69017097813.us-central1.run.app"
 
 app = FastAPI(
     title="Kaedra API",
@@ -40,30 +51,40 @@ A2A_CARD = {
     "name": "Kaedra",
     "version": "0.0.6",
     "id": "kaedra-shadow-tactician",
-    "description": "Strategic intelligence partner and shadow tactician for Who Visions LLC.",
-    "role": "Orchestrator",
+    "description": SERVICE_DESCRIPTION,
+    "role": SERVICE_ROLE,
+    "icon": SERVICE_ICON,
     "capabilities": [
         "strategic_planning",
         "intelligence_synthesis",
         "shadow_operations",
-        "multi_agent_coordination"
+        "multi_agent_coordination",
+        "gemini-3-reasoning"
     ],
     "endpoints": {
-        "chat": "/v1/chat",
-        "info": "/v1/api"
+        "chat": "/v1/chat/completions",
+        "info": "/.well-known/agent.json"
     },
     "input_schema": {
         "type": "object",
         "properties": {
-            "message": {"type": "string"},
-            "context": {"type": "string", "nullable": True}
+            "messages": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "role": {"type": "string"},
+                        "content": {"type": "string"}
+                    }
+                }
+            }
         },
-        "required": ["message"]
+        "required": ["messages"]
     },
     "meta": {
         "framework": "FastAPI",
         "language": "Python",
-        "deploy_region": LOCATION
+        "deploy_url": CLOUD_RUN_URL
     }
 }
 
@@ -73,6 +94,8 @@ A2A_CARD = {
 
 class AppState:
     agent: Optional[KaedraAgent] = None
+    research_service: Optional[ResearchService] = None
+    web_service: Optional[WebService] = None
 
 state = AppState()
 
@@ -84,6 +107,10 @@ async def startup_event():
         # Initialize services
         prompt_service = PromptService(project=PROJECT_ID, location=LOCATION)
         memory_service = MemoryService() # Assumes default init is fine
+        
+        # Initialize Services
+        state.web_service = WebService()
+        state.research_service = ResearchService(prompt_service)
         
         # Initialize Agent
         state.agent = KaedraAgent(prompt_service, memory_service)
@@ -107,9 +134,66 @@ class ChatResponse(BaseModel):
     latency_ms: float
     timestamp: float
 
+# OpenAI-Compatible Models
+class OpenAIMessage(BaseModel):
+    role: str
+    content: str
+
+class OpenAIChatCompletionRequest(BaseModel):
+    model: Optional[str] = "gemini-3-flash-preview"
+    messages: List[OpenAIMessage]
+    temperature: Optional[float] = 0.7
+    stream: Optional[bool] = False
+
+class OpenAIChoice(BaseModel):
+    index: int
+    message: OpenAIMessage
+    finish_reason: str
+
+class OpenAIChatCompletionResponse(BaseModel):
+    id: str
+    object: str = "chat.completion"
+    created: int
+    model: str
+    choices: List[OpenAIChoice]
+    usage: Dict[str, int]
+
+# Fleet Request Models
+class GenerateRequest(BaseModel):
+    prompt: str
+    model: Optional[str] = "gemini-3-flash-preview"
+
+class SearchRequest(BaseModel):
+    query: str
+    num_results: int = 5
+
+class AnalyzeUrlRequest(BaseModel):
+    url: str
+
+class ExecuteCodeRequest(BaseModel):
+    code: str
+    language: str = "python"
+
+class ResearchRequest(BaseModel):
+    query: str
+
+class EmbeddingRequest(BaseModel):
+    text: str
+    model: str = "text-embedding-004"
+
 # -------------------------------------------------------------------------
 # ENDPOINTS
 # -------------------------------------------------------------------------
+
+@app.get("/health")
+async def health_check():
+    """Fleet standard health check."""
+    return {
+        "status": "ok",
+        "service": "kaedra-shadow-tactician",
+        "version": "0.0.6",
+        "grounding_enabled": True
+    }
 
 @app.get("/")
 async def root():
@@ -139,7 +223,7 @@ async def v1_api_info():
 @app.post("/v1/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     """
-    Chat with Kaedra.
+    Chat with Kaedra (Legacy Endpoint).
     """
     if not state.agent:
         raise HTTPException(status_code=503, detail="Agent not initialized")
@@ -161,6 +245,147 @@ async def chat_endpoint(request: ChatRequest):
         print(f"[!] Chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/v1/chat/completions", response_model=OpenAIChatCompletionResponse)
+async def openai_chat_endpoint(request: OpenAIChatCompletionRequest):
+    """
+    OpenAI-compatible chat endpoint for Fleet usage.
+    """
+    if not state.agent:
+        raise HTTPException(status_code=503, detail="Agent not initialized")
+    
+    try:
+        # Extract last message as the prompt
+        last_message = request.messages[-1].content
+        
+        # Build context from previous messages if any
+        context_str = ""
+        if len(request.messages) > 1:
+            context_str = "\n".join([f"{m.role}: {m.content}" for m in request.messages[:-1]])
+
+        # Run agent
+        result = await state.agent.run(last_message, context_str)
+        
+        return OpenAIChatCompletionResponse(
+            id=f"chatcmpl-{int(time.time())}",
+            created=int(time.time()),
+            model=result.model,
+            choices=[
+                OpenAIChoice(
+                    index=0,
+                    message=OpenAIMessage(role="assistant", content=result.content),
+                    finish_reason="stop"
+                )
+            ],
+            usage={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        )
+    except Exception as e:
+        print(f"[!] OpenAI chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/chat", response_model=OpenAIChatCompletionResponse)
+async def fleet_chat_endpoint(request: OpenAIChatCompletionRequest):
+    """
+    Standard Fleet Chat Endpoint (alias for /v1/chat/completions).
+    """
+    return await openai_chat_endpoint(request)
+
+@app.post("/generate")
+async def fleet_generate(request: GenerateRequest):
+    """
+    Fleet Generate Endpoint: Direct text generation.
+    """
+    if not state.agent:
+        raise HTTPException(status_code=503, detail="Agent not initialized")
+    
+    result = await state.agent.prompt_service.generate_async(
+        prompt=request.prompt,
+        model_key="flash" # Default to Flash for speed
+    )
+    return {"text": result.text, "model": result.model}
+
+@app.post("/search")
+async def fleet_search(request: SearchRequest):
+    """
+    Fleet Search Endpoint: Grounded Google Search.
+    """
+    return GOOGLE_TOOLS["google_search"](request.query, request.num_results)
+
+@app.post("/analyze-url")
+async def fleet_analyze_url(request: AnalyzeUrlRequest):
+    """
+    Fleet Analyze URL Endpoint: Scrape and Metadata.
+    """
+    if not state.web_service:
+        state.web_service = WebService()
+    
+    metadata = state.web_service.extract_metadata(request.url)
+    return metadata
+
+@app.post("/execute-code")
+async def fleet_execute_code(request: ExecuteCodeRequest):
+    """
+    Fleet Execute Code Endpoint (Simulation/Prompt-based for now).
+    """
+    if not state.agent:
+        raise HTTPException(status_code=503, detail="Agent not initialized")
+
+    # TODO: Connect to Vertex AI Code Execution Tool if available
+    prompt = f"Executing {request.language} code:\n```\n{request.code}\n```\n\nSimulate the output of this code:"
+    result = await state.agent.prompt_service.generate_async(prompt)
+    return {"output": result.text, "status": "simulated"}
+
+@app.post("/research")
+async def start_research(request: ResearchRequest):
+    """
+    Deep Research Endpoint: Starts a research task.
+    """
+    if not state.research_service:
+        raise HTTPException(status_code=503, detail="Research Service not initialized")
+    
+    task_id = state.research_service.create_task(request.query)
+    return {"task_id": task_id, "status": "pending", "message": "Research task started"}
+
+@app.get("/research/{task_id}")
+async def get_research_status(task_id: str):
+    """
+    Get Research Status.
+    """
+    if not state.research_service:
+        raise HTTPException(status_code=503, detail="Research Service not initialized")
+    
+    task = state.research_service.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
+@app.post("/v1/embeddings")
+async def create_embeddings(request: EmbeddingRequest):
+    """
+    Create Embeddings Endpoint.
+    """
+    if not state.agent:
+        raise HTTPException(status_code=503, detail="Agent not initialized")
+    
+    vector = state.agent.prompt_service.embed(request.text, request.model)
+    return {
+        "object": "list",
+        "data": [{"object": "embedding", "embedding": vector, "index": 0}],
+        "model": request.model
+    }
+
+@app.get("/health/detailed")
+async def health_detailed():
+    """
+    Detailed System Health Check.
+    """
+    sys_info = FreeToolsRegistry.get_system_info()
+    return {
+        "status": "ok",
+        "service": SERVICE_NAME,
+        "system": sys_info,
+        "timestamp": time.time()
+    }
+
 @app.get("/a2a")
 async def get_a2a_card():
     """Return the Agent-to-Agent (A2A) Card."""
@@ -179,25 +404,29 @@ async def get_agent_card_standard():
     """
     return {
         "name": "Kaedra",
+        "description": SERVICE_DESCRIPTION,
+        "icon": SERVICE_ICON,
+        "role": SERVICE_ROLE,
         "version": "0.0.6",
-        "description": "Shadow Tactician. Strategic intelligence partner for Who Visions LLC. Speaks authentic AAVE, thinks tactically, orchestrates multi-agent operations.",
         "capabilities": [
             "strategic-planning",
             "intelligence-synthesis",
             "multi-agent-coordination",
-            "text-generation",
-            "code-analysis"
+            "gemini-3-reasoning",
+            "deep-research",
+            "embeddings",
+            "code-execution"
         ],
         "endpoints": {
-            "chat": "/v1/chat",
-            "health": "/"
+            "chat": f"{CLOUD_RUN_URL}/v1/chat/completions",
+            "health": f"{CLOUD_RUN_URL}/health",
+            "card": f"{CLOUD_RUN_URL}/.well-known/agent.json"
         },
         "extensions": {
             "color": "neon pink",
-            "role": "Orchestrator",
             "personality": "AAVE, tactical, uncensored",
             "deploy_region": LOCATION,
-            "reasoning_engine": "projects/69017097813/locations/us-central1/reasoningEngines/423129457763549184"
+            "reasoning_engine": AGENT_RESOURCE_NAME
         }
     }
 

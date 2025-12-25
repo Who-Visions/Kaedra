@@ -4,13 +4,15 @@ Handles LLM interactions with Vertex AI / Gemini.
 """
 
 import time
-from typing import Optional, Generator, Dict, Any
+from typing import Optional, Generator, Dict, Any, List
 from dataclasses import dataclass
 
 import vertexai
+import vertexai
 from vertexai.generative_models import GenerativeModel, Tool
+from vertexai.language_models import TextEmbeddingModel
 
-from ..core.config import MODELS, PROJECT_ID, LOCATION, DEFAULT_MODEL
+from ..core.config import MODELS, PROJECT_ID, LOCATION, MODEL_LOCATION, DEFAULT_MODEL
 
 
 @dataclass
@@ -54,8 +56,10 @@ class PromptService:
         self.enable_grounding = enable_grounding
         self._current_model_key = model_key
         
+        self.model_location = MODEL_LOCATION
+        
         # Initialize Vertex AI
-        vertexai.init(project=project, location=location)
+        vertexai.init(project=project, location=self.model_location)
         
         # Model cache
         self._models: Dict[str, GenerativeModel] = {}
@@ -204,3 +208,24 @@ class PromptService:
         """
         # TODO: Use true async when Vertex AI SDK supports it
         return self.generate(prompt, model_key, system_instruction)
+
+    def embed(self, text: str, model: str = "text-embedding-004") -> List[float]:
+        """
+        Generate embeddings for a given text.
+        
+        Args:
+            text: The text to embed
+            model: Embedding model name
+            
+        Returns:
+            List of floats representing the embedding vector
+        """
+        try:
+            embedding_model = TextEmbeddingModel.from_pretrained(model)
+            embeddings = embedding_model.get_embeddings([text])
+            if embeddings:
+                return embeddings[0].values
+            return []
+        except Exception as e:
+            print(f"[!] Embedding error: {e}")
+            return []
