@@ -1,6 +1,6 @@
 import os
 import time
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -137,7 +137,7 @@ class ChatResponse(BaseModel):
 # OpenAI-Compatible Models
 class OpenAIMessage(BaseModel):
     role: str
-    content: str
+    content: Union[str, List[Any]]
 
 class OpenAIChatCompletionRequest(BaseModel):
     model: Optional[str] = "gemini-3-flash-preview"
@@ -245,6 +245,19 @@ async def chat_endpoint(request: ChatRequest):
         print(f"[!] Chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+def _extract_text(content: Union[str, List[Any]]) -> str:
+    """Helper to extract text from OpenAI content (str or list)."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        # Extract all text parts
+        text_parts = [
+            part["text"] for part in content 
+            if isinstance(part, dict) and part.get("type") == "text" and "text" in part
+        ]
+        return "\n".join(text_parts)
+    return str(content)
+
 @app.post("/v1/chat/completions", response_model=OpenAIChatCompletionResponse)
 async def openai_chat_endpoint(request: OpenAIChatCompletionRequest):
     """
@@ -255,12 +268,17 @@ async def openai_chat_endpoint(request: OpenAIChatCompletionRequest):
     
     try:
         # Extract last message as the prompt
-        last_message = request.messages[-1].content
+        last_content = request.messages[-1].content
+        last_message = _extract_text(last_content)
         
         # Build context from previous messages if any
         context_str = ""
         if len(request.messages) > 1:
-            context_str = "\n".join([f"{m.role}: {m.content}" for m in request.messages[:-1]])
+            context_entries = []
+            for m in request.messages[:-1]:
+                m_text = _extract_text(m.content)
+                context_entries.append(f"{m.role}: {m_text}")
+            context_str = "\n".join(context_entries)
 
         # Run agent
         result = await state.agent.run(last_message, context_str)
