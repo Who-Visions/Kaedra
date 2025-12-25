@@ -10,10 +10,17 @@ from dotenv import load_dotenv
 from kaedra.services.prompt import PromptService
 from kaedra.services.memory import MemoryService
 from kaedra.agents.kaedra import KaedraAgent
-from kaedra.core.config import PROJECT_ID, LOCATION
+from kaedra.core.config import PROJECT_ID, LOCATION, AGENT_RESOURCE_NAME
 
 # Load environment variables
 load_dotenv()
+
+# Service Metadata
+SERVICE_NAME = "kaedra-shadow-tactician"
+SERVICE_ICON = "🌑"
+SERVICE_ROLE = "Shadow Tactician"
+SERVICE_DESCRIPTION = "Strategic intelligence partner for Who Visions LLC. Speaks authentic AAVE, thinks tactically, orchestrates multi-agent operations."
+CLOUD_RUN_URL = "https://kaedra-69017097813.us-central1.run.app"
 
 app = FastAPI(
     title="Kaedra API",
@@ -40,30 +47,40 @@ A2A_CARD = {
     "name": "Kaedra",
     "version": "0.0.6",
     "id": "kaedra-shadow-tactician",
-    "description": "Strategic intelligence partner and shadow tactician for Who Visions LLC.",
-    "role": "Orchestrator",
+    "description": SERVICE_DESCRIPTION,
+    "role": SERVICE_ROLE,
+    "icon": SERVICE_ICON,
     "capabilities": [
         "strategic_planning",
         "intelligence_synthesis",
         "shadow_operations",
-        "multi_agent_coordination"
+        "multi_agent_coordination",
+        "gemini-3-reasoning"
     ],
     "endpoints": {
-        "chat": "/v1/chat",
-        "info": "/v1/api"
+        "chat": "/v1/chat/completions",
+        "info": "/.well-known/agent.json"
     },
     "input_schema": {
         "type": "object",
         "properties": {
-            "message": {"type": "string"},
-            "context": {"type": "string", "nullable": True}
+            "messages": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "role": {"type": "string"},
+                        "content": {"type": "string"}
+                    }
+                }
+            }
         },
-        "required": ["message"]
+        "required": ["messages"]
     },
     "meta": {
         "framework": "FastAPI",
         "language": "Python",
-        "deploy_region": LOCATION
+        "deploy_url": CLOUD_RUN_URL
     }
 }
 
@@ -107,9 +124,43 @@ class ChatResponse(BaseModel):
     latency_ms: float
     timestamp: float
 
+# OpenAI-Compatible Models
+class OpenAIMessage(BaseModel):
+    role: str
+    content: str
+
+class OpenAIChatCompletionRequest(BaseModel):
+    model: Optional[str] = "gemini-3-flash-preview"
+    messages: List[OpenAIMessage]
+    temperature: Optional[float] = 0.7
+    stream: Optional[bool] = False
+
+class OpenAIChoice(BaseModel):
+    index: int
+    message: OpenAIMessage
+    finish_reason: str
+
+class OpenAIChatCompletionResponse(BaseModel):
+    id: str
+    object: str = "chat.completion"
+    created: int
+    model: str
+    choices: List[OpenAIChoice]
+    usage: Dict[str, int]
+
 # -------------------------------------------------------------------------
 # ENDPOINTS
 # -------------------------------------------------------------------------
+
+@app.get("/health")
+async def health_check():
+    """Fleet standard health check."""
+    return {
+        "status": "ok",
+        "service": "kaedra-shadow-tactician",
+        "version": "0.0.6",
+        "grounding_enabled": True
+    }
 
 @app.get("/")
 async def root():
@@ -139,7 +190,7 @@ async def v1_api_info():
 @app.post("/v1/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     """
-    Chat with Kaedra.
+    Chat with Kaedra (Legacy Endpoint).
     """
     if not state.agent:
         raise HTTPException(status_code=503, detail="Agent not initialized")
@@ -161,6 +212,43 @@ async def chat_endpoint(request: ChatRequest):
         print(f"[!] Chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/v1/chat/completions", response_model=OpenAIChatCompletionResponse)
+async def openai_chat_endpoint(request: OpenAIChatCompletionRequest):
+    """
+    OpenAI-compatible chat endpoint for Fleet usage.
+    """
+    if not state.agent:
+        raise HTTPException(status_code=503, detail="Agent not initialized")
+    
+    try:
+        # Extract last message as the prompt
+        last_message = request.messages[-1].content
+        
+        # Build context from previous messages if any
+        context_str = ""
+        if len(request.messages) > 1:
+            context_str = "\n".join([f"{m.role}: {m.content}" for m in request.messages[:-1]])
+
+        # Run agent
+        result = await state.agent.run(last_message, context_str)
+        
+        return OpenAIChatCompletionResponse(
+            id=f"chatcmpl-{int(time.time())}",
+            created=int(time.time()),
+            model=result.model,
+            choices=[
+                OpenAIChoice(
+                    index=0,
+                    message=OpenAIMessage(role="assistant", content=result.content),
+                    finish_reason="stop"
+                )
+            ],
+            usage={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        )
+    except Exception as e:
+        print(f"[!] OpenAI chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/a2a")
 async def get_a2a_card():
     """Return the Agent-to-Agent (A2A) Card."""
@@ -179,25 +267,26 @@ async def get_agent_card_standard():
     """
     return {
         "name": "Kaedra",
+        "description": SERVICE_DESCRIPTION,
+        "icon": SERVICE_ICON,
+        "role": SERVICE_ROLE,
         "version": "0.0.6",
-        "description": "Shadow Tactician. Strategic intelligence partner for Who Visions LLC. Speaks authentic AAVE, thinks tactically, orchestrates multi-agent operations.",
         "capabilities": [
             "strategic-planning",
             "intelligence-synthesis",
             "multi-agent-coordination",
-            "text-generation",
-            "code-analysis"
+            "gemini-3-reasoning"
         ],
         "endpoints": {
-            "chat": "/v1/chat",
-            "health": "/"
+            "chat": f"{CLOUD_RUN_URL}/v1/chat/completions",
+            "health": f"{CLOUD_RUN_URL}/health",
+            "card": f"{CLOUD_RUN_URL}/.well-known/agent.json"
         },
         "extensions": {
             "color": "neon pink",
-            "role": "Orchestrator",
             "personality": "AAVE, tactical, uncensored",
             "deploy_region": LOCATION,
-            "reasoning_engine": "projects/69017097813/locations/us-central1/reasoningEngines/423129457763549184"
+            "reasoning_engine": AGENT_RESOURCE_NAME
         }
     }
 

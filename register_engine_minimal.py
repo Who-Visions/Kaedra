@@ -34,7 +34,7 @@ class KaedraEngine:
         vertexai.init(project=self.project_id, location=self.location)
         
         # Use a simple model directly instead of the full agent stack
-        self.model = GenerativeModel("gemini-2.0-flash-exp")
+        self.model = GenerativeModel("gemini-3-flash-preview")
         
         # System instruction
         self.system_instruction = """You are KAEDRA, a shadow tactician and strategic intelligence partner for Who Visions LLC.
@@ -102,7 +102,7 @@ Current Timezone: EST (Eastern Standard Time)
         return {
             "response": response.text,
             "agent_name": "KAEDRA",
-            "model": "gemini-2.0-flash-exp",
+            "model": "gemini-3-flash-preview",
             "latency_ms": latency,
             "timestamp": time.time()
         }

@@ -73,7 +73,7 @@ class VideoService:
     
     def generate_image(self, prompt: str) -> Any:
         """
-        Generate an image using Nano Banana (gemini-2.5-flash-image).
+        Generate an image using Gemini 3 Pro Image Preview.
         
         Args:
             prompt: Text description of the image
@@ -83,7 +83,7 @@ class VideoService:
         """
         try:
             result = self.client.models.generate_content(
-                model="gemini-2.5-flash-image",
+                model="gemini-3-pro-image-preview",
                 contents=prompt,
                 config={"response_modalities": ['IMAGE']}
             )

@@ -26,7 +26,7 @@ def kaedra_query(message: str) -> str:
 Speak with authentic AAVE. Be sharp, competent, real. Never stiff or robotic."""
     
     # Generate
-    model = GenerativeModel("gemini-2.0-flash-exp", system_instruction=system)
+    model = GenerativeModel("gemini-3-flash-preview", system_instruction=system)
     response = model.generate_content(message)
     
     return response.text
@@ -48,7 +48,7 @@ def kaedra_chat(message: str, context: Optional[str] = None) -> Dict:
     return {
         "response": response_text,
         "agent_name": "KAEDRA",
-        "model": "gemini-2.0-flash-exp",
+        "model": "gemini-3-flash-preview",
         "latency_ms": latency,
         "timestamp": time.time()
     }

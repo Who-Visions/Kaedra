@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import vertexai
 from vertexai.generative_models import GenerativeModel, Tool
 
-from ..core.config import MODELS, PROJECT_ID, LOCATION, DEFAULT_MODEL
+from ..core.config import MODELS, PROJECT_ID, LOCATION, MODEL_LOCATION, DEFAULT_MODEL
 
 
 @dataclass
@@ -54,8 +54,10 @@ class PromptService:
         self.enable_grounding = enable_grounding
         self._current_model_key = model_key
         
+        self.model_location = MODEL_LOCATION
+        
         # Initialize Vertex AI
-        vertexai.init(project=project, location=location)
+        vertexai.init(project=project, location=self.model_location)
         
         # Model cache
         self._models: Dict[str, GenerativeModel] = {}
