@@ -9,8 +9,12 @@ from dotenv import load_dotenv
 # Import Kaedra core components
 from kaedra.services.prompt import PromptService
 from kaedra.services.memory import MemoryService
+from kaedra.services.research import ResearchService
+from kaedra.services.web import WebService
 from kaedra.agents.kaedra import KaedraAgent
 from kaedra.core.config import PROJECT_ID, LOCATION, AGENT_RESOURCE_NAME
+from kaedra.core.google_tools import GOOGLE_TOOLS
+from kaedra.core.tools import FreeToolsRegistry
 
 # Load environment variables
 load_dotenv()
@@ -90,6 +94,8 @@ A2A_CARD = {
 
 class AppState:
     agent: Optional[KaedraAgent] = None
+    research_service: Optional[ResearchService] = None
+    web_service: Optional[WebService] = None
 
 state = AppState()
 
@@ -101,6 +107,10 @@ async def startup_event():
         # Initialize services
         prompt_service = PromptService(project=PROJECT_ID, location=LOCATION)
         memory_service = MemoryService() # Assumes default init is fine
+        
+        # Initialize Services
+        state.web_service = WebService()
+        state.research_service = ResearchService(prompt_service)
         
         # Initialize Agent
         state.agent = KaedraAgent(prompt_service, memory_service)
@@ -147,6 +157,29 @@ class OpenAIChatCompletionResponse(BaseModel):
     model: str
     choices: List[OpenAIChoice]
     usage: Dict[str, int]
+
+# Fleet Request Models
+class GenerateRequest(BaseModel):
+    prompt: str
+    model: Optional[str] = "gemini-3-flash-preview"
+
+class SearchRequest(BaseModel):
+    query: str
+    num_results: int = 5
+
+class AnalyzeUrlRequest(BaseModel):
+    url: str
+
+class ExecuteCodeRequest(BaseModel):
+    code: str
+    language: str = "python"
+
+class ResearchRequest(BaseModel):
+    query: str
+
+class EmbeddingRequest(BaseModel):
+    text: str
+    model: str = "text-embedding-004"
 
 # -------------------------------------------------------------------------
 # ENDPOINTS
@@ -249,6 +282,110 @@ async def openai_chat_endpoint(request: OpenAIChatCompletionRequest):
         print(f"[!] OpenAI chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/chat", response_model=OpenAIChatCompletionResponse)
+async def fleet_chat_endpoint(request: OpenAIChatCompletionRequest):
+    """
+    Standard Fleet Chat Endpoint (alias for /v1/chat/completions).
+    """
+    return await openai_chat_endpoint(request)
+
+@app.post("/generate")
+async def fleet_generate(request: GenerateRequest):
+    """
+    Fleet Generate Endpoint: Direct text generation.
+    """
+    if not state.agent:
+        raise HTTPException(status_code=503, detail="Agent not initialized")
+    
+    result = await state.agent.prompt_service.generate_async(
+        prompt=request.prompt,
+        model_key="flash" # Default to Flash for speed
+    )
+    return {"text": result.text, "model": result.model}
+
+@app.post("/search")
+async def fleet_search(request: SearchRequest):
+    """
+    Fleet Search Endpoint: Grounded Google Search.
+    """
+    return GOOGLE_TOOLS["google_search"](request.query, request.num_results)
+
+@app.post("/analyze-url")
+async def fleet_analyze_url(request: AnalyzeUrlRequest):
+    """
+    Fleet Analyze URL Endpoint: Scrape and Metadata.
+    """
+    if not state.web_service:
+        state.web_service = WebService()
+    
+    metadata = state.web_service.extract_metadata(request.url)
+    return metadata
+
+@app.post("/execute-code")
+async def fleet_execute_code(request: ExecuteCodeRequest):
+    """
+    Fleet Execute Code Endpoint (Simulation/Prompt-based for now).
+    """
+    if not state.agent:
+        raise HTTPException(status_code=503, detail="Agent not initialized")
+
+    # TODO: Connect to Vertex AI Code Execution Tool if available
+    prompt = f"Executing {request.language} code:\n```\n{request.code}\n```\n\nSimulate the output of this code:"
+    result = await state.agent.prompt_service.generate_async(prompt)
+    return {"output": result.text, "status": "simulated"}
+
+@app.post("/research")
+async def start_research(request: ResearchRequest):
+    """
+    Deep Research Endpoint: Starts a research task.
+    """
+    if not state.research_service:
+        raise HTTPException(status_code=503, detail="Research Service not initialized")
+    
+    task_id = state.research_service.create_task(request.query)
+    return {"task_id": task_id, "status": "pending", "message": "Research task started"}
+
+@app.get("/research/{task_id}")
+async def get_research_status(task_id: str):
+    """
+    Get Research Status.
+    """
+    if not state.research_service:
+        raise HTTPException(status_code=503, detail="Research Service not initialized")
+    
+    task = state.research_service.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
+@app.post("/v1/embeddings")
+async def create_embeddings(request: EmbeddingRequest):
+    """
+    Create Embeddings Endpoint.
+    """
+    if not state.agent:
+        raise HTTPException(status_code=503, detail="Agent not initialized")
+    
+    vector = state.agent.prompt_service.embed(request.text, request.model)
+    return {
+        "object": "list",
+        "data": [{"object": "embedding", "embedding": vector, "index": 0}],
+        "model": request.model
+    }
+
+@app.get("/health/detailed")
+async def health_detailed():
+    """
+    Detailed System Health Check.
+    """
+    sys_info = FreeToolsRegistry.get_system_info()
+    return {
+        "status": "ok",
+        "service": SERVICE_NAME,
+        "system": sys_info,
+        "timestamp": time.time()
+    }
+
 @app.get("/a2a")
 async def get_a2a_card():
     """Return the Agent-to-Agent (A2A) Card."""
@@ -275,7 +412,10 @@ async def get_agent_card_standard():
             "strategic-planning",
             "intelligence-synthesis",
             "multi-agent-coordination",
-            "gemini-3-reasoning"
+            "gemini-3-reasoning",
+            "deep-research",
+            "embeddings",
+            "code-execution"
         ],
         "endpoints": {
             "chat": f"{CLOUD_RUN_URL}/v1/chat/completions",
