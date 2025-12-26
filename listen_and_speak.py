@@ -222,7 +222,7 @@ class AudioConfig:
     wake_threshold: int = 500
     silence_threshold: int = 400
     silence_duration: float = 0.6
-    max_record_seconds: float = 30.0
+    max_record_seconds: float = 360.0  # Support up to 6 minutes (Wispr level)
     post_speech_cooldown: float = 3.0  # Ignore mic for N seconds after TTS
     feedback_rms_threshold: int = 3000  # RMS above this right after TTS = feedback
 
@@ -768,7 +768,7 @@ class KaedraVoiceEngine:
         self.dashboard.set_mic(f"{audio_seconds:.1f}s")
         self.live.update(self.dashboard.generate_view())
 
-        if audio_seconds > 30:
+        if audio_seconds > self.audio_config.max_record_seconds:
             self.dashboard.update_history("System", f"Recording too long ({audio_seconds:.1f}s)", "yellow")
             return
 
