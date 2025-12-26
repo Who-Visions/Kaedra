@@ -5,6 +5,11 @@ Centralized configuration for all modules.
 
 import os
 from pathlib import Path
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # ══════════════════════════════════════════════════════════════════════════════
 # GCP CONFIGURATION
@@ -34,6 +39,7 @@ MODELS = {
     "ultra": "gemini-3-pro-preview",           # Using Pro V3 for Ultra slot
     "tts-pro": "gemini-2.5-pro-preview-tts",   # Native TTS (Pro)
     "tts-flash": "gemini-2.5-flash-preview-tts", # Native TTS (Flash)
+    "tts-flash-lite": "gemini-2.5-flash-lite-preview-tts", # Fastest TTS
     "tts": "gemini-2.5-pro-preview-tts",       # Default to Pro
 }
 

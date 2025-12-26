@@ -107,3 +107,5 @@ Thumbs.db
 *.tmp
 *.temp
 *.bak
+*_backup.py
+sessions/
