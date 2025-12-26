@@ -15,7 +15,7 @@ except ImportError:
 # GCP CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
 
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "gen-lang-client-0939852539")
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "69017097813")
 LOCATION = os.getenv("KAEDRA_LOCATION", "us-central1")
 MODEL_LOCATION = "global" # Gemini 3 Preview models require global endpoint
 AGENT_RESOURCE_NAME = os.getenv(
@@ -37,10 +37,14 @@ MODELS = {
     "flash": "gemini-3-flash-preview",         # Latest Flash V3 (Preview)
     "pro": "gemini-3-pro-preview",             # Latest Pro V3 (Preview)
     "ultra": "gemini-3-pro-preview",           # Using Pro V3 for Ultra slot
-    "tts-pro": "gemini-2.5-pro-preview-tts",   # Native TTS (Pro)
-    "tts-flash": "gemini-2.5-flash-preview-tts", # Native TTS (Flash)
-    "tts-flash-lite": "gemini-2.5-flash-lite-preview-tts", # Fastest TTS
-    "tts": "gemini-2.5-pro-preview-tts",       # Default to Pro
+    "tts-flash": "en-US-Journey-F",            # Journey (Expressive, Fast) - Replaces Gemini Flash TTS
+    "tts-flash-lite": "en-US-Neural2-C",       # Neural2 (Ultra Fast) - Replaces Gemini Flash Lite
+    "tts-pro": "en-US-Studio-O",               # Studio (High Res)
+    "tts": "en-US-Journey-F",                  # Default
+    "chirp-kore": "en-US-Chirp3-HD-Kore",      # Chirp 3 HD (US, Female)
+    "chirp-puck": "en-US-Chirp3-HD-Puck",      # Chirp 3 HD (US, Male)
+    "chirp-charon": "en-US-Chirp3-HD-Charon",  # Chirp 3 HD (US, Male)
+    "chirp-fenrir": "en-US-Chirp3-HD-Fenrir",  # Chirp 3 HD (US, Male)
 }
 
 MODEL_COSTS = {
