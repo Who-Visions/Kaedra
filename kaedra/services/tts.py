@@ -15,139 +15,261 @@ from pathlib import Path
 
 from ..core.config import MODELS, PROJECT_ID, LOCATION
 
-import io
+import sounddevice as sd
+import numpy as np
+
+try:
+    from google.cloud import texttospeech
+except ImportError:
+    texttospeech = None
+    print("[!] Warning: google-cloud-texttospeech not installed.")
 
 class StreamWorker:
-    """Background worker to play audio snippets sequentially."""
-    def __init__(self):
+    """Background worker to play audio stream."""
+    def __init__(self, sample_rate=24000):
         self.q = queue.Queue()
         self.playing = False
+        self.sample_rate = sample_rate
+        # For MULAW we need an 8kHz stream, or we decode to PWM.
+        # Let's dynamically create the stream based on input if possible, 
+        # but for now let's stick to a fixed output and decode to it.
+        self.output_rate = 24000
+        self.stream = sd.OutputStream(
+            samplerate=self.output_rate,
+            channels=1,
+            dtype='int16'
+        )
+        self.stream.start()
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
     
     def _run(self):
+        import audioop
         while True:
             item = self.q.get()
-            if item is None: break # Poison pill
+            if item is None: break 
             
-            wav_data = item
+            data_bytes, audio_format = item
             self.playing = True
             try:
-                if winsound:
-                    # SND_MEMORY plays from RAM. 
-                    # Without SND_ASYNC, it blocks this thread until done. Perfect.
-                    winsound.PlaySound(wav_data, winsound.SND_MEMORY)
+                if audio_format == "mulaw":
+                    pcm_data = audioop.ulaw2lin(data_bytes, 2) # Decode 8-bit MULAW to 16-bit PCM
+                    # Upsample from 8kHz to 24kHz
+                    pcm_24k, _ = audioop.ratecv(pcm_data, 2, 1, 8000, 24000, None)
+                    final_data = np.frombuffer(pcm_24k, dtype=np.int16)
                 else:
-                    # Linux fallback (print duration)
-                    time.sleep(1) 
+                    # Assume LINEAR16 24kHz (Gemini/Cloud Oneshots)
+                    final_data = np.frombuffer(data_bytes, dtype=np.int16)
+                
+                self.stream.write(final_data)
             except Exception as e:
                 print(f"[!] Playback Error: {e}")
             finally:
                 self.playing = False
                 self.q.task_done()
 
-    def add(self, wav_data: bytes):
-        self.q.put(wav_data)
+    def add(self, pcm_data: bytes, audio_format: str = "linear16"):
+        if pcm_data:
+            self.q.put((pcm_data, audio_format))
         
     def stop_all(self):
         """Stop current and clear queue."""
-        # Clear queue
         with self.q.mutex:
             self.q.queue.clear()
-        
-        # Stop playing current sound
-        if winsound:
-            winsound.PlaySound(None, winsound.SND_PURGE)
+        # Sounddevice doesn't have an easy "flush" effectively without restarting,
+        # but clearing the queue stops future chunks.
         self.playing = False
 
-    @property
     def is_busy(self) -> bool:
         """True if playing or has items in queue."""
         return self.playing or not self.q.empty()
 
 
+class StreamingSession:
+    """Manages a single streaming session to Google Cloud TTS."""
+    def __init__(self, client, config):
+        self._client = client
+        self._config = config
+        self._q = queue.Queue()
+        self._stop_event = threading.Event()
+        self._generator_thread = None
+        
+    def start(self, output_callback):
+        """Start the streaming request and feed output to callback."""
+        def request_gen():
+            # Initial config request
+            yield texttospeech.StreamingSynthesizeRequest(streaming_config=self._config)
+            
+            while not self._stop_event.is_set() or not self._q.empty():
+                try:
+                    text = self._q.get(timeout=0.1)
+                    if text:
+                        yield texttospeech.StreamingSynthesizeRequest(
+                            input=texttospeech.StreamingSynthesisInput(text=text)
+                        )
+                except queue.Empty:
+                    continue
+                    
+        def run_stream():
+            try:
+                responses = self._client.streaming_synthesize(request_gen())
+                for response in responses:
+                     if response.audio_content:
+                         output_callback(response.audio_content, "mulaw")
+            except Exception as e:
+                print(f"[!] TTS Stream Error: {e}")
+
+        self._generator_thread = threading.Thread(target=run_stream, daemon=True)
+        self._generator_thread.start()
+
+    def feed_text(self, text: str):
+        self._q.put(text)
+        
+    def end(self):
+        self._stop_event.set()
+
+
 class TTSService:
     def __init__(self, model_variant: str = "pro"):
         self.client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
-        # Select model based on variant
         model_key = f"tts-{model_variant}" if f"tts-{model_variant}" in MODELS else "tts"
+        if model_variant in MODELS:
+            model_key = model_variant
         self.model = MODELS.get(model_key, "gemini-2.5-pro-preview-tts")
         print(f"[*] TTSService initialized with model: {self.model}")
-        self.voice_name = "Kore" # Firm/Professional voice
+        self.voice_name = "Kore"
         
-        self.worker = StreamWorker()
+        self.worker = StreamWorker(sample_rate=24000)
         
-        # Ensure output directory exists (temp or cache)
-        self.output_dir = Path(os.environ.get("TEMP", ".")) / "kaedra_tts"
-        self.output_dir.mkdir(exist_ok=True)
+        # Audio buffer for sentence assembly (fallback)
+        self._streaming_client = None
+
+    def begin_stream(self) -> StreamingSession:
+        """Start a new TTS stream session."""
+        if "gemini" in self.model and "tts" in self.model:
+            return None
+            
+        try:
+            from google.cloud import texttospeech
+        except ImportError:
+             return None
+             
+        if not self._streaming_client:
+            # Use the project ID from config to ensure correct quota/billing
+            self._streaming_client = texttospeech.TextToSpeechClient(
+                client_options={"quota_project_id": PROJECT_ID}
+            )
+
+        # Parse voice details
+        language_code = "en-US"
+        voice_name = self.model
+        
+        # Handle Chirp naming specifically if needed, but "en-US-Chirp3-HD-Kore" is standard format
+        if "-Chirp3-HD-" in self.model:
+             parts = self.model.split("-Chirp3-HD-")
+             if len(parts) == 2: language_code = parts[0]
+        elif "-Neural2-" in self.model:
+             parts = self.model.split("-Neural2-")
+             if len(parts) == 2: language_code = parts[0]
+        elif "-Journey-" in self.model:
+             parts = self.model.split("-Journey-")
+             if len(parts) == 2: language_code = parts[0]
+        elif "-Studio-" in self.model:
+             parts = self.model.split("-Studio-")
+             if len(parts) == 2: language_code = parts[0]
+
+        config = texttospeech.StreamingSynthesizeConfig(
+            voice=texttospeech.VoiceSelectionParams(language_code=language_code, name=voice_name),
+            streaming_audio_config=texttospeech.StreamingAudioConfig(
+                audio_encoding=texttospeech.AudioEncoding.MULAW, 
+                sample_rate_hertz=8000
+            ),
+        )
+        
+        session = StreamingSession(self._streaming_client, config)
+        session.start(self.worker.add)
+        return session
 
     def speak(self, text: str):
-        """Generate speech from text and queue it for playback."""
+        """Standard oneshot speak."""
         try:
-            # print(f"[*] Generating speech for: {text[:30]}...")
-            
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=text,
-                config=types.GenerateContentConfig(
-                    response_modalities=["AUDIO"],
-                    speech_config=types.SpeechConfig(
-                        voice_config=types.VoiceConfig(
-                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                voice_name=self.voice_name,
-                            )
-                        )
-                    ),
-                )
-            )
-            
-            if not response.candidates: return
-
-            part = response.candidates[0].content.parts[0]
-            if not part.inline_data or not part.inline_data.data:
-                return
-            
-            raw_data = part.inline_data.data
-            
-            # Handle both raw bytes and base64 encoded string
-            if isinstance(raw_data, str):
-                audio_bytes = base64.b64decode(raw_data)
+            if "gemini" in self.model and "tts" in self.model:
+                 self._speak_gemini(text)
             else:
-                audio_bytes = raw_data
-            
-            # Create WAV in memory (Gemini returns PCM usually? Need to wrap)
-            # Actually Gemini TTS returns encoded audio often? 
-            # The previous code re-wrapped it in WAV at 24000Hz.
-            # Assuming raw_data is PCM? 
-            # Docs say: "Unary: LINEAR16 (default)".
-            # So wrapping in WAV container is required for winsound.
-            
-            wav_buf = io.BytesIO()
-            with wave.open(wav_buf, "wb") as wf:
-                wf.setnchannels(1)
-                wf.setsampwidth(2)
-                wf.setframerate(24000)
-                wf.writeframes(audio_bytes)
-            
-            wav_data = wav_buf.getvalue()
-            
-            # Queue for playback
-            self.worker.add(wav_data)
-            
+                 # Use streaming logic for simple speak too (cleaner vs maintaining two paths)
+                 # Or just generic one shot. Let's use generic one shot for simplicity if not in a stream loop.
+                 self._speak_cloud_oneshot(text)
         except Exception as e:
             print(f"[!] TTS Error: {e}")
+
+    def _speak_cloud_oneshot(self, text: str):
+         # Reuse stream session or separate method? 
+         # Separate is safer for one-off calls outside the streaming loop.
+        try:
+            from google.cloud import texttospeech
+            client = texttospeech.TextToSpeechClient(
+                client_options={"quota_project_id": PROJECT_ID}
+            )
             
+            language_code = "en-US"
+            if "-Chirp3-HD-" in self.model: language_code = self.model.split("-Chirp3-HD-")[0]
+            elif "-Neural2-" in self.model: language_code = self.model.split("-Neural2-")[0]
+            elif "-Journey-" in self.model: language_code = self.model.split("-Journey-")[0]
+            elif "-Studio-" in self.model: language_code = self.model.split("-Studio-")[0]
+
+            input_text = texttospeech.SynthesisInput(text=text)
+            voice = texttospeech.VoiceSelectionParams(language_code=language_code, name=self.model)
+            audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.LINEAR16)
+
+            response = client.synthesize_speech(
+                request={"input": input_text, "voice": voice, "audio_config": audio_config}
+            )
+            
+            # Skip RIFF header (44 bytes) if we are just appending to a raw stream?
+            # Sounddevice raw stream handles int16. WAV usually has header.
+            # If we send Header to stream, it might sound like a "pop".
+            # Better to strip header for raw playback if possible, or just play it.
+            # The 'wav_data' logic in StreamWorker uses np.frombuffer.
+            # Riff header is just metadata, might cause slight noise.
+            data = response.audio_content
+            if data.startswith(b'RIFF'):
+                data = data[44:] # Simple strip
+            self.worker.add(data)
+            
+        except Exception as e:
+            print(f"[!] OneShot Error: {e}")
+
+    def _speak_gemini(self, text: str):
+        """Use Gemini Generative TTS."""
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=text,
+            config=types.GenerateContentConfig(
+                response_modalities=["AUDIO"],
+                speech_config=types.SpeechConfig(
+                    voice_config=types.VoiceConfig(
+                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                            voice_name=self.voice_name,
+                        )
+                    )
+                ),
+            )
+        )
+        if not response.candidates: return
+        part = response.candidates[0].content.parts[0]
+        if not part.inline_data: return
+        
+        raw = part.inline_data.data
+        if isinstance(raw, str): raw = base64.b64decode(raw)
+        self.worker.add(raw)
+
     def stop(self):
         """Stop all playback."""
         self.worker.stop_all()
 
     def is_speaking(self) -> bool:
-        return self.worker.is_busy
+        return self.worker.is_busy()
 
 if __name__ == "__main__":
-    tts = TTSService()
-    tts.speak("Streaming test. Phase 1.")
-    tts.speak("Phase 2 initiating.")
-    import time
-    while tts.is_speaking():
-        time.sleep(0.1)
+    # Test
+    pass

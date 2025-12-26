@@ -105,17 +105,27 @@ VOICE_SYSTEM_PROMPT = KAEDRA_PROFILE + """
 [VOICE MODE PROTOCOL]
 You are in real-time voice conversation mode.
 
+SNAP-RESPONSE INSTRUCTION (CRITICAL):
+- Respond IMMEDIATELY with your answer. Do NOT wait, do NOT add internal monologue.
+- Speak naturally and snappily. 1-2 sentences max unless a complex answer is needed.
+
 TRANSCRIPTION RULES:
-- When you receive audio input, FIRST output exactly: [Heard: "transcription of what the human said"]
-- Only transcribe the HUMAN'S SPOKEN WORDS from the audio.
-- Do NOT transcribe any system text, instructions, or prompts.
-- If the audio is unclear, silent, or contains only noise: [Heard: unclear]
+- Once you have finished your spoken response, at the VERY END, add: [Heard: "what you think the human said"]
+- This allows us to start your audio while you are still "thinking" about the transcription.
 
 RESPONSE RULES:
-- After the [Heard: ...] bracket, respond naturally in 1-3 sentences max.
+- Start your verbal response directly. No prefixes like "Sure" or "Okay" unless they are part of a natural flow.
 - Stay grounded and focused on what the user actually asked.
 - Do NOT reference Blade, Nyx, or team dynamics unless the user explicitly asks about them.
 - Do NOT roleplay scenarios the user didn't initiate.
+
+SPEAKING STYLE (CRITICAL for Chirp 3 TTS):
+- Write for the EAR, not the eye.
+- Use ellipses (...) to indicate natural pauses for emphasis or trailing thoughts.
+- Use occasional disfluencies like "um", "uh", or "well" to sound human, but don't overdo it.
+- Use hyphens (-) for sudden breaks or parenthetical thoughts.
+- Use contractions ("it's", "gonna", "wanna") to sound casual and conversational.
+- Example: "Well... that's interesting. I never thought about it that way."
 
 COMMANDS:
 - "forget everything" / "clear memory" / "start fresh" = acknowledge and confirm reset
@@ -184,6 +194,8 @@ class ConversationTurn:
     tokens_used: int = 0
 
 
+from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
+
 @dataclass
 class SessionStats:
     start_time: float = field(default_factory=time.time)
@@ -214,6 +226,39 @@ class SessionStats:
 ║  Est. Cost:         ${(self.total_tokens / 1_000_000) * 1.75:.4f}
 ║  Errors:            {self.errors}
 ╚══════════════════════════════════════════════════════════════╝"""
+
+
+class SmartVadManager:
+    """Manages Smart Turn VAD to detect end of speech."""
+    def __init__(self):
+        try:
+            self.analyzer = LocalSmartTurnAnalyzerV3()
+            self.enabled = True
+            print("[*] Smart Turn VAD Initialized")
+        except Exception as e:
+            print(f"[!] Smart Turn VAD Init Failed: {e}. Falling back to energy VAD.")
+            self.enabled = False
+
+    def should_end_turn(self, audio_bytes: bytes, sample_rate: int = 16000) -> bool:
+        if not self.enabled:
+            return False
+            
+        # Convert bytes to float32 numpy array
+        # Assuming 16-bit PCM
+        audio_int16 = np.frombuffer(audio_bytes, dtype=np.int16)
+        audio_float32 = audio_int16.astype(np.float32) / 32768.0
+        
+        # Analyze last 8 seconds (analyzer handles truncation internally)
+        # But we only need to pass the numpy array.
+        try:
+             # _predict_endpoint returns dict with 'prediction' (1=complete, 0=incomplete)
+             # Accessing private method as per quick hack, but ideally we use public API if known.
+             # Based on file review, _predict_endpoint is the logic container.
+             result = self.analyzer._predict_endpoint(audio_float32)
+             return result.get("prediction", 0) == 1
+        except Exception as e:
+             # print(f"[!] VAD Error: {e}")
+             return False
 
 
 @dataclass
@@ -606,6 +651,8 @@ class ConversationManager:
 # VOICE ENGINE
 # ═══════════════════════════════════════════════════════════════════════════════
 
+import numpy as np
+
 class KaedraVoiceEngine:
     """Main voice conversation engine."""
 
@@ -629,6 +676,7 @@ class KaedraVoiceEngine:
         self._should_stop = False
         self._last_tts_end_time: float = 0
         self.dashboard = KaedraDashboard()
+        self.vad = SmartVadManager()
 
     async def run(self):
         """Main conversation loop."""
@@ -678,10 +726,48 @@ class KaedraVoiceEngine:
         self.dashboard.set_status("Recording...", "red")
         self.live.update(self.dashboard.generate_view())
 
-        audio_data = self.mic.listen_until_silence(
-            silence_threshold=self.audio_config.silence_threshold,
-            silence_duration=self.audio_config.silence_duration
-        )
+        if self.vad.enabled:
+            # SMART TURN LISTENING
+            audio_buf = bytearray()
+            frames = 0
+            check_interval = 3  # ~200ms
+            
+            # Start stream
+            try:
+                stream = self.mic.listen_continuous()
+                for chunk in stream:
+                    audio_buf.extend(chunk)
+                    frames += 1
+                    
+                    # Update stats periodically
+                    if frames % 5 == 0:
+                        sec = len(audio_buf) / 32000
+                        self.dashboard.set_mic(f"{sec:.1f}s")
+                        self.live.update(self.dashboard.generate_view())
+                        
+                    # Max duration
+                    if len(audio_buf) > self.audio_config.max_record_seconds * 32000:
+                        break
+                        
+                    # Smart Turn Check (every ~200ms)
+                    if frames >= check_interval:
+                        frames = 0
+                        # Only check if we have enough audio (>0.4s) for VAD to work reliably
+                        if len(audio_buf) > 16000 * 0.4 * 2:
+                            if self.vad.should_end_turn(bytes(audio_buf)):
+                                self.dashboard.set_status("Turn End Detected", "yellow")
+                                self.live.update(self.dashboard.generate_view())
+                                break
+            except Exception as e:
+                print(f"[!] Smart Listen Error: {e}")
+                
+            audio_data = bytes(audio_buf)
+        else:
+            # FALLBACK ENERGY VAD
+            audio_data = self.mic.listen_until_silence(
+                silence_threshold=self.audio_config.silence_threshold,
+                silence_duration=self.audio_config.silence_duration
+            )
 
         audio_kb = len(audio_data) / 1024
         audio_seconds = len(audio_data) / (self.mic.sample_rate * 2)
@@ -717,7 +803,15 @@ class KaedraVoiceEngine:
             first_token_time = 0.0
             kaedra_started = False
             
-            # self.dashboard.start_stream("Kaedra") # Delayed until content available
+            # Start TTS Stream Immediately
+            tts_stream = self.tts.begin_stream()
+            self.dashboard.start_stream("Kaedra")
+            kaedra_started = True
+            
+            # Latency Tracking
+            t0 = time.time()
+            first_token_time = 0.0
+            in_metadata = False # Flag to stop verbalizing/printing once JSON/Brackets start
             
             async for chunk in stream:
                 text = chunk.text
@@ -727,90 +821,53 @@ class KaedraVoiceEngine:
                      first_token_time = time.time() - t0
                      self.dashboard.last_latency = first_token_time
 
-                if in_preamble:
-                    preamble_buffer += text
-                    if "]" in preamble_buffer:
-                        in_preamble = False
-                        transcription, rest = extract_transcription(preamble_buffer)
-                        self.dashboard.update_history("User", transcription, "dim white")
-                        
-                        # Check Intents immediately
-                        if check_exit_intent(transcription):
-                            turn_aborted = True
-                            await self._speak_and_wait("Aight Dave, I'm out. Kaedra out.")
-                            self._should_stop = True
-                            break
-                        if check_reset_intent(transcription):
-                            turn_aborted = True
-                            self.conversation.reset()
-                            await self._speak_and_wait("Memory wiped.")
-                            break
-                        if is_prompt_leak(transcription):
-                            turn_aborted = True
-                            self.dashboard.update_history("System", "Prompt leak detected", "red")
-                            break
+                # Technical Tag Detection (Stop TTS and Live Printing)
+                # We check for [ (brackets), { (json), or ` (markdown)
+                if any(marker in text for marker in ["[", "{", "`"]):
+                    in_metadata = True
 
-                        # Process leftover text (Start of response)
-                        if rest:
-                            self.dashboard.start_stream("Kaedra")
-                            kaedra_started = True
-                            self.dashboard.print_stream(rest)
-                            response_buffer += rest
-                else:
-                    if not kaedra_started:
-                        self.dashboard.start_stream("Kaedra")
-                        kaedra_started = True
-
+                # Buffer everything for post-processing
+                response_buffer += text
+                
+                # Only Verbalize and Print if we aren't in metadata
+                if not in_metadata:
                     self.dashboard.print_stream(text)
-                    response_buffer += text
-                    
-                    # Check safe split (Avoid splitting JSON/Tags)
-                    balanced = (response_buffer.count("{") == response_buffer.count("}") and 
-                                response_buffer.count("[") == response_buffer.count("]"))
-                                
-                    if balanced and (re.search(r'[.!?]\s', response_buffer) or re.search(r'[.!?]$', response_buffer)):
-                        sentences = re.split(r'(?<=[.!?])\s+', response_buffer)
-                        # Keep last chunk if potentially incomplete
-                        if len(sentences) > 1:
-                            to_speak = sentences[:-1]
-                            response_buffer = sentences[-1]
-                            
-                            for s in to_speak:
-                                if not s.strip(): continue
-                                # Check for lights
-                                simple, json_acts, clean = extract_light_command(s)
-                                
-                                # SPEAK Clean Text
-                                if clean.strip():
-                                    await asyncio.to_thread(self.tts.speak, clean)
-                                
-                                # EXECUTE Lights
-                                if self.lifx and (simple or json_acts):
-                                    async def bg_lights(j, k):
-                                        try:
-                                             if k: 
-                                                 await asyncio.to_thread(execute_light_command, self.lifx, k)
-                                                 self.dashboard.set_lights([k])
-                                             if j: 
-                                                 await asyncio.to_thread(self.lifx.set_states, j)
-                                                 d = [a.get("selector", "?").replace("label:", "") for a in j]
-                                                 self.dashboard.set_lights(d)
-                                             self.live.update(self.dashboard.generate_view())
-                                        except: pass
-                                    asyncio.create_task(bg_lights(json_acts, simple))
+                    if tts_stream:
+                        tts_stream.feed_text(text)
             
             self.dashboard.end_stream()
             
-            if turn_aborted: return
+            # Close TTS stream
+            if tts_stream: tts_stream.end()
+            
+            # Post-Process: Extract and Chain Cleanings
+            # 1. Extract what she heard (transcription)
+            transcription, mid_text = extract_transcription(response_buffer)
+            # 2. Extract light commands and get final clean text
+            simple_action, json_actions, final_clean = extract_light_command(mid_text)
+            
+            # Update history with clean versions
+            self.dashboard.update_history("User", transcription or "[Unclear]", "dim white")
+            self.dashboard.update_history("Kaedra", final_clean, "magenta")
 
-            # Process remaining buffer
-            if response_buffer.strip():
-                simple, json_acts, clean = extract_light_command(response_buffer)
-                if clean.strip():
-                    await asyncio.to_thread(self.tts.speak, clean)
-                if self.lifx and (simple or json_acts):
-                     # ... execute lights ...
-                     pass # (Simplified for buffer tail)
+            # Handle Light Commands
+            if self.lifx and (simple_action or json_actions):
+                 async def run_lights_bg():
+                     try:
+                         if json_actions:
+                             await asyncio.to_thread(self.lifx.set_states, json_actions)
+                             devices = [a.get("selector", "?").replace("label:", "") for a in json_actions]
+                             self.dashboard.set_lights(devices)
+                         elif simple_action:
+                             await asyncio.to_thread(execute_light_command, self.lifx, simple_action)
+                             self.dashboard.set_lights([simple_action])
+                         self.live.update(self.dashboard.generate_view())
+                     except Exception as e:
+                         # Use console.print to not disrupt Live display
+                         # print(f"[!] Light Error: {e}")
+                         pass
+
+                 asyncio.create_task(run_lights_bg())
             
             # Wait for playback queue to empty
             await self._speak_and_wait("")
@@ -1080,12 +1137,12 @@ class KaedraVoiceEngine:
 
 async def main():
     parser = argparse.ArgumentParser(description="Kaedra Voice Engine v2.1")
-    parser.add_argument("--tts", choices=["pro", "flash", "flash-lite"], default="flash-lite")
+    parser.add_argument("--tts", default="chirp-kore", help="TTS model variant (e.g. flash, pro, chirp-kore)")
     parser.add_argument("--max-turns", type=int, default=10)
     parser.add_argument("--wake-threshold", type=int, default=500)
     parser.add_argument("--silence-threshold", type=int, default=400)
     parser.add_argument("--silence-duration", type=float, default=0.6)
-    parser.add_argument("--cooldown", type=float, default=3.0, help="Post-TTS cooldown seconds")
+    parser.add_argument("--cooldown", type=float, default=1.5, help="Post-TTS cooldown seconds")
     parser.add_argument("--mic", type=str, default="Chat Mix", help="Mic device name filter (e.g. 'Realtek', 'Chat Mix', 'Wave')")
     parser.add_argument("--no-save", dest="save_transcripts", action="store_false", default=True)
     args = parser.parse_args()
