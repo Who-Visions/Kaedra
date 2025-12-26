@@ -87,9 +87,10 @@ class StreamWorker:
 
 class StreamingSession:
     """Manages a single streaming session to Google Cloud TTS."""
-    def __init__(self, client, config):
+    def __init__(self, client, config, persona_prompt=None):
         self._client = client
         self._config = config
+        self._persona_prompt = persona_prompt
         self._q = queue.Queue()
         self._stop_event = threading.Event()
         self._generator_thread = None
@@ -105,9 +106,7 @@ class StreamingSession:
                 try:
                     text = self._q.get(timeout=0.1)
                     if text:
-                        prompt = None
-                        if first_chunk and hasattr(self._config, "persona_prompt"):
-                            prompt = self._config.persona_prompt
+                        prompt = self._persona_prompt if first_chunk else None
                         
                         yield texttospeech.StreamingSynthesizeRequest(
                             input=texttospeech.StreamingSynthesisInput(
@@ -147,10 +146,11 @@ class TTSService:
         self.model = MODELS.get(model_key, "en-US-Journey-F")
         print(f"[*] TTSService initialized with model: {self.model}")
         
-        # Persona for Gemini-TTS
+        # Persona for Gemini-TTS (Steering)
         self.persona_prompt = (
-            "You are Kaedra, a tactical and direct partner. "
-            "Speak naturally, with a professional yet street-smart attitude."
+            "You are Kaedra, the Shadow Tactician. "
+            "Speak with a natural, conversational AAVE flow—direct, confident, and professional. "
+            "Keep it fly but stay sharp; you are a partner, not just a narrator."
         )
         
         self.worker = StreamWorker(sample_rate=24000)
@@ -199,10 +199,8 @@ class TTSService:
                 sample_rate_hertz=8000
             ),
         )
-        # Inject persona into config object (monkey-patch for generator to find)
-        config.persona_prompt = self.persona_prompt if model_name else None
         
-        session = StreamingSession(self._streaming_client, config)
+        session = StreamingSession(self._streaming_client, config, persona_prompt=self.persona_prompt if model_name else None)
         session.start(self.worker.add)
         return session
 

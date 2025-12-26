@@ -43,11 +43,10 @@ MODELS = {
     "tts": "en-US-Journey-F",                  # Default
     "chirp-kore": "en-US-Chirp3-HD-Kore",      # Chirp 3 HD (US, Female) - Fast Stream
     "hifi-kore": "gemini-2.5-flash-tts:Kore", # High Fidelity (24kHz) - Premium Stream!
-    "hifi-pro": "gemini-2.5-pro-tts:Charon",   # Ultra High Detail (24kHz)
+    "hifi-pro": "gemini-2.5-pro-tts:Aoede",    # Ultra High Detail (24kHz) - Female
     "lite-kore": "gemini-2.5-flash-lite-preview-tts:Kore", # Cost Efficient HiFi
-    "chirp-puck": "en-US-Chirp3-HD-Puck",      # Chirp 3 HD (US, Male)
-    "chirp-charon": "en-US-Chirp3-HD-Charon",  # Chirp 3 HD (US, Male)
-    "chirp-fenrir": "en-US-Chirp3-HD-Fenrir",  # Chirp 3 HD (US, Male)
+    "chirp-leda": "en-US-Chirp3-HD-Leda",      # Chirp 3 HD (US, Female)
+    "chirp-zephyr": "en-US-Chirp3-HD-Zephyr",  # Chirp 3 HD (US, Female)
 }
 
 MODEL_COSTS = {
