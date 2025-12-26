@@ -115,7 +115,9 @@ class PromptService:
                  model_key: str = None,
                  system_instruction: str = None,
                  temperature: float = 0.7,
-                 max_tokens: int = 4096) -> PromptResult:
+                 max_tokens: int = 4096,
+                 response_schema: Dict = None,
+                 response_mime_type: str = None) -> PromptResult:
         """
         Generate a response from the LLM.
         
@@ -125,6 +127,8 @@ class PromptService:
             system_instruction: System instruction to prepend
             temperature: Generation temperature (0.0-1.0)
             max_tokens: Maximum output tokens
+            response_schema: dict representing the JSON schema for structured output
+            response_mime_type: MIME type, e.g. 'application/json'
             
         Returns:
             PromptResult with response text and metadata
@@ -137,16 +141,28 @@ class PromptService:
         if system_instruction:
             full_prompt = f"{system_instruction}\n\n{prompt}"
         
+        # Build generation config
+        gen_config = {
+            "temperature": temperature,
+            "max_output_tokens": max_tokens,
+        }
+        
+        if response_schema:
+            gen_config["response_schema"] = response_schema
+            # Usually requires application/json if schema is provided
+            if not response_mime_type:
+                gen_config["response_mime_type"] = "application/json"
+        
+        if response_mime_type:
+            gen_config["response_mime_type"] = response_mime_type
+        
         # Generate with timing
         start_time = time.time()
         
         try:
             response = model.generate_content(
                 full_prompt,
-                generation_config={
-                    "temperature": temperature,
-                    "max_output_tokens": max_tokens,
-                }
+                generation_config=gen_config
             )
             
             latency_ms = (time.time() - start_time) * 1000
@@ -199,7 +215,9 @@ class PromptService:
     async def generate_async(self,
                              prompt: str,
                              model_key: str = None,
-                             system_instruction: str = None) -> PromptResult:
+                             system_instruction: str = None,
+                             response_schema: Dict = None,
+                             response_mime_type: str = None) -> PromptResult:
         """
         Async version of generate for concurrent operations.
         
@@ -207,7 +225,9 @@ class PromptService:
         Vertex AI SDK updates.
         """
         # TODO: Use true async when Vertex AI SDK supports it
-        return self.generate(prompt, model_key, system_instruction)
+        return self.generate(prompt, model_key, system_instruction, 
+                             response_schema=response_schema, 
+                             response_mime_type=response_mime_type)
 
     def embed(self, text: str, model: str = "text-embedding-004") -> List[float]:
         """

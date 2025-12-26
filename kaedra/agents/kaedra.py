@@ -71,7 +71,14 @@ class KaedraAgent(BaseAgent):
     
     @property
     def profile(self) -> str:
-        return KAEDRA_PROFILE
+        return KAEDRA_PROFILE + """
+[WISPR CONTEXT TOOL]
+To search the user's past voice transcripts/dictations, output:
+[TOOL: get_flow_context(action="search", query="...")]
+[TOOL: get_flow_context(action="recent", limit=5)]
+
+Use this when the user asks "What did I say about..." or "Summarize my last dictation".
+"""
     
     async def run(self, query: str, context: str = None) -> AgentResponse:
         """
@@ -113,6 +120,53 @@ class KaedraAgent(BaseAgent):
         
         start_time = time.time()
         result = self.prompt.generate(full_prompt)
+        
+        # --- Tool Execution Logic ---
+        # Parse for [TOOL: get_flow_context(...)]
+        if "[TOOL: get_flow_context" in result.text:
+            import re
+            import json
+            from kaedra.tools.wispr import get_flow_context
+            
+            # Simple regex to extract args - robust enough for trusted output
+            match = re.search(r'\[TOOL: get_flow_context\((.*?)\)\]', result.text)
+            if match:
+                args_str = match.group(1)
+                tool_output = None
+                
+                try:
+                    # Parse args manually or safely eval
+                    # Safest: parse specific known args
+                    action = "recent"
+                    if 'action="search"' in args_str or "action='search'" in args_str:
+                        action = "search"
+                    elif 'action="stats"' in args_str:
+                        action = "stats"
+                        
+                    query_arg = None
+                    if 'query="' in args_str:
+                        query_arg = args_str.split('query="')[1].split('"')[0]
+                    elif "query='" in args_str:
+                        query_arg = args_str.split("query='")[1].split("'")[0]
+                        
+                    # Execute
+                    print(f"[*] Executing Wispr Tool: {action} query={query_arg}")
+                    tool_result = get_flow_context(action=action, query=query_arg)
+                    
+                    # Recursively run agent with tool output
+                    # We limit depth to avoid loops, but for now 1 level is fine
+                    new_context = f"Context from Wispr Flow:\n{json.dumps(tool_result, indent=2)}"
+                    
+                    # Re-run with the tool output as context
+                    # Use a system-like prompt to say "Here is the tool output, now answer user"
+                    follow_up_prompt = f"{query}\n\n[SYSTEM] Tool Output:\n{new_context}"
+                    
+                    # We return the FINAL result
+                    result = self.prompt.generate(self._build_prompt(follow_up_prompt, combined_context))
+                    
+                except Exception as e:
+                    print(f"[!] Tool execution failed: {e}")
+        
         latency = (time.time() - start_time) * 1000
         
         return AgentResponse(

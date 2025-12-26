@@ -1,235 +1,236 @@
 """
-KAEDRA v0.0.6 - Memory Service
-Persistent memory storage and retrieval with keyword search.
+KAEDRA v0.0.7 - Memory Service (Vertex AI Agent Engine)
+Persistent memory storage using Vertex AI Memory Bank.
 """
 
+import os
+import uuid
 import json
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional, Any
-from dataclasses import dataclass, asdict
+import vertexai
+from vertexai import types
 
-from ..core.config import MEMORY_DIR
-
+from dataclasses import dataclass, field
 
 @dataclass
 class MemoryEntry:
-    """A single memory entry."""
-    id: str
-    topic: str
     content: str
-    tags: List[str]
-    timestamp: str
-    importance: str = "normal"  # low, normal, high, critical
-    
-    def to_dict(self) -> dict:
-        return asdict(self)
-    
-    @classmethod
-    def from_dict(cls, data: dict) -> 'MemoryEntry':
-        return cls(**data)
+    role: str = "user"
+    timestamp: str = ""
+    metadata: Dict = field(default_factory=dict)
 
+from ..core.config import PROJECT_ID, LOCATION, MEMORY_DIR, AGENT_RESOURCE_NAME
+from ..core.memory_topics import get_customization_config
 
 class MemoryService:
     """
-    Manages persistent memory storage and retrieval.
-    
-    Features:
-    - JSON-based storage (upgradeable to vector DB later)
-    - Keyword search with scoring
-    - Tag-based filtering
-    - Importance levels
-    - Recent memory listing
+    Manages persistent memory using Vertex AI Memory Bank (Agent Engine).
+    Wraps the Agent Engine API to provide a simplified interface for Kaedra.
     """
     
-    def __init__(self, db_path: Optional[Path] = None):
-        self.db_path = db_path or MEMORY_DIR
-        self.db_path.mkdir(parents=True, exist_ok=True)
-        self.index_file = self.db_path / "memory_index.json"
-        self._index: List[Dict] = self._load_index()
-    
-    def _load_index(self) -> List[Dict]:
-        """Load the memory index from disk."""
-        if self.index_file.exists():
-            try:
-                with open(self.index_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except (json.JSONDecodeError, IOError):
-                return []
-        return []
-    
-    def _save_index(self):
-        """Save the memory index to disk."""
-        with open(self.index_file, 'w', encoding='utf-8') as f:
-            json.dump(self._index, f, indent=2, ensure_ascii=False)
-    
-    def insert(self, content: str, topic: str = "general", 
-               tags: List[str] = None, importance: str = "normal",
-               metadata: Dict = None) -> str:
-        """
-        Store a new memory entry.
+    def __init__(self):
+        self.project_id = PROJECT_ID
+        self.location = LOCATION
+        self.engine_name = f"kaedra-memory-bank-v1"
+        self.user_id = "kaedra-user-main" # Single user mode for now
+        self.session_name = None
+        self.agent_engine_resource_name = AGENT_RESOURCE_NAME
         
-        Args:
-            content: The memory content
-            topic: Category/topic for the memory
-            tags: List of searchable tags
-            importance: Priority level (low/normal/high/critical)
-            metadata: Additional metadata
+        # Initialize Vertex AI
+        vertexai.init(project=self.project_id, location=self.location)
+
+        # Using the High-Level SDK client
+        self.hl_client = vertexai.Client(project=self.project_id, location=self.location)
+        self.client = self.hl_client # Alias for convenience if needed, or just use hl_client
+        
+        if not self.agent_engine_resource_name:
+            self._ensure_agent_engine()
+        else:
+            print(f"[*] Using existing Agent Engine: {self.agent_engine_resource_name}")
             
-        Returns:
-            The memory ID
+        self._ensure_session()
+
+    def _get_model_path(self, model_name: str) -> str:
         """
-        timestamp = datetime.now().isoformat()
-        memory_id = f"mem_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
+        Get the full resource path for a model, handling Global vs Regional endpoints.
+        Gemini 3 models must use 'global'. Others use the service region.
+        """
+        location = "global" if "gemini-3" in model_name else self.location
+        return f"projects/{self.project_id}/locations/{location}/publishers/google/models/{model_name}"
+
+    def _ensure_agent_engine(self):
+        """Find or create the Agent Engine."""
+        print(f"[*] Ensuring Agent Engine '{self.engine_name}' exists...")
         
-        entry = MemoryEntry(
-            id=memory_id,
-            topic=topic,
-            content=content,
-            tags=tags or [],
-            timestamp=timestamp,
-            importance=importance
+        try:
+            engines = self.hl_client.agent_engines.list()
+            for engine in engines:
+                if engine.display_name == self.engine_name:
+                    self.agent_engine_resource_name = engine.name
+                    print(f"[*] Found existing Agent Engine: {self.agent_engine_resource_name}")
+                    return
+        except Exception as e:
+            print(f"[!] Error listing agent engines: {e}")
+
+        print(f"[*] Creating new Agent Engine '{self.engine_name}'...")
+        
+        model_name = "gemini-3-flash-preview"
+        
+        memory_config = types.ReasoningEngineContextSpecMemoryBankConfig(
+            similarity_search_config=types.ReasoningEngineContextSpecMemoryBankConfigSimilaritySearchConfig(
+                embedding_model=f"projects/{self.project_id}/locations/{self.location}/publishers/google/models/text-embedding-005"
+            ),
+            generation_config=types.ReasoningEngineContextSpecMemoryBankConfigGenerationConfig(
+                model=self._get_model_path(model_name)
+            ),
+            customization_configs=[get_customization_config()]
         )
         
-        # Save individual memory file
-        mem_file = self.db_path / f"{memory_id}.json"
-        entry_dict = entry.to_dict()
-        if metadata:
-            entry_dict['metadata'] = metadata
+        try:
+            op = self.hl_client.agent_engines.create(
+                config={"context_spec": {"memory_bank_config": memory_config}},
+                display_name=self.engine_name
+            )
+            self.agent_engine_resource_name = op.api_resource.name
+            print(f"[*] Created Agent Engine: {self.agent_engine_resource_name}")
             
-        with open(mem_file, 'w', encoding='utf-8') as f:
-            json.dump(entry_dict, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"[!] Failed to create Agent Engine: {e}")
+            raise e
+
+    def _ensure_session(self):
+        """Ensure a session exists for the user."""
+        # We try to keep a persistent session ID file?
+        session_file = MEMORY_DIR / "current_session.txt"
         
-        # Update index
-        self._index.append(entry_dict)
-        self._save_index()
-        
-        return memory_id
-    
-    def recall(self, query: str, top_k: int = 5, 
-               tags: List[str] = None,
-               min_importance: str = None) -> List[Dict]:
+        if session_file.exists():
+            with open(session_file, 'r') as f:
+                self.session_name = f.read().strip()
+                return
+
+        print(f"[*] Creating new Session for {self.user_id}...")
+        try:
+            session = self.hl_client.agent_engines.sessions.create(
+                name=self.agent_engine_resource_name,
+                user_id=self.user_id,
+                config={"display_name": f"Main Session for {self.user_id}"}
+            )
+            self.session_name = session.response.name
+            
+            # Save persist
+            MEMORY_DIR.mkdir(parents=True, exist_ok=True)
+            with open(session_file, 'w') as f:
+                f.write(self.session_name)
+                
+            print(f"[*] Created Session: {self.session_name}")
+            
+        except Exception as e:
+            print(f"[!] Session creation failed: {e}")
+            raise e
+
+    def insert(self, content: str, role: str = "user") -> str:
         """
-        Search memory for relevant entries.
-        
-        Args:
-            query: Search query (keywords)
-            top_k: Maximum number of results
-            tags: Filter by specific tags
-            min_importance: Minimum importance level
-            
-        Returns:
-            List of matching memory entries, scored and sorted
+        Add an event to the session memory.
+        Note: This does NOT immediately generate a 'Memory' fact. 
+        It appends to history. You must call `consolidate()` to trigger extraction.
         """
-        query_lower = query.lower()
-        query_words = set(query_lower.split())
-        scored = []
-        
-        importance_levels = {'low': 1, 'normal': 2, 'high': 3, 'critical': 4}
-        min_imp_value = importance_levels.get(min_importance, 0)
-        
-        for entry in self._index:
-            # Filter by importance
-            entry_imp = importance_levels.get(entry.get('importance', 'normal'), 2)
-            if entry_imp < min_imp_value:
-                continue
+        try:
+            # We use a simple counter for invocation? Or UUID?
+            # API requires invocation_id (string)
+            inv_id = str(uuid.uuid4())
             
-            # Filter by tags
-            if tags:
-                entry_tags = set(t.lower() for t in entry.get('tags', []))
-                if not any(t.lower() in entry_tags for t in tags):
-                    continue
+            self.hl_client.agent_engines.sessions.events.append(
+                name=self.session_name,
+                author=self.user_id if role == "user" else "kaedra",
+                invocation_id=inv_id,
+                timestamp=datetime.now(tz=datetime.timezone.utc),
+                config={
+                    "content": {"role": role, "parts": [{"text": content}]}
+                }
+            )
+            return inv_id
+        except Exception as e:
+            print(f"[!] Insert failed: {e}")
+            return ""
+
+    def consolidate(self):
+        """Trigger background memory generation from recent events."""
+        print("[*] Consolidating memories in background...")
+        try:
+            # wait_for_completion=False for async background processing
+            self.hl_client.agent_engines.memories.generate(
+                name=self.agent_engine_resource_name,
+                vertex_session_source={"session": self.session_name},
+                config={"wait_for_completion": False} 
+            )
+        except Exception as e:
+            print(f"[!] Consolidation failed: {e}")
+
+    def recall(self, query: str, top_k: int = 5) -> List[Dict]:
+        """
+        Semantic search over generated memories.
+        """
+        try:
+            results = self.hl_client.agent_engines.memories.retrieve(
+                name=self.agent_engine_resource_name,
+                scope={"user_id": self.user_id},
+                similarity_search_params={
+                    "search_query": query,
+                    "top_k": top_k,
+                },
+            )
             
-            # Score by relevance
-            score = 0
+            # Convert to dict format expected by KaedraAgent
+            memories = []
+            for item in results:
+                mem = item.memory
+                memories.append({
+                    "content": mem.fact,
+                    "topic": "memory_bank", # We don't get the topic label easily in the list view?
+                    "timestamp": mem.create_time.isoformat() if mem.create_time else "",
+                    "score": item.distance if hasattr(item, 'distance') else 0.0
+                })
+            return memories
             
-            # Topic match (high weight)
-            topic_lower = entry.get('topic', '').lower()
-            if query_lower in topic_lower:
-                score += 5
-            for word in query_words:
-                if word in topic_lower:
-                    score += 2
-            
-            # Content match (medium weight)
-            content_lower = entry.get('content', '').lower()
-            if query_lower in content_lower:
-                score += 3
-            for word in query_words:
-                if word in content_lower:
-                    score += 1
-            
-            # Tag match (medium weight)
-            for tag in entry.get('tags', []):
-                tag_lower = tag.lower()
-                if query_lower in tag_lower:
-                    score += 2
-                for word in query_words:
-                    if word in tag_lower:
-                        score += 1
-            
-            # Importance boost
-            score += entry_imp * 0.5
-            
-            if score > 0:
-                scored.append((score, entry))
-        
-        # Sort by score descending
-        scored.sort(key=lambda x: x[0], reverse=True)
-        return [entry for _, entry in scored[:top_k]]
-    
+        except Exception as e:
+            print(f"[!] Recall failed: {e}")
+            return []
+
     def list_recent(self, limit: int = 10) -> List[Dict]:
-        """Get the most recent memories."""
-        sorted_entries = sorted(
-            self._index,
-            key=lambda x: x.get('timestamp', ''),
-            reverse=True
-        )
-        return sorted_entries[:limit]
-    
-    def get_by_id(self, memory_id: str) -> Optional[Dict]:
-        """Retrieve a specific memory by ID."""
-        for entry in self._index:
-            if entry.get('id') == memory_id:
-                return entry
-        return None
-    
-    def delete(self, memory_id: str) -> bool:
-        """Delete a memory entry."""
-        # Remove from index
-        self._index = [e for e in self._index if e.get('id') != memory_id]
-        self._save_index()
-        
-        # Remove file
-        mem_file = self.db_path / f"{memory_id}.json"
-        if mem_file.exists():
-            mem_file.unlink()
-            return True
-        return False
-    
-    def search_by_tag(self, tag: str) -> List[Dict]:
-        """Get all memories with a specific tag."""
-        tag_lower = tag.lower()
-        return [
-            entry for entry in self._index
-            if any(t.lower() == tag_lower for t in entry.get('tags', []))
-        ]
-    
-    def get_stats(self) -> Dict:
-        """Get memory statistics."""
-        total = len(self._index)
-        by_importance = {}
-        by_tag = {}
-        
-        for entry in self._index:
-            imp = entry.get('importance', 'normal')
-            by_importance[imp] = by_importance.get(imp, 0) + 1
+        """Get most recent memories (by creation time)."""
+        # Retrieve all (scope based) and sort?
+        try:
+            results = self.hl_client.agent_engines.memories.retrieve(
+                name=self.agent_engine_resource_name,
+                scope={"user_id": self.user_id}
+            )
+            # This iterator might be large, but for now it's okay.
+            # Convert to list and sort
+            items = list(results)
+            items.sort(key=lambda x: x.memory.create_time, reverse=True)
             
-            for tag in entry.get('tags', []):
-                by_tag[tag] = by_tag.get(tag, 0) + 1
-        
-        return {
-            'total': total,
-            'by_importance': by_importance,
-            'top_tags': sorted(by_tag.items(), key=lambda x: x[1], reverse=True)[:10]
-        }
+            memories = []
+            for item in items[:limit]:
+                mem = item.memory
+                memories.append({
+                    "content": mem.fact,
+                    "timestamp": mem.create_time.isoformat() if mem.create_time else ""
+                })
+            return memories
+        except Exception as e:
+            print(f"[!] List recent failed: {e}")
+            return []
+            
+    def get_stats(self) -> Dict:
+        """Helper to get count."""
+        try:
+            results = self.hl_client.agent_engines.memories.retrieve(
+                name=self.agent_engine_resource_name, 
+                scope={"user_id": self.user_id}
+            )
+            return {"total": len(list(results))}
+        except:
+            return {"total": 0}
+

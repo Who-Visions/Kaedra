@@ -15,7 +15,7 @@ LOCATION = os.getenv("KAEDRA_LOCATION", "us-central1")
 MODEL_LOCATION = "global" # Gemini 3 Preview models require global endpoint
 AGENT_RESOURCE_NAME = os.getenv(
     "KAEDRA_AGENT_RESOURCE",
-    "projects/69017097813/locations/us-central1/reasoningEngines/423129457763549184"
+    "projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200"
 )
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -26,6 +26,7 @@ MODELS = {
     "flash": "gemini-3-flash-preview",         # Latest Flash V3 (Preview)
     "pro": "gemini-3-pro-preview",             # Latest Pro V3 (Preview)
     "ultra": "gemini-3-pro-preview",           # Using Pro V3 for Ultra slot
+    "tts": "gemini-2.5-flash-preview-tts",     # Native TTS
 }
 
 MODEL_COSTS = {

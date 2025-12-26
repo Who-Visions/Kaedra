@@ -11,6 +11,7 @@ from kaedra.services.prompt import PromptService
 from kaedra.services.memory import MemoryService
 from kaedra.services.research import ResearchService
 from kaedra.services.web import WebService
+from kaedra.services.wispr import WisprMonitor
 from kaedra.agents.kaedra import KaedraAgent
 from kaedra.core.config import PROJECT_ID, LOCATION, AGENT_RESOURCE_NAME
 from kaedra.core.google_tools import GOOGLE_TOOLS
@@ -29,7 +30,7 @@ CLOUD_RUN_URL = "https://kaedra-69017097813.us-central1.run.app"
 app = FastAPI(
     title="Kaedra API",
     description="Shadow Tactician Agent API",
-    version="0.0.6"
+    version="0.0.7"
 )
 
 # -------------------------------------------------------------------------
@@ -49,7 +50,7 @@ app.add_middleware(
 
 A2A_CARD = {
     "name": "Kaedra",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "id": "kaedra-shadow-tactician",
     "description": SERVICE_DESCRIPTION,
     "role": SERVICE_ROLE,
@@ -59,7 +60,8 @@ A2A_CARD = {
         "intelligence_synthesis",
         "shadow_operations",
         "multi_agent_coordination",
-        "gemini-3-reasoning"
+        "gemini-3-reasoning",
+        "voice_command_listener"
     ],
     "endpoints": {
         "chat": "/v1/chat/completions",
@@ -96,8 +98,38 @@ class AppState:
     agent: Optional[KaedraAgent] = None
     research_service: Optional[ResearchService] = None
     web_service: Optional[WebService] = None
+    wispr_service: Optional[WisprService] = None # Changed from wispr_monitor
+    tts_service: Optional[TTSService] = None # Added tts_service
 
 state = AppState()
+
+async def handle_voice_command(command_text: str):
+    """Callback for when Wispr detects a wake word."""
+    print(f"\n[MIC] Detected Command: {command_text}")
+    
+    if state.agent:
+        # Send to agent as if it were a chat message (but marked as voice)
+        print(f"[*] Processing voice command with Kaedra...")
+        
+        # Add voice context
+        context = f"[VOICE COMMAND] User said: '{command_text}' via Wispr Flow."
+        
+        # Run agent
+        response = await state.agent.run(query=command_text, context=context)
+        
+        # Log response
+        # Note: Colors.kaedra_tag() is not defined in the provided context, omitting for now.
+        print(f"\nKaedra: {response.content}\n") 
+        
+        # Speak response if TTS is available
+        if state.tts_service:
+            # Run in thread pool to avoid blocking async loop with synchronous playback
+            import asyncio
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, state.tts_service.speak, response.content)
+            
+    else:
+        print("[!] Agent not initialized yet.")
 
 @app.on_event("startup")
 async def startup_event():
@@ -111,10 +143,21 @@ async def startup_event():
         # Initialize Services
         state.web_service = WebService()
         state.research_service = ResearchService(prompt_service)
+        state.tts_service = TTSService()
         
         # Initialize Agent
         state.agent = KaedraAgent(prompt_service, memory_service)
         print("[+] Kaedra Agent initialized successfully.")
+        
+        # Initialize Wispr Monitor
+        # Only start if on local Windows machine or appropriately configured environment
+        # We can check for the existence of the DB path in the class init logic
+        user_home = os.environ.get("USERPROFILE", "")
+        if "super" in user_home.lower(): # Simple check to only run on your local machine
+            print("[*] Starting Wispr Listener...")
+            state.wispr_monitor = WisprMonitor(callback=handle_voice_command)
+            await state.wispr_monitor.start()
+            
     except Exception as e:
         print(f"[!] Failed to initialize Kaedra Agent: {e}")
         # We don't raise here to allow the server to start, but agent endpoints will fail
