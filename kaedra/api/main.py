@@ -12,6 +12,7 @@ from kaedra.services.memory import MemoryService
 from kaedra.services.research import ResearchService
 from kaedra.services.web import WebService
 from kaedra.services.wispr import WisprMonitor
+from kaedra.services.tts import TTSService
 from kaedra.agents.kaedra import KaedraAgent
 from kaedra.core.config import PROJECT_ID, LOCATION, AGENT_RESOURCE_NAME
 from kaedra.core.google_tools import GOOGLE_TOOLS
@@ -98,7 +99,7 @@ class AppState:
     agent: Optional[KaedraAgent] = None
     research_service: Optional[ResearchService] = None
     web_service: Optional[WebService] = None
-    wispr_service: Optional[WisprService] = None # Changed from wispr_monitor
+    wispr_service: Optional[WisprMonitor] = None # Changed from wispr_monitor
     tts_service: Optional[TTSService] = None # Added tts_service
 
 state = AppState()
