@@ -1001,7 +1001,7 @@ class KaedraVoiceEngine:
 
 async def main():
     parser = argparse.ArgumentParser(description="Kaedra Voice Engine v2.1")
-    parser.add_argument("--tts", default="flash", help="TTS model variant (e.g. flash, pro, chirp-kore)")
+    parser.add_argument("--tts", default="flash", help="TTS model variant (e.g. flash, chirp-kore, hifi-kore, lite-kore)")
     parser.add_argument("--max-turns", type=int, default=10)
     parser.add_argument("--wake-threshold", type=int, default=500)
     parser.add_argument("--silence-threshold", type=int, default=400)

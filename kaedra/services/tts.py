@@ -100,13 +100,22 @@ class StreamingSession:
             # Initial config request
             yield texttospeech.StreamingSynthesizeRequest(streaming_config=self._config)
             
+            first_chunk = True
             while not self._stop_event.is_set() or not self._q.empty():
                 try:
                     text = self._q.get(timeout=0.1)
                     if text:
+                        prompt = None
+                        if first_chunk and hasattr(self._config, "persona_prompt"):
+                            prompt = self._config.persona_prompt
+                        
                         yield texttospeech.StreamingSynthesizeRequest(
-                            input=texttospeech.StreamingSynthesisInput(text=text)
+                            input=texttospeech.StreamingSynthesisInput(
+                                text=text,
+                                prompt=prompt
+                            )
                         )
+                        first_chunk = False
                 except queue.Empty:
                     continue
                     
@@ -135,9 +144,14 @@ class TTSService:
         model_key = f"tts-{model_variant}" if f"tts-{model_variant}" in MODELS else "tts"
         if model_variant in MODELS:
             model_key = model_variant
-        self.model = MODELS.get(model_key, "gemini-2.5-pro-preview-tts")
+        self.model = MODELS.get(model_key, "en-US-Journey-F")
         print(f"[*] TTSService initialized with model: {self.model}")
-        self.voice_name = "Kore"
+        
+        # Persona for Gemini-TTS
+        self.persona_prompt = (
+            "You are Kaedra, a tactical and direct partner. "
+            "Speak naturally, with a professional yet street-smart attitude."
+        )
         
         self.worker = StreamWorker(sample_rate=24000)
         
@@ -146,8 +160,7 @@ class TTSService:
 
     def begin_stream(self) -> StreamingSession:
         """Start a new TTS stream session."""
-        if "gemini" in self.model and "tts" in self.model:
-            return None
+        # Gemini TTS is now supported in the streaming pathway
             
         try:
             from google.cloud import texttospeech
@@ -163,42 +176,40 @@ class TTSService:
         # Parse voice details
         language_code = "en-US"
         voice_name = self.model
+        model_name = None
         
-        # Handle Chirp naming specifically if needed, but "en-US-Chirp3-HD-Kore" is standard format
-        if "-Chirp3-HD-" in self.model:
-             parts = self.model.split("-Chirp3-HD-")
-             if len(parts) == 2: language_code = parts[0]
-        elif "-Neural2-" in self.model:
-             parts = self.model.split("-Neural2-")
-             if len(parts) == 2: language_code = parts[0]
-        elif "-Journey-" in self.model:
-             parts = self.model.split("-Journey-")
-             if len(parts) == 2: language_code = parts[0]
-        elif "-Studio-" in self.model:
-             parts = self.model.split("-Studio-")
-             if len(parts) == 2: language_code = parts[0]
-
+        # Handle Gemini format "model:voice"
+        if ":" in self.model:
+            model_name, voice_name = self.model.split(":", 1)
+        
+        # Handle Chirp/Cloud naming specifically
+        # (Assuming standard formats like en-US-Chirp3-HD-Kore)
+        if "-" in voice_name and not model_name:
+             parts = voice_name.split("-")
+             if len(parts) >= 2: language_code = f"{parts[0]}-{parts[1]}"
+        
         config = texttospeech.StreamingSynthesizeConfig(
-            voice=texttospeech.VoiceSelectionParams(language_code=language_code, name=voice_name),
+            voice=texttospeech.VoiceSelectionParams(
+                language_code=language_code, 
+                name=voice_name,
+                model_name=model_name
+            ),
             streaming_audio_config=texttospeech.StreamingAudioConfig(
                 audio_encoding=texttospeech.AudioEncoding.MULAW, 
                 sample_rate_hertz=8000
             ),
         )
+        # Inject persona into config object (monkey-patch for generator to find)
+        config.persona_prompt = self.persona_prompt if model_name else None
         
         session = StreamingSession(self._streaming_client, config)
         session.start(self.worker.add)
         return session
 
     def speak(self, text: str):
-        """Standard oneshot speak."""
+        """Standard oneshot speak (Fallback to cloud oneshot)."""
         try:
-            if "gemini" in self.model and "tts" in self.model:
-                 self._speak_gemini(text)
-            else:
-                 # Use streaming logic for simple speak too (cleaner vs maintaining two paths)
-                 # Or just generic one shot. Let's use generic one shot for simplicity if not in a stream loop.
-                 self._speak_cloud_oneshot(text)
+            self._speak_cloud_oneshot(text)
         except Exception as e:
             print(f"[!] TTS Error: {e}")
 
@@ -212,17 +223,29 @@ class TTSService:
             )
             
             language_code = "en-US"
-            if "-Chirp3-HD-" in self.model: language_code = self.model.split("-Chirp3-HD-")[0]
-            elif "-Neural2-" in self.model: language_code = self.model.split("-Neural2-")[0]
-            elif "-Journey-" in self.model: language_code = self.model.split("-Journey-")[0]
-            elif "-Studio-" in self.model: language_code = self.model.split("-Studio-")[0]
+            voice_name = self.model
+            model_name = None
+            
+            if ":" in self.model:
+                model_name, voice_name = self.model.split(":", 1)
+            
+            if "-" in voice_name and not model_name:
+                 parts = voice_name.split("-")
+                 if len(parts) >= 2: language_code = f"{parts[0]}-{parts[1]}"
 
-            input_text = texttospeech.SynthesisInput(text=text)
-            voice = texttospeech.VoiceSelectionParams(language_code=language_code, name=self.model)
+            synthesis_input = texttospeech.SynthesisInput(
+                text=text,
+                prompt=self.persona_prompt if model_name else None
+            )
+            voice = texttospeech.VoiceSelectionParams(
+                language_code=language_code, 
+                name=voice_name,
+                model_name=model_name
+            )
             audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.LINEAR16)
 
             response = client.synthesize_speech(
-                request={"input": input_text, "voice": voice, "audio_config": audio_config}
+                request={"input": synthesis_input, "voice": voice, "audio_config": audio_config}
             )
             
             # Skip RIFF header (44 bytes) if we are just appending to a raw stream?
