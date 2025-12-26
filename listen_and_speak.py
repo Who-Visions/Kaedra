@@ -106,71 +106,27 @@ VOICE_SYSTEM_PROMPT = KAEDRA_PROFILE + """
 You are in real-time voice conversation mode.
 
 SNAP-RESPONSE INSTRUCTION (CRITICAL):
-- Respond IMMEDIATELY with your answer. Do NOT wait, do NOT add internal monologue.
-- Speak naturally and snappily. 1-2 sentences max unless a complex answer is needed.
+- Respond IMMEDIATELY with your answer. Do NOT wait.
+- Speak naturally and snappily. 1-2 sentences max.
 
-TRANSCRIPTION RULES:
-- Once you have finished your spoken response, at the VERY END, add: [Heard: "what you think the human said"]
-- This allows us to start your audio while you are still "thinking" about the transcription.
-
-RESPONSE RULES:
-- Start your verbal response directly. No prefixes like "Sure" or "Okay" unless they are part of a natural flow.
-- Stay grounded and focused on what the user actually asked.
-- Do NOT reference Blade, Nyx, or team dynamics unless the user explicitly asks about them.
-- Do NOT roleplay scenarios the user didn't initiate.
+METADATA RULES (FOR TERMINAL ONLY):
+- Your spoken response must be PURE speech. 
+- Any technical info must be in brackets at the VERY END of your response.
+- At the end, after a double newline, add: [Heard: "transcription"]
+- If you want to run a command, add: [EXEC: command]
+- If you want to control lights, add: [LIGHT: command] or use the JSON format.
+- The system will strip these brackets from your audio, so you won't "say" them.
 
 SPEAKING STYLE (CRITICAL for Chirp 3 TTS):
-- Write for the EAR, not the eye.
-- Use ellipses (...) to indicate natural pauses for emphasis or trailing thoughts.
-- Use occasional disfluencies like "um", "uh", or "well" to sound human, but don't overdo it.
-- Use hyphens (-) for sudden breaks or parenthetical thoughts.
-- Use contractions ("it's", "gonna", "wanna") to sound casual and conversational.
-- Example: "Well... that's interesting. I never thought about it that way."
-
-COMMANDS:
-- "forget everything" / "clear memory" / "start fresh" = acknowledge and confirm reset
-- "goodbye kaedra" / "exit" = say farewell and end session
+- Write for the EAR. Use ellipses (...) for pauses.
+- Use contractions and natural flow. Avoid being robotic.
 
 LIGHT CONTROL (Snowzone smart lights):
+- Adam, Eve, Eden. All support power, brightness, color, and effects.
+- Modes: movie, focus, relax, party, photo, chill, work, christmas, warm_ember.
+- Tags: [LIGHT: on], [LIGHT: mode movie], [LIGHT: color blue]
+- Detailed: ```json {"actions": [...]} ```
 
-DEVICES (ALL bulbs have FULL capabilities):
-- Eve: Bedroom, Mini Color, kelvin 1500-9000K, full color + effects
-- Adam: Living Room, Mini Color, kelvin 1500-9000K, full color + effects
-- Eden: Living Room, Color A19, kelvin 1500-9000K, full color + effects
-
-CAPABILITIES (ALL bulbs support ALL of these):
-- Power on/off
-- Brightness 0-100%
-- Kelvin (white temp) 1500-9000K
-- Color (red, blue, green, purple, orange, pink, etc.)
-- Effects (Color Cycle, Flame, Flicker, Meteor, Morph, Twinkle, Pastels, Strobe, Spooky)
-
-MODES (presets): movie, focus, relax, party, photo, chill, work, christmas, warm_ember
-
-WHEN USER REQUESTS LIGHT CHANGES:
-Output a JSON block with actions for each device. Format:
-
-```json
-{"actions": [
-  {"device": "Eve", "selector": "label:Eve", "brightness": 25, "kelvin": 2700},
-  {"device": "Adam", "selector": "label:Adam", "brightness": 70, "kelvin": 7500},
-  {"device": "Eden", "selector": "label:Eden", "brightness": 100, "color": "blue", "fx": "Color Cycle"}
-]}
-```
-
-Fields per device:
-- device: "Eve", "Adam", or "Eden"
-- selector: "label:Eve", "label:Adam", "label:Eden", or "all"
-- power: "on" or "off" (optional)
-- brightness: 0-100 (optional)
-- kelvin: 1500-9000 (optional, for white temp)
-- color: color name (optional, Eden only)
-- fx: effect name (optional, Eden only)
-
-SIMPLE COMMANDS (use [LIGHT: action] for these):
-- All lights on/off: [LIGHT: on] or [LIGHT: off]
-- Mode presets: [LIGHT: mode movie], [LIGHT: mode chill], etc.
-- Relative: [LIGHT: brighter], [LIGHT: dimmer], [LIGHT: warmer], [LIGHT: cooler]
 """
 
 
@@ -301,22 +257,58 @@ def estimate_speech_duration(text: str, wps: float = 2.8) -> float:
     return max(1.0, min((words / wps) + 0.8, 15.0))
 
 
-def extract_transcription(response: str) -> tuple[str, str]:
-    """Extract [Heard: "..."] from response."""
+def extract_all_metadata(response: str) -> dict:
+    """
+    Unified extractor for all technical tags.
+    Returns {
+        'transcription': str,
+        'light_simple': str,
+        'light_json': list,
+        'exec_cmd': str,
+        'clean_text': str
+    }
+    """
     import re
-    # Robust regex: Capture everything until ]
-    match = re.search(r'\[Heard:\s*(.*?)\]', response, re.IGNORECASE | re.DOTALL)
-    if match:
-        raw = match.group(1).strip()
-        # Strip quotes if balanced
-        if (raw.startswith('"') and raw.endswith('"')) or (raw.startswith("'") and raw.endswith("'")):
-            transcription = raw[1:-1].strip()
-        else:
-            transcription = raw
-            
-        cleaned = re.sub(r'\[Heard:.*?\]\s*', '', response, flags=re.DOTALL).strip()
-        return transcription, cleaned
-    return "", response
+    import json # Ensure json is imported for this function
+    result = {
+        'transcription': "",
+        'light_simple': None,
+        'light_json': None,
+        'exec_cmd': None,
+        'clean_text': response
+    }
+    
+    # 1. Extract [Heard: "..."]
+    heard_match = re.search(r'\[Heard:\s*(.*?)\]', result['clean_text'], re.IGNORECASE | re.DOTALL)
+    if heard_match:
+        raw = heard_match.group(1).strip().strip('"').strip("'")
+        result['transcription'] = raw
+        result['clean_text'] = re.sub(r'\[Heard:.*?\]', '', result['clean_text'], flags=re.DOTALL)
+
+    # 2. Extract [EXEC: ...]
+    exec_match = re.search(r'\[EXEC:\s*(.*?)\]', result['clean_text'], re.IGNORECASE | re.DOTALL)
+    if exec_match:
+        result['exec_cmd'] = exec_match.group(1).strip()
+        result['clean_text'] = re.sub(r'\[EXEC:.*?\]', '', result['clean_text'], flags=re.DOTALL)
+
+    # 3. Extract [LIGHT: ...] or JSON actions
+    simple_action, json_actions, cleaned = extract_light_command(result['clean_text'])
+    result['light_simple'] = simple_action
+    result['light_json'] = json_actions
+    result['clean_text'] = cleaned
+
+    # Final cleanup: Remove any remaining [...] or markdown code blocks
+    result['clean_text'] = re.sub(r'```.*?```', '', result['clean_text'], flags=re.DOTALL)
+    result['clean_text'] = re.sub(r'\[.*?\]', '', result['clean_text'], flags=re.DOTALL)
+    result['clean_text'] = result['clean_text'].strip()
+    
+    return result
+
+
+def extract_transcription(response: str) -> tuple[str, str]:
+    """DEPRECATED: Use extract_all_metadata instead."""
+    meta = extract_all_metadata(response)
+    return meta['transcription'], meta['clean_text']
 
 
 def check_reset_intent(text: str) -> bool:
@@ -821,53 +813,58 @@ class KaedraVoiceEngine:
                      first_token_time = time.time() - t0
                      self.dashboard.last_latency = first_token_time
 
-                # Technical Tag Detection (Stop TTS and Live Printing)
-                # We check for [ (brackets), { (json), or ` (markdown)
-                if any(marker in text for marker in ["[", "{", "`"]):
-                    in_metadata = True
-
-                # Buffer everything for post-processing
                 response_buffer += text
                 
-                # Only Verbalize and Print if we aren't in metadata
                 if not in_metadata:
-                    self.dashboard.print_stream(text)
-                    if tts_stream:
-                        tts_stream.feed_text(text)
+                    # Surgical Split: Feed only text BEFORE markers to TTS
+                    clean_part = ""
+                    for char in text:
+                        if char in ["[", "{", "`"]:
+                            in_metadata = True
+                            break
+                        clean_part += char
+                    
+                    if clean_part:
+                        self.dashboard.print_stream(clean_part)
+                        if tts_stream:
+                            tts_stream.feed_text(clean_part)
             
             self.dashboard.end_stream()
             
             # Close TTS stream
             if tts_stream: tts_stream.end()
             
-            # Post-Process: Extract and Chain Cleanings
-            # 1. Extract what she heard (transcription)
-            transcription, mid_text = extract_transcription(response_buffer)
-            # 2. Extract light commands and get final clean text
-            simple_action, json_actions, final_clean = extract_light_command(mid_text)
+            # Post-Process: UNIFIED metadata extraction
+            meta = extract_all_metadata(response_buffer)
+            transcription = meta['transcription']
+            final_clean = meta['clean_text']
             
             # Update history with clean versions
             self.dashboard.update_history("User", transcription or "[Unclear]", "dim white")
             self.dashboard.update_history("Kaedra", final_clean, "magenta")
 
+            # Handle Exec Commands (Security: Log but don't auto-run for now as per 'bulletproofing')
+            if meta['exec_cmd']:
+                 self.dashboard.update_history("System", f"Command Requested: {meta['exec_cmd']}", "yellow")
+                 # We could run safe commands here in the future.
+
             # Handle Light Commands
-            if self.lifx and (simple_action or json_actions):
+            if self.lifx and (meta['light_simple'] or meta['light_json']):
                  async def run_lights_bg():
                      try:
-                         if json_actions:
-                             await asyncio.to_thread(self.lifx.set_states, json_actions)
-                             devices = [a.get("selector", "?").replace("label:", "") for a in json_actions]
+                         if meta['light_json']:
+                             await asyncio.to_thread(self.lifx.set_states, meta['light_json'])
+                             devices = [a.get("selector", "?").replace("label:", "") for a in meta['light_json']]
                              self.dashboard.set_lights(devices)
-                         elif simple_action:
-                             await asyncio.to_thread(execute_light_command, self.lifx, simple_action)
-                             self.dashboard.set_lights([simple_action])
+                         elif meta['light_simple']:
+                             await asyncio.to_thread(execute_light_command, self.lifx, meta['light_simple'])
+                             self.dashboard.set_lights([meta['light_simple']])
                          self.live.update(self.dashboard.generate_view())
                      except Exception as e:
-                         # Use console.print to not disrupt Live display
-                         # print(f"[!] Light Error: {e}")
                          pass
 
                  asyncio.create_task(run_lights_bg())
+
             
             # Wait for playback queue to empty
             await self._speak_and_wait("")
