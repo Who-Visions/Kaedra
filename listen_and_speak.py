@@ -57,17 +57,17 @@ COMMANDS:
 
 LIGHT CONTROL (Snowzone smart lights):
 
-DEVICES:
-- Eve: Bedroom, Mini C, kelvin 1500-9000K, no color
-- Adam: Living Room, Mini C, kelvin 1500-9000K, no color  
+DEVICES (ALL bulbs have FULL capabilities):
+- Eve: Bedroom, Mini Color, kelvin 1500-9000K, full color + effects
+- Adam: Living Room, Mini Color, kelvin 1500-9000K, full color + effects
 - Eden: Living Room, Color A19, kelvin 1500-9000K, full color + effects
 
-CAPABILITIES:
-- All bulbs: power on/off, brightness 0-100%, kelvin 1500-9000
-- Eden only: color (red, blue, green, purple, orange, etc.) + effects
-
-EFFECTS (Eden only):
-Color Cycle, Flame, Flicker, Meteor, Morph, Twinkle, Pastels, Strobe, Spooky
+CAPABILITIES (ALL bulbs support ALL of these):
+- Power on/off
+- Brightness 0-100%
+- Kelvin (white temp) 1500-9000K
+- Color (red, blue, green, purple, orange, pink, etc.)
+- Effects (Color Cycle, Flame, Flicker, Meteor, Morph, Twinkle, Pastels, Strobe, Spooky)
 
 MODES (presets): movie, focus, relax, party, photo, chill, work, christmas, warm_ember
 
@@ -606,7 +606,7 @@ class KaedraVoiceEngine:
         print(f"[User] 🎤 {audio_kb:.1f} KB ({audio_seconds:.1f}s)")
 
         # Reject suspiciously long recordings (likely feedback loop)
-        if audio_seconds > 10:
+        if audio_seconds > 30:
             print(f"[!] ⚠️ Recording too long ({audio_seconds:.1f}s) - likely feedback, skipping")
             self.stats.feedback_rejected += 1
             return
