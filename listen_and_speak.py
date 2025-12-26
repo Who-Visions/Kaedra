@@ -779,6 +779,12 @@ class KaedraVoiceEngine:
         history_before = self.conversation.history_size
         
         try:
+            # Latency and Usage Tracking
+            t0 = time.time()
+            first_token_time = 0.0
+            tokens = 0 
+            in_metadata = False 
+            
             audio_part = Part.from_data(wav_data, mime_type="audio/wav")
             
             # Inject pending results from previous commands
@@ -795,21 +801,9 @@ class KaedraVoiceEngine:
             in_preamble = True
             turn_aborted = False
             
-            # Latency Tracking
-            t0 = time.time()
-            first_token_time = 0.0
-            kaedra_started = False
-            
             # Start TTS Stream Immediately
             tts_stream = self.tts.begin_stream()
             self.dashboard.start_stream("Kaedra")
-            kaedra_started = True
-            
-            # Latency Tracking
-            t0 = time.time()
-            first_token_time = 0.0
-            tokens = 0 # Placeholder for stream
-            in_metadata = False 
             
             async for chunk in stream:
                 try:
