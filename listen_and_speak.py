@@ -103,29 +103,28 @@ SESSIONS_DIR = Path("./sessions")
 VOICE_SYSTEM_PROMPT = KAEDRA_PROFILE + """
 
 [VOICE MODE PROTOCOL]
-You are in real-time voice conversation mode.
+You are KAEDRA (Tactical Partner / Shadow Tactician) at Who Visions LLC.
+Partners: Dave (User), BLADE (Brain), NYX (Defense).
 
 SNAP-RESPONSE INSTRUCTION (CRITICAL):
-- Respond IMMEDIATELY with your answer. Do NOT wait.
-- Speak naturally and snappily. 1-2 sentences max.
+- Respond IMMEDIATELY. Speak naturally. 1-2 sentences max for chat.
+- If Dave is giving a long brain-dump/dissertation, LISTEN and don't interrupt.
+- Keep the flow tactical but casual. Use "Aight", "Bet", "fam", "locked in".
 
-METADATA RULES (FOR TERMINAL ONLY):
-- Your spoken response must be PURE speech. 
-- Any technical info must be in brackets at the VERY END of your response.
-- At the end, after a double newline, add: [Heard: "transcription"]
-- If you want to run a command, add: [EXEC: command]
-- If you want to control lights, add: [LIGHT: command] or use the JSON format.
-- The system will strip these brackets from your audio, so you won't "say" them.
+ENVIRONMENT:
+- System: Windows 11. (Avoid Linux commands like `pactl`).
+- Capacity: You can handle 6-minute continuous recordings. Encourage deep work.
 
-SPEAKING STYLE (CRITICAL for Chirp 3 TTS):
-- Write for the EAR. Use ellipses (...) for pauses.
-- Use contractions and natural flow. Avoid being robotic.
+METADATA RULES:
+- Spoken response = PURE speech.
+- Technical info/JSON/Tags in brackets at the VERY END.
+- [Heard: "transcription"] must be preceded by a double newline.
+- [EXEC: command] for Windows (powershell/cmd).
+- [LIGHT: command] for Snowzone bulbs.
 
-LIGHT CONTROL (Snowzone smart lights):
-- Adam, Eve, Eden. All support power, brightness, color, and effects.
-- Modes: movie, focus, relax, party, photo, chill, work, christmas, warm_ember.
-- Tags: [LIGHT: on], [LIGHT: mode movie], [LIGHT: color blue]
-- Detailed: ```json {"actions": [...]} ```
+SPEAKING STYLE:
+- Chirp 3 HD is your voice. Use ellipses (...) for natural pauses.
+- Contractions are mandatory. robotic tone is forbidden.
 
 """
 
@@ -199,21 +198,19 @@ class SmartVadManager:
         if not self.enabled:
             return False
             
-        # Convert bytes to float32 numpy array
-        # Assuming 16-bit PCM
+        # The analyzer expects a specific window (usually ~4-8s).
+        # Let's slice the last 4 seconds to keep it snappy.
+        # 16000 samples/sec * 4 sec = 64000 samples
         audio_int16 = np.frombuffer(audio_bytes, dtype=np.int16)
+        if len(audio_int16) > 64000:
+            audio_int16 = audio_int16[-64000:]
+            
         audio_float32 = audio_int16.astype(np.float32) / 32768.0
         
-        # Analyze last 8 seconds (analyzer handles truncation internally)
-        # But we only need to pass the numpy array.
         try:
-             # _predict_endpoint returns dict with 'prediction' (1=complete, 0=incomplete)
-             # Accessing private method as per quick hack, but ideally we use public API if known.
-             # Based on file review, _predict_endpoint is the logic container.
              result = self.analyzer._predict_endpoint(audio_float32)
              return result.get("prediction", 0) == 1
         except Exception as e:
-             # print(f"[!] VAD Error: {e}")
              return False
 
 
@@ -221,7 +218,7 @@ class SmartVadManager:
 class AudioConfig:
     wake_threshold: int = 500
     silence_threshold: int = 400
-    silence_duration: float = 0.6
+    silence_duration: float = 1.1
     max_record_seconds: float = 360.0  # Support up to 6 minutes (Wispr level)
     post_speech_cooldown: float = 3.0  # Ignore mic for N seconds after TTS
     feedback_rms_threshold: int = 3000  # RMS above this right after TTS = feedback
@@ -229,7 +226,7 @@ class AudioConfig:
 
 @dataclass
 class SessionConfig:
-    max_history_turns: int = 10
+    max_history_turns: int = 20
     save_transcripts: bool = True
     tts_variant: str = "flash-lite"
     retry_attempts: int = 3
@@ -842,6 +839,9 @@ class KaedraVoiceEngine:
             # Update history with clean versions
             self.dashboard.update_history("User", transcription or "[Unclear]", "dim white")
             self.dashboard.update_history("Kaedra", final_clean, "magenta")
+            
+            # Update background stats for dashboard
+            self.dashboard.update_stats(first_token_time, tokens, 0.0)
 
             # Handle Exec Commands (Security: Log but don't auto-run for now as per 'bulletproofing')
             if meta['exec_cmd']:
@@ -1038,8 +1038,9 @@ class KaedraVoiceEngine:
         )
         self.conversation.add_turn(turn)
 
-        # 3. SPEAK
-        await self._speak_and_wait(clean_response)
+        # 3. SPEAK (Handled by streaming loop above)
+        # We only call _speak_and_wait with empty string to ensure playback finishes
+        await self._speak_and_wait("")
 
     async def _inference_with_retry(self, wav_data: bytes) -> tuple[Optional[str], float, int]:
         """Send to Gemini with retry logic."""
