@@ -80,6 +80,19 @@ class MicrophoneService:
         # Cast to float to avoid integer overflow when squaring int16
         return np.sqrt(np.mean(indata.astype(float)**2))
 
+    def get_current_rms(self) -> float:
+        """Quick sample of current mic level for barge-in detection."""
+        try:
+            with sd.InputStream(device=self.device_index,
+                                samplerate=self.sample_rate,
+                                channels=self.channels,
+                                dtype=self.dtype,
+                                blocksize=self.block_size) as stream:
+                indata, _ = stream.read(self.block_size)
+                return self._calculate_rms(indata)
+        except:
+            return 0.0
+
     def wait_for_speech(self, threshold: int = 300) -> bool:
         """
         Blocks until audio energy exceeds threshold.

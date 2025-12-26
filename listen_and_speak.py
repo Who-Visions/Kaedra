@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Optional
 from enum import Enum
 
-import vertexai
-from vertexai.generative_models import GenerativeModel, Part
+from google import genai
+from google.genai import types
 
 from kaedra.core.config import PROJECT_ID, LIFX_TOKEN
 from kaedra.services.mic import MicrophoneService
@@ -231,6 +231,7 @@ class SessionConfig:
     tts_variant: str = "flash-lite"
     retry_attempts: int = 3
     retry_delay: float = 1.0
+    thinking_level: Optional[str] = None
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -567,38 +568,66 @@ def execute_light_command(lifx, action: str) -> bool:
         return False
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# CONVERSATION MANAGER
-# ═══════════════════════════════════════════════════════════════════════════════
-
 class ConversationManager:
     """Handles history, pruning, and persistence."""
 
-    def __init__(self, model: GenerativeModel, config: SessionConfig):
-        self.model = model
+    def __init__(self, client: genai.Client, model_name: str, config: SessionConfig, system_instruction: str):
+        self.client = client
+        self.model_id = model_name
         self.config = config
-        self.chat = model.start_chat(history=[])
+        self.system_instruction = system_instruction
+        
+        # Configure the persistent chat session with system instruction
+        # GenAI SDK: system_instruction goes in the config
+        self.chat_config = types.GenerateContentConfig(
+            system_instruction=system_instruction,
+            temperature=1.0  # Recommended for Gemini 3
+        )
+        
+        # Create chat with explicit config
+        self.chat = client.aio.chats.create(
+            model=model_name, 
+            config=self.chat_config
+        )
         self.turns: list[ConversationTurn] = []
         self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     def reset(self):
         """Clear history and start fresh."""
-        self.chat = self.model.start_chat(history=[])
+        self.chat = self.client.aio.chats.create(
+            model=self.model_id, 
+            config=self.chat_config
+        )
         self.turns = []
 
-    def rollback(self, to_size: int):
+    async def rollback(self, to_size: int):
         """Rollback history to a previous size."""
-        if len(self.chat.history) > to_size:
-            self.chat = self.model.start_chat(history=list(self.chat.history[:to_size]))
+        history = self.chat.get_history()
+        if len(history) > to_size:
+            trimmed_history = list(history[:to_size])
+            self.chat = self.client.aio.chats.create(
+                model=self.model_id, 
+                history=trimmed_history,
+                config=self.chat_config
+            )
 
-    def prune_history(self):
+    async def prune_history(self):
         """Trim history to max_history_turns (exchanges, not entries)."""
+        history = self.chat.get_history()
         max_entries = self.config.max_history_turns * 2
-        if len(self.chat.history) > max_entries:
-            trimmed = list(self.chat.history[-max_entries:])
-            self.chat = self.model.start_chat(history=trimmed)
+        if len(history) > max_entries:
+            trimmed = list(history[-max_entries:])
+            self.chat = self.client.aio.chats.create(
+                model=self.model_id, 
+                history=trimmed,
+                config=self.chat_config
+            )
             return True
         return False
+
+    def get_history_size(self):
+        history = self.chat.get_history()
+        return len(history)
 
     def add_turn(self, turn: ConversationTurn):
         self.turns.append(turn)
@@ -631,9 +660,7 @@ class ConversationManager:
 
         return filepath
 
-    @property
-    def history_size(self) -> int:
-        return len(self.chat.history)
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -652,7 +679,8 @@ class KaedraVoiceEngine:
         conversation: ConversationManager,
         audio_config: AudioConfig,
         session_config: SessionConfig,
-        lifx: Optional["LIFXService"] = None
+        lifx: Optional["LIFXService"] = None,
+        model_name: str = "gemini-3-flash-preview"
     ):
         self.mic = mic
         self.tts = tts
@@ -660,6 +688,7 @@ class KaedraVoiceEngine:
         self.audio_config = audio_config
         self.session_config = session_config
         self.lifx = lifx
+        self.model_name = model_name
         self.stats = SessionStats()
         self.state = SessionState.IDLE
         self._should_stop = False
@@ -693,7 +722,7 @@ class KaedraVoiceEngine:
 
         # 1. LISTEN (with cooldown check)
         self.state = SessionState.IDLE
-        pruned = self.conversation.prune_history()
+        pruned = await self.conversation.prune_history()
         
         self.dashboard.set_status(f"Listening", "green")
         if pruned:
@@ -776,7 +805,16 @@ class KaedraVoiceEngine:
         self.live.update(self.dashboard.generate_view())
         
         wav_data = create_wav_buffer(audio_data, self.mic.sample_rate)
-        history_before = self.conversation.history_size
+        
+        # Prepare parts for inference
+        audio_part = types.Part.from_bytes(data=wav_data, mime_type="audio/wav")
+        current_time = datetime.now().strftime("%I:%M %p EST on %B %d, %Y")
+        parts = [audio_part, types.Part.from_text(text=f"Current time: {current_time}")]
+        
+        if self._pending_exec_result:
+            parts.append(types.Part.from_text(text=self._pending_exec_result))
+            self._pending_exec_result = None
+
         
         try:
             # Latency and Usage Tracking
@@ -785,55 +823,87 @@ class KaedraVoiceEngine:
             tokens = 0 
             in_metadata = False 
             
-            audio_part = Part.from_data(wav_data, mime_type="audio/wav")
+            # Gemini 3 Agentic Reasoning Config (Brain)
+            # Default to 'Low' for Flash to maintain < 3s latency
+            if self.session_config.thinking_level:
+                think_level = self.session_config.thinking_level
+            else:
+                think_level = "Low" if "flash" in self.model_name else "Medium"
             
-            # Inject pending results from previous commands
-            parts = [audio_part]
-            if self._pending_exec_result:
-                parts.append(Part.from_text(self._pending_exec_result))
-                self._pending_exec_result = None
-                
-            stream = await self.conversation.chat.send_message_async(parts, stream=True)
+            # Thinking config is passed per-message to enable/disable it
+            gen_config = types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(
+                    include_thoughts=True,
+                    thinking_level=think_level
+                )
+            ) if "gemini-3" in self.model_name else None
+            
+            # Use unified SDK async stream method
+            # Start stream IMMEDIATELY
+            stream = await self.conversation.chat.send_message_stream(
+                message=parts,
+                config=gen_config
+            )
             
             # Streaming State
-            preamble_buffer = ""
             response_buffer = ""
-            in_preamble = True
-            turn_aborted = False
+            thought_logged = False
             
-            # Start TTS Stream Immediately
-            tts_stream = self.tts.begin_stream()
-            self.dashboard.start_stream("Kaedra")
+            # LAZY TTS: Don't start until we have actual text (avoids timeout during thinking)
+            tts_stream = None
+            tts_started = False
             
             async for chunk in stream:
-                try:
-                    text = chunk.text
-                    if not text: continue
-                except: continue
+                if not chunk.candidates: continue
                 
+                # Check for first token latency
                 if first_token_time == 0:
                      first_token_time = time.time() - t0
                      self.dashboard.last_latency = first_token_time
+                     self.dashboard.set_status("Responding...", "magenta")
+                     self.live.update(self.dashboard.generate_view())
 
-                response_buffer += text
-                
-                if not in_metadata:
-                    # Surgical Split: Feed only text BEFORE markers to TTS
-                    clean_part = ""
-                    for char in text:
-                        if char in ["[", "{", "`"]:
-                            in_metadata = True
-                            break
-                        clean_part += char
+                for part in chunk.candidates[0].content.parts:
+                    # THOUGHT HANDLING: Display when it starts thinking
+                    if hasattr(part, 'thought') and part.thought:
+                        if not thought_logged:
+                            self.dashboard.set_status(f"Thinking ({think_level})...", "yellow")
+                            self.live.update(self.dashboard.generate_view())
+                            thought_logged = True
+                        continue
+
+                for part in chunk.candidates[0].content.parts:
+                    # THOUGHT HANDLING: Display in logs, skip for voice
+                    if hasattr(part, 'thought') and part.thought:
+                        continue
                     
-                    if clean_part:
-                        self.dashboard.print_stream(clean_part)
-                        if tts_stream:
-                            tts_stream.feed_text(clean_part)
+                    if not part.text: continue
+                    text = part.text
+                    response_buffer += text
+                    
+                    if not in_metadata:
+                        # Surgical Split: Feed only clean text to TTS
+                        clean_part = ""
+                        for char in text:
+                            if char in ["[", "{", "`"]:
+                                in_metadata = True
+                                break
+                            clean_part += char
+                        
+                        if clean_part:
+                            # START TTS STREAM LAZILY - only when we have real text
+                            if not tts_started:
+                                tts_stream = self.tts.begin_stream()
+                                self.dashboard.start_stream("Kaedra")
+                                tts_started = True
+                            
+                            self.dashboard.print_stream(clean_part)
+                            if tts_stream:
+                                tts_stream.feed_text(clean_part)
             
             self.dashboard.end_stream()
             
-            # Close TTS stream
+            # Close TTS stream (Unified end)
             if tts_stream: tts_stream.end()
             
             # Post-Process: UNIFIED metadata extraction
@@ -904,23 +974,33 @@ class KaedraVoiceEngine:
             self.stats.successful_turns += 1
             self.stats.total_inference_time += (time.time() - t0)
 
+            # Manage history and persistence
+            await self.conversation.prune_history()
+            self.conversation.save_transcript()
+
         except Exception as e:
             self.dashboard.update_history("System", f"Stream Error: {e}", "red")
             self.live.update(self.dashboard.generate_view())
 
     async def _inference_with_retry(self, wav_data: bytes) -> tuple[Optional[str], float, int]:
         """Send to Gemini with retry logic."""
-        audio_part = Part.from_data(wav_data, mime_type="audio/wav")
+        audio_part = types.Part.from_bytes(data=wav_data, mime_type="audio/wav")
+        
+        # Inject pending results from previous commands
+        parts = [audio_part]
+        if self._pending_exec_result:
+            parts.append(types.Part.from_text(text=self._pending_exec_result))
+            self._pending_exec_result = None
 
         for attempt in range(self.session_config.retry_attempts):
             try:
                 start = time.time()
                 # Inject current time so Kaedra knows the real time
                 current_time = datetime.now().strftime("%I:%M %p EST on %B %d, %Y")
-                response = await self.conversation.chat.send_message_async([
-                    audio_part,
-                    f"[USER_AUDIO] Current time: {current_time}"
-                ])
+                parts.append(f"[USER_AUDIO] Current time: {current_time}")
+                response = await self.conversation.chat.send_message(
+                    message=parts
+                )
                 inference_time = time.time() - start
 
                 text_tokens = len(response.text) // 4
@@ -945,7 +1025,7 @@ class KaedraVoiceEngine:
         await asyncio.sleep(1.5)
 
     async def _speak_and_wait(self, text: str):
-        """Speak response and wait for playback to finish."""
+        """Speak response and wait for playback, with barge-in detection."""
         self.state = SessionState.SPEAKING
         self.dashboard.set_status("Speaking...", "green")
         self.live.update(self.dashboard.generate_view())
@@ -958,8 +1038,20 @@ class KaedraVoiceEngine:
         self.dashboard.set_status("Speaking (Queue)...", "yellow")
         self.live.update(self.dashboard.generate_view())
 
-        # Poll for completion
+        # Poll for completion with BARGE-IN detection
+        barge_in_threshold = self.audio_config.wake_threshold * 2  # Higher threshold to avoid feedback
         while self.tts.is_speaking():
+            # Check mic for user interrupt
+            try:
+                rms = self.mic.get_current_rms()
+                if rms > barge_in_threshold:
+                    self.dashboard.set_status("Interrupted!", "red")
+                    self.live.update(self.dashboard.generate_view())
+                    self.tts.stop()  # Cut her off
+                    self._last_tts_end_time = time.time()
+                    return  # Exit immediately, next turn will start
+            except:
+                pass
             await asyncio.sleep(0.1)
         
         self.state = SessionState.IDLE
@@ -1002,12 +1094,14 @@ class KaedraVoiceEngine:
 async def main():
     parser = argparse.ArgumentParser(description="Kaedra Voice Engine v2.1")
     parser.add_argument("--tts", default="flash", help="TTS model variant (e.g. flash, chirp-kore, hifi-kore, lite-kore)")
+    parser.add_argument("--model", default="flash", help="Reasoning model variant (flash, pro, ultra)")
     parser.add_argument("--max-turns", type=int, default=10)
     parser.add_argument("--wake-threshold", type=int, default=500)
     parser.add_argument("--silence-threshold", type=int, default=400)
     parser.add_argument("--silence-duration", type=float, default=0.6)
     parser.add_argument("--cooldown", type=float, default=1.5, help="Post-TTS cooldown seconds")
     parser.add_argument("--mic", type=str, default="Chat Mix", help="Mic device name filter (e.g. 'Realtek', 'Chat Mix', 'Wave')")
+    parser.add_argument("--thinking", type=str, default=None, help="Thinking level override (Minimal, Low, Medium, High)")
     parser.add_argument("--no-save", dest="save_transcripts", action="store_false", default=True)
     args = parser.parse_args()
 
@@ -1021,7 +1115,8 @@ async def main():
     session_config = SessionConfig(
         max_history_turns=args.max_turns,
         tts_variant=args.tts,
-        save_transcripts=args.save_transcripts
+        save_transcripts=args.save_transcripts,
+        thinking_level=args.thinking
     )
 
     print(f"[*] Initializing (Project: {PROJECT_ID})...")
@@ -1043,10 +1138,13 @@ async def main():
         else:
             print("[*] LIFX not configured (set LIFX_TOKEN env var)")
 
-        vertexai.init(project=PROJECT_ID, location="global")
-        model = GenerativeModel(MODEL_NAME, system_instruction=VOICE_SYSTEM_PROMPT)
-
-        conversation = ConversationManager(model, session_config)
+        from kaedra.core.config import MODELS, DEFAULT_MODEL, LOCATION
+        MODEL_NAME = MODELS.get(args.model, MODELS.get(DEFAULT_MODEL, "gemini-3-flash-preview"))
+        
+        # New SDK Client (Vertex AI mode)
+        client = genai.Client(vertexai=True, project=PROJECT_ID, location="global")
+        
+        conversation = ConversationManager(client, MODEL_NAME, session_config, VOICE_SYSTEM_PROMPT)
 
         engine = KaedraVoiceEngine(
             mic=mic,
@@ -1054,7 +1152,8 @@ async def main():
             conversation=conversation,
             audio_config=audio_config,
             session_config=session_config,
-            lifx=lifx
+            lifx=lifx,
+            model_name=MODEL_NAME
         )
 
         await engine.run()
