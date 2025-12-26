@@ -41,7 +41,8 @@ MODELS = {
     "tts-flash-lite": "en-US-Neural2-C",       # Neural2 (Ultra Fast) - Replaces Gemini Flash Lite
     "tts-pro": "en-US-Studio-O",               # Studio (High Res)
     "tts": "en-US-Journey-F",                  # Default
-    "chirp-kore": "en-US-Chirp3-HD-Kore",      # Chirp 3 HD (US, Female)
+    "chirp-kore": "en-US-Chirp3-HD-Kore",      # Chirp 3 HD (US, Female) - Fast Stream
+    "hifi-kore": "gemini-3-flash-preview-tts", # High Fidelity (24kHz) - Premium Sound
     "chirp-puck": "en-US-Chirp3-HD-Puck",      # Chirp 3 HD (US, Male)
     "chirp-charon": "en-US-Chirp3-HD-Charon",  # Chirp 3 HD (US, Male)
     "chirp-fenrir": "en-US-Chirp3-HD-Fenrir",  # Chirp 3 HD (US, Male)
