@@ -74,3 +74,57 @@ class MicrophoneService:
                            dtype=self.dtype)
         sd.wait()
         return recording.tobytes()
+
+    def _calculate_rms(self, indata):
+        """Calculate Root Mean Square amplitude."""
+        # Cast to float to avoid integer overflow when squaring int16
+        return np.sqrt(np.mean(indata.astype(float)**2))
+
+    def wait_for_speech(self, threshold: int = 300) -> bool:
+        """
+        Blocks until audio energy exceeds threshold.
+        Returns True when speech triggers.
+        """
+        print(f"[*] Waiting for speech (Threshold: {threshold})...")
+        with sd.InputStream(device=self.device_index,
+                            samplerate=self.sample_rate,
+                            channels=self.channels,
+                            dtype=self.dtype,
+                            blocksize=self.block_size) as stream:
+            while True:
+                indata, _ = stream.read(self.block_size)
+                rms = self._calculate_rms(indata)
+                if rms > threshold:
+                    print(f"[*] Speech Detected! (RMS: {rms:.2f})")
+                    return True
+
+    def listen_until_silence(self, silence_threshold: int = 300, silence_duration: float = 1.5) -> bytes:
+        """
+        Records audio until silence is detected for `silence_duration` seconds.
+        """
+        print("[*] Recording... (Stop speaking to finish)")
+        buffer = []
+        silent_chunks = 0
+        chunks_per_second = self.sample_rate / self.block_size
+        max_silent_chunks = int(silence_duration * chunks_per_second)
+        
+        with sd.InputStream(device=self.device_index,
+                            samplerate=self.sample_rate,
+                            channels=self.channels,
+                            dtype=self.dtype,
+                            blocksize=self.block_size) as stream:
+            while True:
+                indata, _ = stream.read(self.block_size)
+                buffer.append(indata.tobytes())
+                
+                rms = self._calculate_rms(indata)
+                if rms < silence_threshold:
+                    silent_chunks += 1
+                else:
+                    silent_chunks = 0
+                
+                if silent_chunks > max_silent_chunks:
+                    print("[*] Silence detected. Stopping.")
+                    break
+        
+        return b"".join(buffer)

@@ -1,0 +1,48 @@
+{
+  "session_id": "20251226_123446",
+  "timestamp": "2025-12-26T12:41:17.614309",
+  "turns": [
+    {
+      "id": 4,
+      "time": "2025-12-26T12:35:58.890247",
+      "user": "What time is it?",
+      "kaedra": "It\u2019s 12:35 PM right now. We smack in the middle of the day, so what we tryna get into?",
+      "inference_ms": 3409
+    },
+    {
+      "id": 8,
+      "time": "2025-12-26T12:38:03.898357",
+      "user": "We gonna try this.",
+      "kaedra": "Bet, I\u2019m ready when you are. Just let me know what you tryna get into and we can make it happen.",
+      "inference_ms": 3640
+    },
+    {
+      "id": 9,
+      "time": "2025-12-26T12:38:25.499177",
+      "user": "What holidays are today?",
+      "kaedra": "Today\u2019s the first day of Kwanzaa, so Habari Gani! It\u2019s also Boxing Day for the folks across the pond, but we out here starting with Umoja today.",
+      "inference_ms": 3570
+    },
+    {
+      "id": 10,
+      "time": "2025-12-26T12:38:54.794198",
+      "user": "What is Umoja?",
+      "kaedra": "Umoja is the first principle of Kwanzaa, and it simply means unity. It\u2019s all about us striving to stay together and holding it down for the family, the community, and the culture as a whole.",
+      "inference_ms": 5617
+    },
+    {
+      "id": 11,
+      "time": "2025-12-26T12:39:28.331140",
+      "user": "Who made Kwanzaa?",
+      "kaedra": "Dr. Maulana Karenga created Kwanzaa back in 1966. He wanted us to have a way to celebrate our roots and keep our community tight, so he pulled it all together during the Black Freedom Movement.",
+      "inference_ms": 3552
+    },
+    {
+      "id": 13,
+      "time": "2025-12-26T12:40:21.110054",
+      "user": "Is that Black as fuck?",
+      "kaedra": "Hell yeah it is! Dr. Karenga wasn't playing when he put that together for the culture\u2014it's straight up for us and by us. It don't get much more authentic than that, for real.",
+      "inference_ms": 5020
+    }
+  ]
+}

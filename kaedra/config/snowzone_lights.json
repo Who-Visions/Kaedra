@@ -1,0 +1,230 @@
+{
+    "locations": {
+        "Snowzone": {
+            "groups": {
+                "Bedroom": {
+                    "devices": [
+                        {
+                            "name": "Eve",
+                            "id": "d073d53ce0df",
+                            "model": "LIFX Mini C",
+                            "capabilities": [
+                                "on_off",
+                                "brightness",
+                                "white_temp"
+                            ],
+                            "supports_color": false,
+                            "temp_range": [
+                                1500,
+                                9000
+                            ],
+                            "homekit_status": "paired",
+                            "note": "Mini C with extended Kelvin firmware"
+                        }
+                    ]
+                },
+                "Living Room": {
+                    "devices": [
+                        {
+                            "name": "Adam",
+                            "id": "d073d53ce0df",
+                            "model": "LIFX Mini C",
+                            "capabilities": [
+                                "on_off",
+                                "brightness",
+                                "white_temp"
+                            ],
+                            "supports_color": false,
+                            "temp_range": [
+                                1500,
+                                9000
+                            ],
+                            "homekit_status": "paired",
+                            "note": "Mini C with extended Kelvin firmware"
+                        },
+                        {
+                            "name": "Eden",
+                            "id": "d073d56aee4e",
+                            "model": "LIFX Color A19 1100lm",
+                            "capabilities": [
+                                "on_off",
+                                "brightness",
+                                "white_temp",
+                                "color",
+                                "effects"
+                            ],
+                            "supports_color": true,
+                            "temp_range": [
+                                1500,
+                                9000
+                            ],
+                            "homekit_status": "not_found",
+                            "note": "Full color + variable white temp"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "scenes": [
+        "Christmas 😇",
+        "Candy Cane Twist 🍭",
+        "Winter Night ❄️",
+        "Warm Ember"
+    ],
+    "effects": [
+        "Color Cycle",
+        "Flame",
+        "Flicker",
+        "Meteor",
+        "Morph",
+        "Move",
+        "Pastels",
+        "Random",
+        "Spooky",
+        "Strobe",
+        "Twinkle",
+        "Visualizer"
+    ],
+    "profiles": {
+        "work": {
+            "description": "Bright daylight for focus",
+            "rooms": {
+                "Bedroom": {
+                    "temp": 4000,
+                    "brightness": 80
+                },
+                "Living Room": {
+                    "temp": 4000,
+                    "brightness": 70,
+                    "color_devices": {
+                        "Eden": {
+                            "temp": 4000,
+                            "brightness": 80
+                        }
+                    }
+                }
+            }
+        },
+        "chill": {
+            "description": "Warm amber low light",
+            "rooms": {
+                "Bedroom": {
+                    "temp": 2700,
+                    "brightness": 40
+                },
+                "Living Room": {
+                    "temp": 2700,
+                    "brightness": 35,
+                    "color_devices": {
+                        "Eden": {
+                            "hue": 30,
+                            "sat": 0.8,
+                            "brightness": 40
+                        }
+                    }
+                }
+            }
+        },
+        "photo": {
+            "description": "Neutral bright for video/photo",
+            "rooms": {
+                "Bedroom": {
+                    "temp": 5000,
+                    "brightness": 100
+                },
+                "Living Room": {
+                    "temp": 5000,
+                    "brightness": 100,
+                    "color_devices": {
+                        "Eden": {
+                            "temp": 5000,
+                            "brightness": 100
+                        }
+                    }
+                }
+            }
+        },
+        "movie": {
+            "description": "Dim warm bias lighting",
+            "rooms": {
+                "Bedroom": {
+                    "temp": 2200,
+                    "brightness": 15
+                },
+                "Living Room": {
+                    "temp": 2200,
+                    "brightness": 15,
+                    "color_devices": {
+                        "Eden": {
+                            "temp": 2200,
+                            "brightness": 10
+                        }
+                    }
+                }
+            }
+        },
+        "party": {
+            "description": "Colorful effects",
+            "rooms": {
+                "Living Room": {
+                    "temp": 3000,
+                    "brightness": 80,
+                    "color_devices": {
+                        "Eden": {
+                            "fx": "Color Cycle"
+                        }
+                    }
+                }
+            }
+        },
+        "christmas": {
+            "description": "Holiday vibes",
+            "rooms": {
+                "Bedroom": {
+                    "temp": 2700,
+                    "brightness": 60
+                },
+                "Living Room": {
+                    "temp": 2700,
+                    "brightness": 70,
+                    "color_devices": {
+                        "Eden": {
+                            "color": "red",
+                            "brightness": 80,
+                            "fx": "Twinkle"
+                        }
+                    }
+                }
+            }
+        },
+        "warm_ember": {
+            "description": "Cozy fireplace glow",
+            "rooms": {
+                "Bedroom": {
+                    "temp": 2200,
+                    "brightness": 40
+                },
+                "Living Room": {
+                    "temp": 2200,
+                    "brightness": 40,
+                    "color_devices": {
+                        "Eden": {
+                            "color": "orange",
+                            "brightness": 50,
+                            "fx": "Flame"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "selectors": {
+        "all": "all",
+        "bedroom": "label:Eve",
+        "living_room": "group:Living Room",
+        "eve": "label:Eve",
+        "adam": "label:Adam",
+        "eden": "label:Eden"
+    }
+}

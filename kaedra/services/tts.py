@@ -10,9 +10,12 @@ from pathlib import Path
 from ..core.config import MODELS, PROJECT_ID, LOCATION
 
 class TTSService:
-    def __init__(self):
+    def __init__(self, model_variant: str = "pro"):
         self.client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
-        self.model = MODELS.get('tts', "gemini-2.5-flash-preview-tts")
+        # Select model based on variant
+        model_key = f"tts-{model_variant}" if f"tts-{model_variant}" in MODELS else "tts"
+        self.model = MODELS.get(model_key, "gemini-2.5-pro-preview-tts")
+        print(f"[*] TTSService initialized with model: {self.model}")
         self.voice_name = "Kore" # Firm/Professional voice
         
         # Ensure output directory exists (temp or cache)
@@ -49,8 +52,17 @@ class TTSService:
             if not part.inline_data or not part.inline_data.data:
                 print("[!] No audio data found in response.")
                 return
-                
-            audio_bytes = base64.b64decode(part.inline_data.data)
+            
+            raw_data = part.inline_data.data
+            print(f"[*] Received audio data: type={type(raw_data).__name__}, len={len(raw_data) if raw_data else 0}")
+            
+            # Handle both raw bytes and base64 encoded string
+            if isinstance(raw_data, str):
+                audio_bytes = base64.b64decode(raw_data)
+            else:
+                audio_bytes = raw_data  # Already bytes
+            
+            print(f"[*] Decoded audio size: {len(audio_bytes)} bytes")
             
             # Save to temporary WAV file
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

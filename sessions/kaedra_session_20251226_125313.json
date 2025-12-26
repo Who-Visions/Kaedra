@@ -1,0 +1,27 @@
+{
+  "session_id": "20251226_125313",
+  "timestamp": "2025-12-26T12:58:53.316612",
+  "turns": [
+    {
+      "id": 1,
+      "time": "2025-12-26T12:53:32.381193",
+      "user": "Hey Kaedra, turn all lights off.",
+      "kaedra": "Aight, I got you. Turning 'em all off right now.",
+      "inference_ms": 5619
+    },
+    {
+      "id": 2,
+      "time": "2025-12-26T12:54:15.990077",
+      "user": "Hey Kaedra, turn all lights on.",
+      "kaedra": "Bet, I'm flipping 'em back on for you right now. There we go.",
+      "inference_ms": 3149
+    },
+    {
+      "id": 3,
+      "time": "2025-12-26T12:54:35.753901",
+      "user": "Hey Kaedra, turn Eden purple.",
+      "kaedra": "Bet, turning Eden purple for you now.",
+      "inference_ms": 4108
+    }
+  ]
+}

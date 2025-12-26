@@ -19,6 +19,12 @@ AGENT_RESOURCE_NAME = os.getenv(
 )
 
 # ══════════════════════════════════════════════════════════════════════════════
+# LIFX SMART LIGHTS CONFIGURATION
+# ══════════════════════════════════════════════════════════════════════════════
+
+LIFX_TOKEN = os.getenv("LIFX_TOKEN", "")
+
+# ══════════════════════════════════════════════════════════════════════════════
 # MODEL REGISTRY
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -26,7 +32,9 @@ MODELS = {
     "flash": "gemini-3-flash-preview",         # Latest Flash V3 (Preview)
     "pro": "gemini-3-pro-preview",             # Latest Pro V3 (Preview)
     "ultra": "gemini-3-pro-preview",           # Using Pro V3 for Ultra slot
-    "tts": "gemini-2.5-flash-preview-tts",     # Native TTS
+    "tts-pro": "gemini-2.5-pro-preview-tts",   # Native TTS (Pro)
+    "tts-flash": "gemini-2.5-flash-preview-tts", # Native TTS (Flash)
+    "tts": "gemini-2.5-pro-preview-tts",       # Default to Pro
 }
 
 MODEL_COSTS = {
