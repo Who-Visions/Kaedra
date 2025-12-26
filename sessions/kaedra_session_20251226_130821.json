@@ -1,0 +1,20 @@
+{
+  "session_id": "20251226_130821",
+  "timestamp": "2025-12-26T13:11:50.618117",
+  "turns": [
+    {
+      "id": 3,
+      "time": "2025-12-26T13:09:59.730247",
+      "user": "Okay, can you turn Eden white, Adam blue,",
+      "kaedra": "I got you. I'm finna set Eden to a clean white, but Adam don't do colors, so I'll crank his kelvin up to 9000 to get it as close to that blue vibe as he can go.",
+      "inference_ms": 5785
+    },
+    {
+      "id": 4,
+      "time": "2025-12-26T13:11:16.894946",
+      "user": "Good job Kaedra",
+      "kaedra": "Preciate it. Just tryna keep everything running smooth for you, you know how we do.",
+      "inference_ms": 4814
+    }
+  ]
+}

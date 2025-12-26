@@ -1,9 +1,9 @@
 @echo off
 CALL .venv\Scripts\activate.bat
 
-REM Load environment variables from .env file
-FOR /F "tokens=*" %%i IN (.env) DO (
-    SET %%i 2>nul
+REM Load environment variables from .env file (skip comments)
+FOR /F "eol=# tokens=*" %%i IN (.env) DO (
+    SET "%%i"
 )
 
 python listen_and_speak.py --tts flash --mic "Realtek"

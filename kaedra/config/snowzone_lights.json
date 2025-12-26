@@ -11,15 +11,17 @@
                             "capabilities": [
                                 "on_off",
                                 "brightness",
-                                "white_temp"
+                                "white_temp",
+                                "color",
+                                "effects"
                             ],
-                            "supports_color": false,
+                            "supports_color": true,
                             "temp_range": [
                                 1500,
                                 9000
                             ],
                             "homekit_status": "paired",
-                            "note": "Mini C with extended Kelvin firmware"
+                            "note": "Mini Color with full color + extended Kelvin"
                         }
                     ]
                 },
@@ -32,15 +34,17 @@
                             "capabilities": [
                                 "on_off",
                                 "brightness",
-                                "white_temp"
+                                "white_temp",
+                                "color",
+                                "effects"
                             ],
-                            "supports_color": false,
+                            "supports_color": true,
                             "temp_range": [
                                 1500,
                                 9000
                             ],
                             "homekit_status": "paired",
-                            "note": "Mini C with extended Kelvin firmware"
+                            "note": "Mini Color with full color + extended Kelvin"
                         },
                         {
                             "name": "Eden",

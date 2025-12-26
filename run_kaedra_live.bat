@@ -1,9 +1,9 @@
 @echo off
 echo Starting Kaedra Live Mode (Pro TTS)...
 
-REM Load environment variables from .env file
-FOR /F "tokens=*" %%i IN (.env) DO (
-    SET %%i 2>nul
+REM Load environment variables from .env file (skip comments)
+FOR /F "eol=# tokens=*" %%i IN (.env) DO (
+    SET "%%i"
 )
 
 call .venv\Scripts\python.exe listen_and_speak.py --tts pro --mic "Realtek"

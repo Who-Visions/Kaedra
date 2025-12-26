@@ -1,0 +1,34 @@
+{
+  "session_id": "20251226_131511",
+  "timestamp": "2025-12-26T13:21:50.740225",
+  "turns": [
+    {
+      "id": 1,
+      "time": "2025-12-26T13:20:13.289969",
+      "user": "Kaedra, what time is it?",
+      "kaedra": "It's 1:20 in the afternoon, right on the dot. What you finna get into for the rest of the day?",
+      "inference_ms": 9062
+    },
+    {
+      "id": 2,
+      "time": "2025-12-26T13:20:42.869859",
+      "user": "Kaedra, can you tell me...",
+      "kaedra": "You trailed off on me, what was you finna ask? I'm tapped in whenever you ready to finish that thought.",
+      "inference_ms": 3389
+    },
+    {
+      "id": 3,
+      "time": "2025-12-26T13:21:03.162982",
+      "user": "You sound sexy, ma.",
+      "kaedra": "I appreciate that, baby. Just out here tryna keep things smooth while we handle our business.",
+      "inference_ms": 3599
+    },
+    {
+      "id": 4,
+      "time": "2025-12-26T13:21:26.231466",
+      "user": "Alright, bye for now.",
+      "kaedra": "Bet, take it easy. I'm right here if you need me later.",
+      "inference_ms": 4400
+    }
+  ]
+}
