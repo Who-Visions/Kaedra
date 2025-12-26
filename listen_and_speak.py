@@ -666,6 +666,7 @@ class KaedraVoiceEngine:
         self._last_tts_end_time: float = 0
         self.dashboard = KaedraDashboard()
         self.vad = SmartVadManager()
+        self._pending_exec_result: Optional[str] = None
 
     async def run(self):
         """Main conversation loop."""
@@ -779,7 +780,14 @@ class KaedraVoiceEngine:
         
         try:
             audio_part = Part.from_data(wav_data, mime_type="audio/wav")
-            stream = await self.conversation.chat.send_message_async([audio_part], stream=True)
+            
+            # Inject pending results from previous commands
+            parts = [audio_part]
+            if self._pending_exec_result:
+                parts.append(Part.from_text(self._pending_exec_result))
+                self._pending_exec_result = None
+                
+            stream = await self.conversation.chat.send_message_async(parts, stream=True)
             
             # Streaming State
             preamble_buffer = ""
@@ -800,11 +808,14 @@ class KaedraVoiceEngine:
             # Latency Tracking
             t0 = time.time()
             first_token_time = 0.0
-            in_metadata = False # Flag to stop verbalizing/printing once JSON/Brackets start
+            tokens = 0 # Placeholder for stream
+            in_metadata = False 
             
             async for chunk in stream:
-                text = chunk.text
-                if not text: continue
+                try:
+                    text = chunk.text
+                    if not text: continue
+                except: continue
                 
                 if first_token_time == 0:
                      first_token_time = time.time() - t0
@@ -843,10 +854,29 @@ class KaedraVoiceEngine:
             # Update background stats for dashboard
             self.dashboard.update_stats(first_token_time, tokens, 0.0)
 
-            # Handle Exec Commands (Security: Log but don't auto-run for now as per 'bulletproofing')
+            # Handle Exec Commands (Tactical Partner Mode)
             if meta['exec_cmd']:
-                 self.dashboard.update_history("System", f"Command Requested: {meta['exec_cmd']}", "yellow")
-                 # We could run safe commands here in the future.
+                 cmd = meta['exec_cmd']
+                 self.dashboard.update_history("System", f"Command: {cmd}", "yellow")
+                 
+                 # Safe execution for read commands (cat, ls, dir, type)
+                 # We restrict to these to prevent accidental accidents while Dave sleeps
+                 safe_keywords = ["cat", "ls", "dir", "type", "pwd", "grep", "find"]
+                 if any(cmd.lower().startswith(kw) for kw in safe_keywords):
+                     try:
+                         import subprocess
+                         # Run in powershell since we are on Windows
+                         self.dashboard.set_status(f"Executing {cmd}...", "yellow")
+                         proc = subprocess.run(["powershell", "-Command", cmd], 
+                                            capture_output=True, text=True, timeout=10)
+                         output = proc.stdout if proc.stdout else proc.stderr
+                         self._pending_exec_result = f"[EXEC_OUTPUT of '{cmd}']:\n{output[:3000]}" # Limit to 3k
+                         self.dashboard.update_history("System", f"Exec Success ({len(output)} chars)", "green")
+                     except Exception as e:
+                         self._pending_exec_result = f"[EXEC_ERROR]: {e}"
+                         self.dashboard.update_history("System", f"Exec Failed: {e}", "red")
+                 else:
+                     self.dashboard.update_history("System", "Cmd rejected (safety)", "red")
 
             # Handle Light Commands
             if self.lifx and (meta['light_simple'] or meta['light_json']):
@@ -869,178 +899,13 @@ class KaedraVoiceEngine:
             # Wait for playback queue to empty
             await self._speak_and_wait("")
             
-            # Log turn (Approximate)
-            turn = ConversationTurn(
-                turn_id=f"stream-{int(time.time())}",
-                timestamp=datetime.now().isoformat(),
-                user_audio_kb=audio_kb,
-                user_audio_seconds=audio_seconds,
-                transcription=transcription if 'transcription' in locals() else "unknown",
-                response="[Streamed]",
-                inference_time=time.time() - t0,
-                tokens_used=0 # Streaming doesn't return usage easily
-            )
-            self.conversation.add_turn(turn)
+            # Update final turn stats
+            self.stats.successful_turns += 1
+            self.stats.total_inference_time += (time.time() - t0)
 
         except Exception as e:
             self.dashboard.update_history("System", f"Stream Error: {e}", "red")
             self.live.update(self.dashboard.generate_view())
-
-        # Wait for speech
-        self.mic.wait_for_speech(threshold=self.audio_config.wake_threshold)
-        
-        # Check if this is feedback (speech detected too soon after TTS)
-        time_since_tts = time.time() - self._last_tts_end_time
-        if time_since_tts < self.audio_config.post_speech_cooldown:
-            self.dashboard.set_status(f"Cooldown ({time_since_tts:.1f}s)", "yellow")
-            self.live.update(self.dashboard.generate_view())
-            
-            self.stats.feedback_rejected += 1
-            await asyncio.sleep(self.audio_config.post_speech_cooldown - time_since_tts)
-            return
-
-        self.state = SessionState.LISTENING
-        self.dashboard.set_status("Recording...", "red")
-        self.live.update(self.dashboard.generate_view())
-
-        audio_data = self.mic.listen_until_silence(
-            silence_threshold=self.audio_config.silence_threshold,
-            silence_duration=self.audio_config.silence_duration
-        )
-
-        audio_kb = len(audio_data) / 1024
-        audio_seconds = len(audio_data) / (self.mic.sample_rate * 2)
-        self.stats.total_audio_seconds += audio_seconds
-
-        self.dashboard.set_mic(f"{audio_seconds:.1f}s")
-        self.live.update(self.dashboard.generate_view())
-
-        # Reject suspiciously long recordings (likely feedback loop)
-        if audio_seconds > 30:
-            self.dashboard.update_history("System", f"Recording too long ({audio_seconds:.1f}s) - ignored", "yellow")
-            self.live.update(self.dashboard.generate_view())
-            self.stats.feedback_rejected += 1
-            return
-
-        # 2. PROCESS
-        self.state = SessionState.PROCESSING
-        self.dashboard.set_status("Thinking...", "cyan")
-        self.live.update(self.dashboard.generate_view())
-        
-        wav_data = create_wav_buffer(audio_data, self.mic.sample_rate)
-
-        # Capture history size BEFORE inference (for rollback)
-        history_before = self.conversation.history_size
-
-        response_text, inference_time, tokens = await self._inference_with_retry(wav_data)
-
-        if response_text is None:
-            self.dashboard.update_history("System", "Inference Failed", "red")
-            self.live.update(self.dashboard.generate_view())
-            self.stats.errors += 1
-            self.conversation.rollback(history_before)
-            return
-
-        # Extract transcription
-        transcription, clean_response = extract_transcription(response_text)
-
-        self.dashboard.update_history("User", transcription or 'unclear', "dim white")
-        self.live.update(self.dashboard.generate_view())
-
-        # ════════════════════════════════════════════════════════════════
-        # VALIDATION CHECKS
-        # ════════════════════════════════════════════════════════════════
-
-        # Check 1: Prompt leak detection
-        # Check 1: Prompt leak detection
-        if is_prompt_leak(transcription):
-            self.dashboard.update_history("System", "Prompt leak detected", "red")
-            self.live.update(self.dashboard.generate_view())
-            self.conversation.rollback(history_before)
-            await self._speak_fallback("I ain't catch that. Say it again for me.")
-            return
-
-        # Check 2: Hallucination (unclear but long response)
-        if transcription.lower() in ["unclear", ""] and len(clean_response) > 100:
-            self.dashboard.update_history("System", "Hallucination detected", "red")
-            self.live.update(self.dashboard.generate_view())
-            self.stats.hallucinations_caught += 1
-            self.conversation.rollback(history_before)
-            await self._speak_fallback("I ain't catch that. Say it again for me.")
-            return
-
-        # Check 3: Genuinely unclear (short response is fine)
-        if transcription.lower() in ["unclear", ""]:
-            self.dashboard.update_history("System", "Audio unclear", "yellow")
-            self.live.update(self.dashboard.generate_view())
-            self.conversation.rollback(history_before)
-            await self._speak_fallback("I ain't catch that. Say it again for me.")
-            return
-
-        # ════════════════════════════════════════════════════════════════
-        # VALID TURN - proceed
-        # ════════════════════════════════════════════════════════════════
-
-        self.stats.total_inference_time += inference_time
-        self.stats.total_tokens += tokens
-        self.stats.successful_turns += 1
-
-        # Extract light commands if present
-        simple_action, json_actions, clean_response = extract_light_command(clean_response)
-        
-        self.dashboard.update_history("Kaedra", clean_response, "magenta")
-        cost = (tokens / 1_000_000) * 0.10
-        self.dashboard.update_stats(inference_time, tokens, self.dashboard.total_cost + cost)
-        self.live.update(self.dashboard.generate_view())
-        
-        # Execute light commands if LIFX is available
-        if self.lifx and (json_actions or simple_action):
-            # Execute lights in background to avoid blocking TTS
-            async def run_lights_bg():
-                try:
-                    if json_actions:
-                        await asyncio.to_thread(self.lifx.set_states, json_actions)
-                        devices = [a.get("selector", "?").replace("label:", "") for a in json_actions]
-                        self.dashboard.set_lights(devices)
-                    elif simple_action:
-                        await asyncio.to_thread(execute_light_command, self.lifx, simple_action)
-                        self.dashboard.set_lights([simple_action])
-                    
-                    self.live.update(self.dashboard.generate_view())
-                except Exception as e:
-                    self.dashboard.update_history("System", f"Light Error: {e}", "red")
-
-            asyncio.create_task(run_lights_bg())
-
-        # Check intents
-        if check_exit_intent(transcription):
-            print("[*] 👋 Exit intent detected")
-            self._should_stop = True
-            await self._speak_and_wait("Aight Dave, I'm out. Kaedra out.")
-            return
-
-        if check_reset_intent(transcription):
-            print("[*] 🔄 Memory reset triggered")
-            self.conversation.reset()
-            await self._speak_and_wait("Bet. Memory wiped. We startin' fresh.")
-            return
-
-        # Log turn
-        turn = ConversationTurn(
-            turn_id=turn_id,
-            timestamp=datetime.now().isoformat(),
-            user_audio_kb=audio_kb,
-            user_audio_seconds=audio_seconds,
-            transcription=transcription,
-            response=clean_response,
-            inference_time=inference_time,
-            tokens_used=tokens
-        )
-        self.conversation.add_turn(turn)
-
-        # 3. SPEAK (Handled by streaming loop above)
-        # We only call _speak_and_wait with empty string to ensure playback finishes
-        await self._speak_and_wait("")
 
     async def _inference_with_retry(self, wav_data: bytes) -> tuple[Optional[str], float, int]:
         """Send to Gemini with retry logic."""
