@@ -259,10 +259,17 @@ def estimate_speech_duration(text: str, wps: float = 2.8) -> float:
 def extract_transcription(response: str) -> tuple[str, str]:
     """Extract [Heard: "..."] from response."""
     import re
-    match = re.search(r'\[Heard:\s*["\']?([^"\'\]]*)["\']?\]', response, re.IGNORECASE)
+    # Robust regex: Capture everything until ]
+    match = re.search(r'\[Heard:\s*(.*?)\]', response, re.IGNORECASE | re.DOTALL)
     if match:
-        transcription = match.group(1).strip()
-        cleaned = re.sub(r'\[Heard:[^\]]*\]\s*', '', response).strip()
+        raw = match.group(1).strip()
+        # Strip quotes if balanced
+        if (raw.startswith('"') and raw.endswith('"')) or (raw.startswith("'") and raw.endswith("'")):
+            transcription = raw[1:-1].strip()
+        else:
+            transcription = raw
+            
+        cleaned = re.sub(r'\[Heard:.*?\]\s*', '', response, flags=re.DOTALL).strip()
         return transcription, cleaned
     return "", response
 
@@ -708,8 +715,9 @@ class KaedraVoiceEngine:
             # Latency Tracking
             t0 = time.time()
             first_token_time = 0.0
+            kaedra_started = False
             
-            self.dashboard.start_stream("Kaedra")
+            # self.dashboard.start_stream("Kaedra") # Delayed until content available
             
             async for chunk in stream:
                 text = chunk.text
@@ -745,9 +753,14 @@ class KaedraVoiceEngine:
                         # Process leftover text (Start of response)
                         if rest:
                             self.dashboard.start_stream("Kaedra")
+                            kaedra_started = True
                             self.dashboard.print_stream(rest)
                             response_buffer += rest
                 else:
+                    if not kaedra_started:
+                        self.dashboard.start_stream("Kaedra")
+                        kaedra_started = True
+
                     self.dashboard.print_stream(text)
                     response_buffer += text
                     
