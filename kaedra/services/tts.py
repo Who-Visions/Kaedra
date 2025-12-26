@@ -140,9 +140,15 @@ class StreamingSession:
 class TTSService:
     def __init__(self, model_variant: str = "pro"):
         self.client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
-        model_key = f"tts-{model_variant}" if f"tts-{model_variant}" in MODELS else "tts"
-        if model_variant in MODELS:
+        # Prioritize 'tts-' prefix to avoid collision with reasoning models
+        prefix_key = f"tts-{model_variant}"
+        if prefix_key in MODELS:
+            model_key = prefix_key
+        elif model_variant in MODELS:
             model_key = model_variant
+        else:
+            model_key = "tts"
+        
         self.model = MODELS.get(model_key, "en-US-Journey-F")
         print(f"[*] TTSService initialized with model: {self.model}")
         
@@ -168,9 +174,13 @@ class TTSService:
              return None
              
         if not self._streaming_client:
-            # Use the project ID from config to ensure correct quota/billing
+            # Use regional endpoint for stability with new Gemini TTS models
+            api_endpoint = f"{LOCATION}-texttospeech.googleapis.com" if LOCATION != "global" else "texttospeech.googleapis.com"
             self._streaming_client = texttospeech.TextToSpeechClient(
-                client_options={"quota_project_id": PROJECT_ID}
+                client_options={
+                    "api_endpoint": api_endpoint,
+                    "quota_project_id": PROJECT_ID
+                }
             )
 
         # Parse voice details
@@ -216,8 +226,12 @@ class TTSService:
          # Separate is safer for one-off calls outside the streaming loop.
         try:
             from google.cloud import texttospeech
+            api_endpoint = f"{LOCATION}-texttospeech.googleapis.com" if LOCATION != "global" else "texttospeech.googleapis.com"
             client = texttospeech.TextToSpeechClient(
-                client_options={"quota_project_id": PROJECT_ID}
+                client_options={
+                    "api_endpoint": api_endpoint,
+                    "quota_project_id": PROJECT_ID
+                }
             )
             
             language_code = "en-US"
