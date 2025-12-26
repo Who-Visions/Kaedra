@@ -1,13 +1,70 @@
 import os
 import wave
 import base64
-import winsound
+import queue
+import threading
+import time
+try:
+    import winsound
+except ImportError:
+    winsound = None
 from google import genai
 from google.genai import types
 from datetime import datetime
 from pathlib import Path
 
 from ..core.config import MODELS, PROJECT_ID, LOCATION
+
+import io
+
+class StreamWorker:
+    """Background worker to play audio snippets sequentially."""
+    def __init__(self):
+        self.q = queue.Queue()
+        self.playing = False
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+    
+    def _run(self):
+        while True:
+            item = self.q.get()
+            if item is None: break # Poison pill
+            
+            wav_data = item
+            self.playing = True
+            try:
+                if winsound:
+                    # SND_MEMORY plays from RAM. 
+                    # Without SND_ASYNC, it blocks this thread until done. Perfect.
+                    winsound.PlaySound(wav_data, winsound.SND_MEMORY)
+                else:
+                    # Linux fallback (print duration)
+                    time.sleep(1) 
+            except Exception as e:
+                print(f"[!] Playback Error: {e}")
+            finally:
+                self.playing = False
+                self.q.task_done()
+
+    def add(self, wav_data: bytes):
+        self.q.put(wav_data)
+        
+    def stop_all(self):
+        """Stop current and clear queue."""
+        # Clear queue
+        with self.q.mutex:
+            self.q.queue.clear()
+        
+        # Stop playing current sound
+        if winsound:
+            winsound.PlaySound(None, winsound.SND_PURGE)
+        self.playing = False
+
+    @property
+    def is_busy(self) -> bool:
+        """True if playing or has items in queue."""
+        return self.playing or not self.q.empty()
+
 
 class TTSService:
     def __init__(self, model_variant: str = "pro"):
@@ -18,14 +75,16 @@ class TTSService:
         print(f"[*] TTSService initialized with model: {self.model}")
         self.voice_name = "Kore" # Firm/Professional voice
         
+        self.worker = StreamWorker()
+        
         # Ensure output directory exists (temp or cache)
         self.output_dir = Path(os.environ.get("TEMP", ".")) / "kaedra_tts"
         self.output_dir.mkdir(exist_ok=True)
 
     def speak(self, text: str):
-        """Generate speech from text and play it immediately."""
+        """Generate speech from text and queue it for playback."""
         try:
-            print(f"[*] Generating speech for: {text[:50]}...")
+            # print(f"[*] Generating speech for: {text[:30]}...")
             
             response = self.client.models.generate_content(
                 model=self.model,
@@ -42,45 +101,53 @@ class TTSService:
                 )
             )
             
-            # Extract audio data
-            # Data is base64 encoded string in inline_data.data
-            if not response.candidates:
-                print("[!] No TTS candidates returned.")
-                return
+            if not response.candidates: return
 
             part = response.candidates[0].content.parts[0]
             if not part.inline_data or not part.inline_data.data:
-                print("[!] No audio data found in response.")
                 return
             
             raw_data = part.inline_data.data
-            print(f"[*] Received audio data: type={type(raw_data).__name__}, len={len(raw_data) if raw_data else 0}")
             
             # Handle both raw bytes and base64 encoded string
             if isinstance(raw_data, str):
                 audio_bytes = base64.b64decode(raw_data)
             else:
-                audio_bytes = raw_data  # Already bytes
+                audio_bytes = raw_data
             
-            print(f"[*] Decoded audio size: {len(audio_bytes)} bytes")
+            # Create WAV in memory (Gemini returns PCM usually? Need to wrap)
+            # Actually Gemini TTS returns encoded audio often? 
+            # The previous code re-wrapped it in WAV at 24000Hz.
+            # Assuming raw_data is PCM? 
+            # Docs say: "Unary: LINEAR16 (default)".
+            # So wrapping in WAV container is required for winsound.
             
-            # Save to temporary WAV file
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = self.output_dir / f"response_{timestamp}.wav"
-            
-            with wave.open(str(filename), "wb") as wf:
+            wav_buf = io.BytesIO()
+            with wave.open(wav_buf, "wb") as wf:
                 wf.setnchannels(1)
                 wf.setsampwidth(2)
                 wf.setframerate(24000)
                 wf.writeframes(audio_bytes)
-                
-            # Play audio
-            print(f"[*] Playing audio: {filename}")
-            winsound.PlaySound(str(filename), winsound.SND_FILENAME | winsound.SND_ASYNC)
+            
+            wav_data = wav_buf.getvalue()
+            
+            # Queue for playback
+            self.worker.add(wav_data)
             
         except Exception as e:
             print(f"[!] TTS Error: {e}")
+            
+    def stop(self):
+        """Stop all playback."""
+        self.worker.stop_all()
+
+    def is_speaking(self) -> bool:
+        return self.worker.is_busy
 
 if __name__ == "__main__":
     tts = TTSService()
-    tts.speak("Systems online. Kaedra is listening.")
+    tts.speak("Streaming test. Phase 1.")
+    tts.speak("Phase 2 initiating.")
+    import time
+    while tts.is_speaking():
+        time.sleep(0.1)

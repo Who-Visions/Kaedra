@@ -4,6 +4,7 @@ import io
 import wave
 import time
 import json
+import re
 from datetime import datetime
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -25,6 +26,71 @@ try:
 except ImportError:
     LIFX_AVAILABLE = False
 
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RICH DASHBOARD
+# ═══════════════════════════════════════════════════════════════════════════════
+
+from rich.console import Console
+from rich.live import Live
+from rich.layout import Layout
+from rich.panel import Panel
+from rich.text import Text
+from rich.table import Table
+from rich.align import Align
+from rich import box
+
+class KaedraDashboard:
+    def __init__(self):
+        self.console = Console()
+        self.status = "INITIALIZING"
+        self.mic_status = "OFF"
+        self.active_lights = []
+        self.last_latency = 0.0
+        self.last_tokens = 0
+        self.total_cost = 0.0
+
+    def set_status(self, status: str, color: str = "white"):
+        self.status = f"[{color}]{status}[/{color}]"
+
+    def set_mic(self, status: str):
+        self.mic_status = status
+
+    def set_lights(self, lights: list):
+        self.active_lights = lights
+
+    def update_stats(self, latency: float, tokens: int, cost: float):
+        self.last_latency = latency
+        self.last_tokens = tokens
+        self.total_cost = cost
+
+    def start_stream(self, role: str, color: str = "magenta"):
+        self.console.print(f"[{color}]{role}:[/{color}] ", end="")
+
+    def print_stream(self, text: str, color: str = "magenta"):
+        self.console.print(f"[{color}]{text}[/{color}]", end="")
+    
+    def end_stream(self):
+        self.console.print() # Newline
+
+    def update_history(self, role: str, message: str, color: str = "white"):
+        # Print directly to console (scrolling log)
+        # Check for System messages vs Chat
+        if role == "System":
+            self.console.print(f"[{color}][!] {message}[/{color}]")
+        elif role == "User":
+             self.console.print(f"\n[bold cyan]User:[/bold cyan] {message}")
+        elif role == "Kaedra":
+             self.console.print(f"[bold magenta]Kaedra:[/bold magenta] {message}")
+        else:
+             self.console.print(f"[{color}]{role}: {message}[/{color}]")
+
+    def generate_view(self) -> Panel:
+        # Only render the footer
+        light_str = ", ".join(self.active_lights) if self.active_lights else "None"
+        stats = f"Status: {self.status} | Mic: {self.mic_status} | Lights: {light_str} | Latency: {self.last_latency:.2f}s | Cost: ${self.total_cost:.4f}"
+        return Panel(Align.center(stats), style="blue", box=box.ROUNDED, title="Kaedra Status")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -154,7 +220,7 @@ class SessionStats:
 class AudioConfig:
     wake_threshold: int = 500
     silence_threshold: int = 400
-    silence_duration: float = 1.5
+    silence_duration: float = 0.6
     max_record_seconds: float = 30.0
     post_speech_cooldown: float = 3.0  # Ignore mic for N seconds after TTS
     feedback_rms_threshold: int = 3000  # RMS above this right after TTS = feedback
@@ -164,7 +230,7 @@ class AudioConfig:
 class SessionConfig:
     max_history_turns: int = 10
     save_transcripts: bool = True
-    tts_variant: str = "pro"
+    tts_variant: str = "flash-lite"
     retry_attempts: int = 3
     retry_delay: float = 1.0
 
@@ -555,31 +621,203 @@ class KaedraVoiceEngine:
         self.state = SessionState.IDLE
         self._should_stop = False
         self._last_tts_end_time: float = 0
+        self.dashboard = KaedraDashboard()
 
     async def run(self):
         """Main conversation loop."""
-        print(self._banner())
+        self.dashboard.console.print(self._banner()) 
 
-        try:
-            while not self._should_stop:
-                await self._conversation_turn()
-        except KeyboardInterrupt:
-            pass
-        finally:
-            await self._shutdown()
+        with Live(self.dashboard.generate_view(), refresh_per_second=10, console=self.dashboard.console) as live:
+            self.live = live
+            self.dashboard.set_status("Listening...", "green")
+            self.live.update(self.dashboard.generate_view())
+            
+            try:
+                while not self._should_stop:
+                    self.live.update(self.dashboard.generate_view())
+                    await self._conversation_turn()
+            except KeyboardInterrupt:
+                pass
+            finally:
+                await self._shutdown()
 
     async def _conversation_turn(self):
-        """Execute one full conversation turn."""
+        """Execute one full conversation turn (Streaming)."""
         self.stats.total_turns += 1
         turn_id = self.stats.total_turns
 
         # 1. LISTEN (with cooldown check)
         self.state = SessionState.IDLE
         pruned = self.conversation.prune_history()
-        status = f"[Turn {turn_id}] 👂 Listening... (History: {self.conversation.history_size})"
+        
+        self.dashboard.set_status(f"Listening", "green")
         if pruned:
-            status += " [pruned]"
-        print(f"\n{status}")
+            self.dashboard.set_status("Listening (Pruned)", "green")
+        self.live.update(self.dashboard.generate_view())
+
+        # Wait for speech
+        self.mic.wait_for_speech(threshold=self.audio_config.wake_threshold)
+        
+        # Check cooldown
+        time_since_tts = time.time() - self._last_tts_end_time
+        if time_since_tts < self.audio_config.post_speech_cooldown:
+            self.dashboard.set_status(f"Cooldown ({time_since_tts:.1f}s)", "yellow")
+            self.live.update(self.dashboard.generate_view())
+            self.stats.feedback_rejected += 1
+            await asyncio.sleep(self.audio_config.post_speech_cooldown - time_since_tts)
+            return
+
+        self.state = SessionState.LISTENING
+        self.dashboard.set_status("Recording...", "red")
+        self.live.update(self.dashboard.generate_view())
+
+        audio_data = self.mic.listen_until_silence(
+            silence_threshold=self.audio_config.silence_threshold,
+            silence_duration=self.audio_config.silence_duration
+        )
+
+        audio_kb = len(audio_data) / 1024
+        audio_seconds = len(audio_data) / (self.mic.sample_rate * 2)
+        self.stats.total_audio_seconds += audio_seconds
+        
+        self.dashboard.set_mic(f"{audio_seconds:.1f}s")
+        self.live.update(self.dashboard.generate_view())
+
+        if audio_seconds > 30:
+            self.dashboard.update_history("System", f"Recording too long ({audio_seconds:.1f}s)", "yellow")
+            return
+
+        # 2. STREAMING INFERENCE
+        self.state = SessionState.PROCESSING
+        self.dashboard.set_status("Streaming...", "cyan")
+        self.live.update(self.dashboard.generate_view())
+        
+        wav_data = create_wav_buffer(audio_data, self.mic.sample_rate)
+        history_before = self.conversation.history_size
+        
+        try:
+            audio_part = Part.from_data(wav_data, mime_type="audio/wav")
+            stream = await self.conversation.chat.send_message_async([audio_part], stream=True)
+            
+            # Streaming State
+            preamble_buffer = ""
+            response_buffer = ""
+            in_preamble = True
+            turn_aborted = False
+            
+            # Latency Tracking
+            t0 = time.time()
+            first_token_time = 0.0
+            
+            self.dashboard.start_stream("Kaedra")
+            
+            async for chunk in stream:
+                text = chunk.text
+                if not text: continue
+                
+                if first_token_time == 0:
+                     first_token_time = time.time() - t0
+                     self.dashboard.last_latency = first_token_time
+
+                if in_preamble:
+                    preamble_buffer += text
+                    if "]" in preamble_buffer:
+                        in_preamble = False
+                        transcription, rest = extract_transcription(preamble_buffer)
+                        self.dashboard.update_history("User", transcription, "dim white")
+                        
+                        # Check Intents immediately
+                        if check_exit_intent(transcription):
+                            turn_aborted = True
+                            await self._speak_and_wait("Aight Dave, I'm out. Kaedra out.")
+                            self._should_stop = True
+                            break
+                        if check_reset_intent(transcription):
+                            turn_aborted = True
+                            self.conversation.reset()
+                            await self._speak_and_wait("Memory wiped.")
+                            break
+                        if is_prompt_leak(transcription):
+                            turn_aborted = True
+                            self.dashboard.update_history("System", "Prompt leak detected", "red")
+                            break
+
+                        # Process leftover text (Start of response)
+                        if rest:
+                            self.dashboard.start_stream("Kaedra")
+                            self.dashboard.print_stream(rest)
+                            response_buffer += rest
+                else:
+                    self.dashboard.print_stream(text)
+                    response_buffer += text
+                    
+                    # Check safe split (Avoid splitting JSON/Tags)
+                    balanced = (response_buffer.count("{") == response_buffer.count("}") and 
+                                response_buffer.count("[") == response_buffer.count("]"))
+                                
+                    if balanced and (re.search(r'[.!?]\s', response_buffer) or re.search(r'[.!?]$', response_buffer)):
+                        sentences = re.split(r'(?<=[.!?])\s+', response_buffer)
+                        # Keep last chunk if potentially incomplete
+                        if len(sentences) > 1:
+                            to_speak = sentences[:-1]
+                            response_buffer = sentences[-1]
+                            
+                            for s in to_speak:
+                                if not s.strip(): continue
+                                # Check for lights
+                                simple, json_acts, clean = extract_light_command(s)
+                                
+                                # SPEAK Clean Text
+                                if clean.strip():
+                                    await asyncio.to_thread(self.tts.speak, clean)
+                                
+                                # EXECUTE Lights
+                                if self.lifx and (simple or json_acts):
+                                    async def bg_lights(j, k):
+                                        try:
+                                             if k: 
+                                                 await asyncio.to_thread(execute_light_command, self.lifx, k)
+                                                 self.dashboard.set_lights([k])
+                                             if j: 
+                                                 await asyncio.to_thread(self.lifx.set_states, j)
+                                                 d = [a.get("selector", "?").replace("label:", "") for a in j]
+                                                 self.dashboard.set_lights(d)
+                                             self.live.update(self.dashboard.generate_view())
+                                        except: pass
+                                    asyncio.create_task(bg_lights(json_acts, simple))
+            
+            self.dashboard.end_stream()
+            
+            if turn_aborted: return
+
+            # Process remaining buffer
+            if response_buffer.strip():
+                simple, json_acts, clean = extract_light_command(response_buffer)
+                if clean.strip():
+                    await asyncio.to_thread(self.tts.speak, clean)
+                if self.lifx and (simple or json_acts):
+                     # ... execute lights ...
+                     pass # (Simplified for buffer tail)
+            
+            # Wait for playback queue to empty
+            await self._speak_and_wait("")
+            
+            # Log turn (Approximate)
+            turn = ConversationTurn(
+                turn_id=f"stream-{int(time.time())}",
+                timestamp=datetime.now().isoformat(),
+                user_audio_kb=audio_kb,
+                user_audio_seconds=audio_seconds,
+                transcription=transcription if 'transcription' in locals() else "unknown",
+                response="[Streamed]",
+                inference_time=time.time() - t0,
+                tokens_used=0 # Streaming doesn't return usage easily
+            )
+            self.conversation.add_turn(turn)
+
+        except Exception as e:
+            self.dashboard.update_history("System", f"Stream Error: {e}", "red")
+            self.live.update(self.dashboard.generate_view())
 
         # Wait for speech
         self.mic.wait_for_speech(threshold=self.audio_config.wake_threshold)
@@ -587,12 +825,16 @@ class KaedraVoiceEngine:
         # Check if this is feedback (speech detected too soon after TTS)
         time_since_tts = time.time() - self._last_tts_end_time
         if time_since_tts < self.audio_config.post_speech_cooldown:
-            print(f"[!] 🔇 Cooldown active ({time_since_tts:.1f}s since TTS) - ignoring")
+            self.dashboard.set_status(f"Cooldown ({time_since_tts:.1f}s)", "yellow")
+            self.live.update(self.dashboard.generate_view())
+            
             self.stats.feedback_rejected += 1
             await asyncio.sleep(self.audio_config.post_speech_cooldown - time_since_tts)
             return
 
         self.state = SessionState.LISTENING
+        self.dashboard.set_status("Recording...", "red")
+        self.live.update(self.dashboard.generate_view())
 
         audio_data = self.mic.listen_until_silence(
             silence_threshold=self.audio_config.silence_threshold,
@@ -603,16 +845,21 @@ class KaedraVoiceEngine:
         audio_seconds = len(audio_data) / (self.mic.sample_rate * 2)
         self.stats.total_audio_seconds += audio_seconds
 
-        print(f"[User] 🎤 {audio_kb:.1f} KB ({audio_seconds:.1f}s)")
+        self.dashboard.set_mic(f"{audio_seconds:.1f}s")
+        self.live.update(self.dashboard.generate_view())
 
         # Reject suspiciously long recordings (likely feedback loop)
         if audio_seconds > 30:
-            print(f"[!] ⚠️ Recording too long ({audio_seconds:.1f}s) - likely feedback, skipping")
+            self.dashboard.update_history("System", f"Recording too long ({audio_seconds:.1f}s) - ignored", "yellow")
+            self.live.update(self.dashboard.generate_view())
             self.stats.feedback_rejected += 1
             return
 
         # 2. PROCESS
         self.state = SessionState.PROCESSING
+        self.dashboard.set_status("Thinking...", "cyan")
+        self.live.update(self.dashboard.generate_view())
+        
         wav_data = create_wav_buffer(audio_data, self.mic.sample_rate)
 
         # Capture history size BEFORE inference (for rollback)
@@ -621,7 +868,8 @@ class KaedraVoiceEngine:
         response_text, inference_time, tokens = await self._inference_with_retry(wav_data)
 
         if response_text is None:
-            print("[!] ❌ Inference failed after retries")
+            self.dashboard.update_history("System", "Inference Failed", "red")
+            self.live.update(self.dashboard.generate_view())
             self.stats.errors += 1
             self.conversation.rollback(history_before)
             return
@@ -629,22 +877,26 @@ class KaedraVoiceEngine:
         # Extract transcription
         transcription, clean_response = extract_transcription(response_text)
 
-        print(f"[Heard] 📝 \"{transcription or 'unclear'}\"")
+        self.dashboard.update_history("User", transcription or 'unclear', "dim white")
+        self.live.update(self.dashboard.generate_view())
 
         # ════════════════════════════════════════════════════════════════
         # VALIDATION CHECKS
         # ════════════════════════════════════════════════════════════════
 
         # Check 1: Prompt leak detection
+        # Check 1: Prompt leak detection
         if is_prompt_leak(transcription):
-            print("[!] ⚠️ Prompt leak detected - she transcribed instructions, not your speech")
+            self.dashboard.update_history("System", "Prompt leak detected", "red")
+            self.live.update(self.dashboard.generate_view())
             self.conversation.rollback(history_before)
             await self._speak_fallback("I ain't catch that. Say it again for me.")
             return
 
         # Check 2: Hallucination (unclear but long response)
         if transcription.lower() in ["unclear", ""] and len(clean_response) > 100:
-            print("[!] ⚠️ Hallucination detected - rolling back")
+            self.dashboard.update_history("System", "Hallucination detected", "red")
+            self.live.update(self.dashboard.generate_view())
             self.stats.hallucinations_caught += 1
             self.conversation.rollback(history_before)
             await self._speak_fallback("I ain't catch that. Say it again for me.")
@@ -652,7 +904,8 @@ class KaedraVoiceEngine:
 
         # Check 3: Genuinely unclear (short response is fine)
         if transcription.lower() in ["unclear", ""]:
-            print("[!] ℹ️ Audio was unclear")
+            self.dashboard.update_history("System", "Audio unclear", "yellow")
+            self.live.update(self.dashboard.generate_view())
             self.conversation.rollback(history_before)
             await self._speak_fallback("I ain't catch that. Say it again for me.")
             return
@@ -668,22 +921,29 @@ class KaedraVoiceEngine:
         # Extract light commands if present
         simple_action, json_actions, clean_response = extract_light_command(clean_response)
         
-        print(f"[Kaedra] 💬 {clean_response}")
-        print(f"[⚡] {inference_time:.2f}s inference | ~{tokens} tokens")
+        self.dashboard.update_history("Kaedra", clean_response, "magenta")
+        cost = (tokens / 1_000_000) * 0.10
+        self.dashboard.update_stats(inference_time, tokens, self.dashboard.total_cost + cost)
+        self.live.update(self.dashboard.generate_view())
         
         # Execute light commands if LIFX is available
-        if self.lifx:
-            if json_actions:
-                # Multi-device JSON actions via set_states
+        if self.lifx and (json_actions or simple_action):
+            # Execute lights in background to avoid blocking TTS
+            async def run_lights_bg():
                 try:
-                    self.lifx.set_states(json_actions)
-                    devices = [a.get("selector", "?").replace("label:", "") for a in json_actions]
-                    print(f"[💡] Multi-device: {', '.join(devices)}")
+                    if json_actions:
+                        await asyncio.to_thread(self.lifx.set_states, json_actions)
+                        devices = [a.get("selector", "?").replace("label:", "") for a in json_actions]
+                        self.dashboard.set_lights(devices)
+                    elif simple_action:
+                        await asyncio.to_thread(execute_light_command, self.lifx, simple_action)
+                        self.dashboard.set_lights([simple_action])
+                    
+                    self.live.update(self.dashboard.generate_view())
                 except Exception as e:
-                    print(f"[!] Multi-light error: {e}")
-            elif simple_action:
-                # Simple tag action
-                execute_light_command(self.lifx, simple_action)
+                    self.dashboard.update_history("System", f"Light Error: {e}", "red")
+
+            asyncio.create_task(run_lights_bg())
 
         # Check intents
         if check_exit_intent(transcription):
@@ -744,35 +1004,44 @@ class KaedraVoiceEngine:
 
     async def _speak_fallback(self, text: str):
         """Speak a fallback message (doesn't update last_tts_end_time aggressively)."""
+        self.dashboard.set_status("Speaking (Fallback)...", "green")
+        self.live.update(self.dashboard.generate_view())
         await asyncio.to_thread(self.tts.speak, text)
         self._last_tts_end_time = time.time()
         await asyncio.sleep(1.5)
 
     async def _speak_and_wait(self, text: str):
-        """Speak response and enforce cooldown."""
+        """Speak response and wait for playback to finish."""
         self.state = SessionState.SPEAKING
+        self.dashboard.set_status("Speaking...", "green")
+        self.live.update(self.dashboard.generate_view())
         
-        await asyncio.to_thread(self.tts.speak, text)
+        # Speak (Non-blocking queue add)
+        if text:
+            await asyncio.to_thread(self.tts.speak, text)
         
-        self._last_tts_end_time = time.time()
         self.state = SessionState.COOLDOWN
-        
-        # Wait for estimated playback + buffer
-        estimated = estimate_speech_duration(text)
-        print(f"[*] � Cooldown {estimated:.1f}s...")
-        await asyncio.sleep(estimated)
+        self.dashboard.set_status("Speaking (Queue)...", "yellow")
+        self.live.update(self.dashboard.generate_view())
+
+        # Poll for completion
+        while self.tts.is_speaking():
+            await asyncio.sleep(0.1)
         
         self.state = SessionState.IDLE
+        self.dashboard.set_status("Idle", "dim white")
+        self.live.update(self.dashboard.generate_view())
 
     async def _shutdown(self):
         """Graceful shutdown."""
-        print("\n[*] 🛑 Shutting down...")
+        # Use console.print to print above/after Live display
+        self.dashboard.console.print("\n[*] 🛑 Shutting down...")
 
         filepath = self.conversation.save_transcript()
         if filepath:
-            print(f"[*] 💾 Transcript saved: {filepath}")
+            self.dashboard.console.print(f"[*] 💾 Transcript saved: {filepath}")
 
-        print(self.stats.summary())
+        self.dashboard.console.print(self.stats.summary())
 
     def _banner(self) -> str:
         return f"""
@@ -798,11 +1067,11 @@ class KaedraVoiceEngine:
 
 async def main():
     parser = argparse.ArgumentParser(description="Kaedra Voice Engine v2.1")
-    parser.add_argument("--tts", choices=["pro", "flash"], default="pro")
+    parser.add_argument("--tts", choices=["pro", "flash", "flash-lite"], default="flash-lite")
     parser.add_argument("--max-turns", type=int, default=10)
     parser.add_argument("--wake-threshold", type=int, default=500)
     parser.add_argument("--silence-threshold", type=int, default=400)
-    parser.add_argument("--silence-duration", type=float, default=1.5)
+    parser.add_argument("--silence-duration", type=float, default=0.6)
     parser.add_argument("--cooldown", type=float, default=3.0, help="Post-TTS cooldown seconds")
     parser.add_argument("--mic", type=str, default="Chat Mix", help="Mic device name filter (e.g. 'Realtek', 'Chat Mix', 'Wave')")
     parser.add_argument("--no-save", dest="save_transcripts", action="store_false", default=True)

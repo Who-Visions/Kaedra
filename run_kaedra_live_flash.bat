@@ -6,5 +6,5 @@ FOR /F "eol=# tokens=*" %%i IN (.env) DO (
     SET "%%i"
 )
 
-python listen_and_speak.py --tts flash --mic "Realtek"
+python listen_and_speak.py --tts flash-lite --mic "Realtek"
 PAUSE
