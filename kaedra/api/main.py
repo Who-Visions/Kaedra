@@ -144,7 +144,13 @@ async def startup_event():
         # Initialize Services
         state.web_service = WebService()
         state.research_service = ResearchService(prompt_service)
-        state.tts_service = TTSService()
+        
+        # TTS only works on local machines with audio output (not Cloud Run)
+        try:
+            state.tts_service = TTSService()
+        except Exception as tts_err:
+            print(f"[!] TTS unavailable (normal for Cloud Run): {tts_err}")
+            state.tts_service = None
         
         # Initialize Agent
         state.agent = KaedraAgent(prompt_service, memory_service)

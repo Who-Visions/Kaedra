@@ -15,8 +15,16 @@ from pathlib import Path
 
 from ..core.config import MODELS, PROJECT_ID, LOCATION
 
-import sounddevice as sd
-import numpy as np
+# Audio playback (only works on machines with audio output)
+try:
+    import sounddevice as sd
+    import numpy as np
+    HAS_AUDIO = True
+except ImportError:
+    sd = None
+    np = None
+    HAS_AUDIO = False
+    print("[!] Audio playback unavailable (sounddevice not installed or no audio device)")
 
 try:
     from google.cloud import texttospeech
@@ -30,10 +38,15 @@ class StreamWorker:
         self.q = queue.Queue()
         self.playing = False
         self.sample_rate = sample_rate
-        # For MULAW we need an 8kHz stream, or we decode to PWM.
-        # Let's dynamically create the stream based on input if possible, 
-        # but for now let's stick to a fixed output and decode to it.
         self.output_rate = 24000
+        self.stream = None
+        self._thread = None
+        
+        if not HAS_AUDIO:
+            print("[!] StreamWorker: Audio disabled (no sounddevice)")
+            return
+            
+        # For MULAW we need an 8kHz stream, or we decode to PWM.
         self.stream = sd.OutputStream(
             samplerate=self.output_rate,
             channels=1,
