@@ -93,6 +93,23 @@ class MicrophoneService:
         except:
             return 0.0
 
+    def wait_for_speech_nonblocking(self, threshold: int = 300) -> bool:
+        """
+        Non-blocking check if current audio energy exceeds threshold.
+        Returns True if speech triggers, False otherwise.
+        """
+        try:
+            with sd.InputStream(device=self.device_index,
+                                samplerate=self.sample_rate,
+                                channels=self.channels,
+                                dtype=self.dtype,
+                                blocksize=self.block_size) as stream:
+                indata, _ = stream.read(self.block_size)
+                rms = self._calculate_rms(indata)
+                return rms > threshold
+        except:
+            return False
+
     def wait_for_speech(self, threshold: int = 300) -> bool:
         """
         Blocks until audio energy exceeds threshold.

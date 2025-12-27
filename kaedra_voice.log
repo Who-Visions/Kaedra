@@ -1,0 +1,801 @@
+2025-12-27 12:16:05,727 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:16:21,435 - input frame rate=25
+2025-12-27 12:17:43,419 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:17:57,098 - input frame rate=25
+2025-12-27 12:18:03,052 - Engine started
+2025-12-27 12:18:06,707 - Process Error: AsyncChat.send_message() got an unexpected keyword argument 'stream'
+2025-12-27 12:18:25,957 - Process Error: AsyncChat.send_message() got an unexpected keyword argument 'stream'
+2025-12-27 12:19:02,683 - Process Error: AsyncChat.send_message() got an unexpected keyword argument 'stream'
+2025-12-27 12:19:10,938 - Process Error: AsyncChat.send_message() got an unexpected keyword argument 'stream'
+2025-12-27 12:20:25,922 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:20:40,785 - input frame rate=25
+2025-12-27 12:20:46,940 - Engine started
+2025-12-27 12:20:56,158 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:21:11,997 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:21:41,391 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:23:06,568 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:23:24,557 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:25:32,972 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:25:47,290 - input frame rate=25
+2025-12-27 12:25:53,807 - Engine started
+2025-12-27 12:26:06,298 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:26:42,698 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:30:34,195 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:30:49,035 - input frame rate=25
+2025-12-27 12:30:56,907 - Engine started
+2025-12-27 12:31:24,662 - Engine stopped
+2025-12-27 12:31:57,201 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:32:10,992 - input frame rate=25
+2025-12-27 12:32:18,012 - Engine started
+2025-12-27 12:34:29,556 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:34:44,055 - input frame rate=25
+2025-12-27 12:34:52,399 - Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet`
+2025-12-27 12:34:54,764 - Engine started
+2025-12-27 12:34:58,856 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:34:58,861 - Engine stopped
+2025-12-27 12:34:59,221 - Processing audio with duration 00:01.088
+2025-12-27 12:34:59,325 - RAG Error: Library cublas64_12.dll is not found or cannot be loaded
+2025-12-27 12:34:59,326 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:35:14,537 - Processing audio with duration 00:01.792
+2025-12-27 12:35:14,546 - RAG Error: Library cublas64_12.dll is not found or cannot be loaded
+2025-12-27 12:35:14,546 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:35:40,469 - Processing audio with duration 00:05.760
+2025-12-27 12:37:47,874 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:38:02,153 - input frame rate=25
+2025-12-27 12:38:09,959 - Engine started
+2025-12-27 12:39:12,728 - Processing audio with duration 00:04.736
+2025-12-27 12:39:12,796 - RAG Error: Library cublas64_12.dll is not found or cannot be loaded
+2025-12-27 12:39:12,799 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:40:16,160 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:40:30,851 - input frame rate=25
+2025-12-27 12:40:38,619 - Engine started
+2025-12-27 12:40:49,336 - Processing audio with duration 00:05.248
+2025-12-27 12:40:59,626 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:40:59,626 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:40:59,626 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:40:59,626 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:40:59,626 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:40:59,626 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:40:59,626 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:40:59,626 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:40:59,626 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:40:59,626 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:40:59,626 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:40:59,626 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 12:41:03,187 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 12:41:03,189 - AFC is enabled with max remote calls: 10.
+2025-12-27 12:45:25,093 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:45:39,510 - input frame rate=25
+2025-12-27 12:45:47,163 - Engine started
+2025-12-27 12:45:51,745 - Engine stopped
+2025-12-27 12:47:12,742 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:47:35,082 - input frame rate=25
+2025-12-27 12:47:53,941 - Engine started
+2025-12-27 12:48:43,965 - Engine stopped
+2025-12-27 12:59:20,226 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 12:59:35,959 - input frame rate=25
+2025-12-27 12:59:45,032 - Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet`
+2025-12-27 12:59:46,817 - Engine started
+2025-12-27 13:01:31,197 - Processing audio with duration 00:00.512
+2025-12-27 13:01:41,834 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:41,834 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:41,834 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:41,834 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:41,834 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:41,834 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:41,834 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:41,834 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:41,834 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:41,834 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:41,834 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:41,834 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:01:45,455 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 13:01:45,458 - AFC is enabled with max remote calls: 10.
+2025-12-27 13:02:00,789 - Processing audio with duration 00:02.880
+2025-12-27 13:02:01,545 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 13:02:01,547 - AFC is enabled with max remote calls: 10.
+2025-12-27 13:02:18,559 - Processing audio with duration 00:05.184
+2025-12-27 13:02:19,733 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 13:02:19,736 - AFC is enabled with max remote calls: 10.
+2025-12-27 13:33:58,688 - Processing audio with duration 00:02.368
+2025-12-27 13:33:59,816 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 13:33:59,819 - AFC is enabled with max remote calls: 10.
+2025-12-27 13:36:20,035 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 13:36:36,178 - input frame rate=25
+2025-12-27 13:36:45,437 - Engine started
+2025-12-27 13:39:11,095 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 13:39:25,855 - input frame rate=25
+2025-12-27 13:39:34,627 - Engine started
+2025-12-27 13:39:40,695 - Processing audio with duration 00:03.776
+2025-12-27 13:39:40,774 - Processing audio with duration 00:03.904
+2025-12-27 13:39:47,587 - RAG Error: Library cublas64_12.dll is not found or cannot be loaded
+2025-12-27 13:39:47,591 - AFC is enabled with max remote calls: 10.
+2025-12-27 13:39:47,594 - Engine stopped
+2025-12-27 13:39:50,102 - RAG Error: Library cublas64_12.dll is not found or cannot be loaded
+2025-12-27 13:39:50,106 - AFC is enabled with max remote calls: 10.
+2025-12-27 13:41:19,390 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 13:41:34,353 - input frame rate=25
+2025-12-27 13:41:42,594 - Engine started
+2025-12-27 13:42:41,011 - Processing audio with duration 00:03.776
+2025-12-27 13:42:41,014 - Processing audio with duration 00:03.776
+2025-12-27 13:42:41,025 - RAG Error: Library cublas64_12.dll is not found or cannot be loaded
+2025-12-27 13:42:41,028 - AFC is enabled with max remote calls: 10.
+2025-12-27 13:42:41,034 - Engine stopped
+2025-12-27 13:42:50,621 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:50,621 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:50,621 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:50,621 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:50,621 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:50,621 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:50,621 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:50,621 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:50,621 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:50,621 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:50,621 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:50,621 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 13:42:53,748 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 13:42:53,751 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:34:32,039 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 14:34:47,930 - input frame rate=25
+2025-12-27 14:35:00,653 - Engine started
+2025-12-27 14:35:10,467 - Processing audio with duration 00:01.600
+2025-12-27 14:35:21,442 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:21,442 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:21,442 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:21,442 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:21,442 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:21,442 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:21,442 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:21,442 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:21,442 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:21,442 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:21,442 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:21,442 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:35:26,677 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:35:26,679 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:37:00,732 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 14:37:18,257 - input frame rate=25
+2025-12-27 14:37:26,254 - Processing audio with duration 00:03.328
+2025-12-27 14:37:28,201 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:37:28,203 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:37:28,208 - Engine stopped
+2025-12-27 14:37:30,110 - Engine started
+2025-12-27 14:37:32,663 - Processing audio with duration 00:01.856
+2025-12-27 14:37:44,926 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:44,926 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:44,926 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:44,926 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:44,926 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:44,926 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:44,926 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:44,926 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:44,926 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:44,926 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:44,926 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:44,926 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:37:48,326 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 14:37:48,492 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:37:48,495 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:38:21,204 - Processing audio with duration 00:02.752
+2025-12-27 14:38:21,731 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 14:38:21,878 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:38:21,880 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:38:42,375 - Processing audio with duration 00:04.160
+2025-12-27 14:38:42,950 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 14:38:43,151 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:38:43,153 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:43:15,693 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 14:43:30,775 - input frame rate=25
+2025-12-27 14:43:39,154 - Engine started
+2025-12-27 14:43:51,679 - Processing audio with duration 00:04.992
+2025-12-27 14:44:01,489 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:01,489 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:01,489 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:01,489 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:01,489 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:01,489 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:01,489 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:01,489 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:01,489 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:01,489 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:01,489 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:01,489 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:44:04,566 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 14:44:04,762 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:44:04,766 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:44:08,890 - Engine stopped
+2025-12-27 14:44:37,022 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 14:44:52,424 - input frame rate=25
+2025-12-27 14:45:00,870 - Engine started
+2025-12-27 14:45:43,506 - Processing audio with duration 00:01.344
+2025-12-27 14:45:53,606 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:53,606 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:53,606 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:53,606 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:53,606 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:53,606 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:53,606 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:53,606 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:53,607 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:53,607 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:53,607 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:53,607 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:45:56,795 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 14:45:56,968 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:45:56,971 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:46:02,284 - TTS Generation Error: ChatterboxTurboTTS.generate() got an unexpected keyword argument 'n_cfm_timesteps'
+2025-12-27 14:46:02,286 - TTS Generation Error: ChatterboxTurboTTS.generate() got an unexpected keyword argument 'n_cfm_timesteps'
+2025-12-27 14:46:02,319 - TTS Generation Error: ChatterboxTurboTTS.generate() got an unexpected keyword argument 'n_cfm_timesteps'
+2025-12-27 14:46:22,285 - Processing audio with duration 00:02.432
+2025-12-27 14:46:22,856 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 14:46:23,003 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:46:23,006 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:46:29,188 - TTS Generation Error: ChatterboxTurboTTS.generate() got an unexpected keyword argument 'n_cfm_timesteps'
+2025-12-27 14:46:29,190 - TTS Generation Error: ChatterboxTurboTTS.generate() got an unexpected keyword argument 'n_cfm_timesteps'
+2025-12-27 14:46:29,196 - TTS Generation Error: ChatterboxTurboTTS.generate() got an unexpected keyword argument 'n_cfm_timesteps'
+2025-12-27 14:46:29,199 - TTS Generation Error: ChatterboxTurboTTS.generate() got an unexpected keyword argument 'n_cfm_timesteps'
+2025-12-27 14:47:46,844 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 14:48:02,234 - input frame rate=25
+2025-12-27 14:48:12,046 - Engine started
+2025-12-27 14:48:25,431 - Processing audio with duration 00:04.992
+2025-12-27 14:48:35,042 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:35,042 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:35,042 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:35,042 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:35,042 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:35,042 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:35,042 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:35,042 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:35,042 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:35,042 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:35,042 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:35,042 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:48:38,071 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 14:48:38,261 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:48:38,263 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:49:29,610 - Processing audio with duration 00:02.176
+2025-12-27 14:49:30,265 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 14:49:30,446 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:49:30,449 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:52:32,658 - Processing audio with duration 00:04.736
+2025-12-27 14:52:33,244 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 14:52:33,419 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:52:33,422 - AFC is enabled with max remote calls: 10.
+2025-12-27 14:54:11,755 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 14:54:26,527 - input frame rate=25
+2025-12-27 14:54:35,546 - Engine started
+2025-12-27 14:56:03,316 - Processing audio with duration 00:09.792
+2025-12-27 14:56:13,057 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:13,058 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:13,058 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:13,058 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:13,058 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:13,058 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:13,058 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:13,058 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:13,058 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:13,058 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:13,058 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:13,058 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 14:56:16,249 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 14:56:16,445 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 14:56:16,447 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:37:06,359 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:37:36,915 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:37:54,025 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:38:08,333 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:38:22,167 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:38:38,767 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:38:56,594 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:39:10,746 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:39:27,047 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:39:42,290 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:39:52,530 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:40:08,145 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:40:20,205 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:40:38,754 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:40:52,486 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:41:07,248 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:41:23,227 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:41:37,626 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:41:51,877 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:41:52,740 - Engine stopped
+2025-12-27 15:42:56,556 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 15:42:56,563 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 15:43:15,654 - input frame rate=25
+2025-12-27 15:43:16,274 - input frame rate=25
+2025-12-27 15:43:39,312 - Engine started
+2025-12-27 15:43:41,203 - Engine started
+2025-12-27 15:45:34,778 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 15:45:49,296 - input frame rate=25
+2025-12-27 15:45:59,102 - Engine started
+2025-12-27 15:48:05,220 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 15:48:19,534 - input frame rate=25
+2025-12-27 15:48:29,026 - Engine started
+2025-12-27 15:50:38,199 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 15:50:52,846 - input frame rate=25
+2025-12-27 15:51:02,557 - Engine started
+2025-12-27 15:52:49,837 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:54:49,495 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:56:02,083 - AFC is enabled with max remote calls: 10.
+2025-12-27 15:58:58,742 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 15:59:13,516 - input frame rate=25
+2025-12-27 15:59:22,973 - Engine started
+2025-12-27 15:59:58,570 - Processing audio with duration 00:19.392
+2025-12-27 16:00:09,080 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:09,080 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:09,080 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:09,080 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:09,080 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:09,080 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:09,080 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:09,080 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:09,080 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:09,080 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:09,080 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:09,081 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:00:12,684 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:00:12,874 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 16:00:12,877 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:05:51,133 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:06:06,045 - input frame rate=25
+2025-12-27 16:06:15,379 - Engine started
+2025-12-27 16:06:15,509 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:06:26,637 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:26,637 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:26,637 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:26,637 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:26,637 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:26,637 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:26,637 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:26,637 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:26,637 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:26,637 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:26,637 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:26,637 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:06:30,817 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:10:22,831 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:10:37,776 - input frame rate=25
+2025-12-27 16:10:47,004 - Engine started
+2025-12-27 16:10:47,115 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:10:57,348 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:10:57,348 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:10:57,348 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:10:57,348 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:10:57,348 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:10:57,348 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:10:57,348 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:10:57,348 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:10:57,348 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:10:57,348 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:10:57,348 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:10:57,348 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:11:00,691 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:12:00,780 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:12:52,260 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:13:42,390 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:14:24,061 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:14:55,337 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:16:48,426 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:17:03,607 - input frame rate=25
+2025-12-27 16:17:12,982 - Engine started
+2025-12-27 16:17:13,093 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:17:22,731 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:22,731 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:22,731 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:22,731 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:22,731 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:22,731 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:22,731 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:22,731 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:22,732 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:22,732 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:22,732 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:22,732 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:17:26,383 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:17:44,316 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:17:46,931 - Text Mode Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:18:09,186 - Processing audio with duration 00:02.304
+2025-12-27 16:18:09,990 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:18:10,201 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 16:18:10,206 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:18:10,694 - Process Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:21:28,553 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:21:43,175 - input frame rate=25
+2025-12-27 16:22:37,992 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:22:52,900 - input frame rate=25
+2025-12-27 16:23:02,810 - Engine started
+2025-12-27 16:23:02,916 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:23:12,643 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:12,644 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:12,644 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:12,644 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:12,644 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:12,644 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:12,644 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:12,644 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:12,644 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:12,644 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:12,644 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:12,644 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:23:15,863 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:23:32,577 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:23:35,069 - Text Mode Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:23:57,965 - Processing audio with duration 00:02.944
+2025-12-27 16:23:58,795 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:23:58,987 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 16:23:58,991 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:23:59,450 - Process Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:27:09,601 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:27:24,267 - input frame rate=25
+2025-12-27 16:27:33,953 - Engine started
+2025-12-27 16:27:34,064 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:27:43,872 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:43,872 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:43,872 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:43,872 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:43,872 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:43,872 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:43,872 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:43,872 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:43,872 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:43,872 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:43,873 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:43,873 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:27:47,519 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:28:20,852 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:28:23,425 - Text Mode Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:29:57,199 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:30:12,041 - input frame rate=25
+2025-12-27 16:30:21,738 - Engine started
+2025-12-27 16:30:21,843 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:30:31,959 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:31,959 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:31,959 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:31,960 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:31,960 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:31,960 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:31,960 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:31,960 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:31,960 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:31,960 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:31,960 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:31,960 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:30:35,396 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:30:47,376 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:30:49,880 - Text Mode Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:31:05,279 - Processing audio with duration 00:06.208
+2025-12-27 16:31:05,898 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:31:06,121 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 16:31:06,125 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:31:06,632 - Process Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:33:48,937 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:34:04,265 - input frame rate=25
+2025-12-27 16:34:14,241 - Engine started
+2025-12-27 16:34:14,356 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:34:24,166 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:24,167 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:24,167 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:24,167 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:24,167 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:24,167 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:24,167 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:24,167 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:24,167 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:24,167 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:24,167 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:24,167 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:34:27,710 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:34:37,474 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:34:39,970 - Text Mode Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:34:56,194 - Processing audio with duration 00:04.288
+2025-12-27 16:34:57,039 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:34:57,219 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 16:34:57,223 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:34:57,660 - Process Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:35:14,219 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:35:14,438 - Text Mode Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:35:22,809 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:35:22,949 - Text Mode Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:35:40,701 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:35:40,896 - Text Mode Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:37:33,695 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:37:48,607 - input frame rate=25
+2025-12-27 16:37:58,917 - Engine started
+2025-12-27 16:37:59,030 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:38:08,791 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:08,791 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:08,791 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:08,791 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:08,791 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:08,791 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:08,791 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:08,791 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:08,791 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:08,792 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:08,792 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:08,792 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:38:12,126 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:39:40,604 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:39:56,592 - input frame rate=25
+2025-12-27 16:40:06,817 - Engine started
+2025-12-27 16:40:06,926 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:40:17,407 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:17,408 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:17,408 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:17,408 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:17,408 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:17,408 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:17,408 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:17,408 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:17,408 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:17,408 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:17,408 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:17,408 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:40:20,925 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:40:30,325 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:40:32,962 - Text Mode Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:40:42,166 - Processing audio with duration 00:05.120
+2025-12-27 16:40:42,229 - Processing audio with duration 00:05.056
+2025-12-27 16:40:44,669 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:40:44,917 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 16:40:44,924 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:40:46,636 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:40:46,803 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 16:40:46,806 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:40:47,245 - Process Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:40:47,655 - Process Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:43:07,684 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:43:22,181 - input frame rate=25
+2025-12-27 16:43:31,829 - Engine started
+2025-12-27 16:43:31,936 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:43:41,545 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:41,545 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:41,545 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:41,545 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:41,545 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:41,546 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:41,546 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:41,546 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:41,546 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:41,546 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:41,546 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:41,546 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:43:44,894 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:44:24,957 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:44:27,724 - Text Mode Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:46:25,321 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:46:41,361 - input frame rate=25
+2025-12-27 16:46:51,427 - Engine started
+2025-12-27 16:46:51,542 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:47:01,903 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:01,904 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:01,904 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:01,904 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:01,904 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:01,904 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:01,904 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:01,904 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:01,904 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:01,904 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:01,904 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:01,904 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:47:05,277 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:49:10,031 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:49:25,851 - input frame rate=25
+2025-12-27 16:49:35,894 - Engine started
+2025-12-27 16:49:36,008 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:49:45,984 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:45,984 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:45,984 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:45,984 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:45,984 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:45,984 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:45,985 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:45,985 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:45,985 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:45,985 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:45,985 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:45,985 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:49:49,280 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:50:56,925 - Processing audio with duration 00:01.984
+2025-12-27 16:50:57,899 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:50:58,106 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 16:50:58,112 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:51:00,917 - Process Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:51:28,425 - Processing audio with duration 00:06.144
+2025-12-27 16:51:28,840 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:51:29,024 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 16:51:29,031 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:51:29,550 - Process Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:54:01,801 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:54:17,210 - input frame rate=25
+2025-12-27 16:54:27,686 - Engine started
+2025-12-27 16:54:27,798 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:54:38,116 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:38,116 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:38,116 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:38,116 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:38,117 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:38,117 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:38,117 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:38,117 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:38,117 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:38,117 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:38,117 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:38,117 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:54:41,300 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:54:47,184 - Processing audio with duration 00:05.376
+2025-12-27 16:54:48,059 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 16:54:48,246 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 16:54:48,253 - AFC is enabled with max remote calls: 10.
+2025-12-27 16:54:51,212 - Process Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 16:58:26,211 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 16:58:40,307 - input frame rate=25
+2025-12-27 16:58:49,498 - Engine started
+2025-12-27 16:58:49,614 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 16:58:59,718 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:58:59,718 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:58:59,718 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:58:59,718 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:58:59,718 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:58:59,718 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:58:59,718 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:58:59,718 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:58:59,718 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:58:59,718 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:58:59,719 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:58:59,719 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 16:59:02,911 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:10:02,078 - Processing audio with duration 00:01.856
+2025-12-27 17:10:02,863 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:10:03,055 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 17:10:03,061 - AFC is enabled with max remote calls: 10.
+2025-12-27 17:10:05,930 - Process Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 17:10:58,326 - Processing audio with duration 00:06.400
+2025-12-27 17:10:58,886 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:10:59,051 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 17:10:59,058 - AFC is enabled with max remote calls: 10.
+2025-12-27 17:10:59,566 - Process Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 17:13:42,945 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 17:13:57,412 - input frame rate=25
+2025-12-27 17:14:06,549 - Engine started
+2025-12-27 17:14:06,656 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 17:14:16,079 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:16,079 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:16,079 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:16,079 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:16,079 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:16,079 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:16,079 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:16,079 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:16,079 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:16,080 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:16,080 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:16,080 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:14:19,236 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:14:23,467 - Processing audio with duration 00:03.584
+2025-12-27 17:14:27,581 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:14:27,854 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 17:14:27,860 - Gemini Stream Error: name 'client' is not defined
+2025-12-27 17:16:08,667 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 17:16:23,171 - input frame rate=25
+2025-12-27 17:16:32,382 - Engine started
+2025-12-27 17:16:32,496 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 17:16:41,992 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:41,992 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:41,993 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:41,993 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:41,993 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:41,993 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:41,993 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:41,993 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:41,993 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:41,993 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:41,993 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:41,993 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:16:45,188 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:16:47,331 - Processing audio with duration 00:01.664
+2025-12-27 17:16:50,116 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:16:50,411 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 17:16:50,417 - Process Error: 'async for' requires an object with __aiter__ method, got coroutine
+2025-12-27 17:16:56,290 - Processing audio with duration 00:05.312
+2025-12-27 17:16:57,007 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:16:57,198 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 17:16:57,203 - Process Error: 'async for' requires an object with __aiter__ method, got coroutine
+2025-12-27 17:17:21,744 - Processing audio with duration 00:11.072
+2025-12-27 17:17:23,826 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:17:24,006 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 17:17:24,013 - Process Error: 'async for' requires an object with __aiter__ method, got coroutine
+2025-12-27 17:19:18,567 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 17:19:33,285 - input frame rate=25
+2025-12-27 17:19:42,425 - Engine started
+2025-12-27 17:19:42,535 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 17:19:51,995 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:51,995 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:51,995 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:51,995 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:51,995 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:51,996 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:51,996 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:51,996 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:51,996 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:51,996 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:51,996 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:51,996 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:19:55,153 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:19:59,070 - Processing audio with duration 00:03.264
+2025-12-27 17:19:59,599 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:19:59,807 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 17:19:59,813 - AFC is enabled with max remote calls: 10.
+2025-12-27 17:20:42,885 - AFC is enabled with max remote calls: 10.
+2025-12-27 17:20:43,077 - Text Mode Error: 400 Bad Request. {'message': '{\n  "error": {\n    "code": 400,\n    "message": "Multiple tools are supported only when they are all search tools.",\n    "status": "INVALID_ARGUMENT"\n  }\n}\n', 'status': 'Bad Request'}
+2025-12-27 17:23:28,996 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 17:23:43,356 - input frame rate=25
+2025-12-27 17:23:52,827 - Engine started
+2025-12-27 17:23:52,940 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 17:24:02,862 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:02,862 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:02,862 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:02,862 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:02,862 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:02,862 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:02,862 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:02,862 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:02,862 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:02,862 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:02,862 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:02,862 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:24:06,163 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:24:31,791 - Processing audio with duration 00:03.072
+2025-12-27 17:24:34,056 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:24:34,263 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 17:24:34,268 - AFC is enabled with max remote calls: 10.
+2025-12-27 17:25:09,275 - Processing audio with duration 00:05.248
+2025-12-27 17:25:10,000 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:25:10,176 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 17:25:10,181 - AFC is enabled with max remote calls: 10.
+2025-12-27 17:25:44,298 - AFC is enabled with max remote calls: 10.
+2025-12-27 17:28:33,329 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 17:28:48,023 - input frame rate=25
+2025-12-27 17:28:58,289 - Engine started
+2025-12-27 17:28:58,402 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 17:29:08,508 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:08,511 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:08,511 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:08,511 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:08,511 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:08,512 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:08,512 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:08,512 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:08,512 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:08,512 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:08,512 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:08,512 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:29:11,830 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:31:34,304 - [*] Found Microphone: Chat Mix (Elgato Virtual Audio) (Index 1)
+2025-12-27 17:31:49,300 - input frame rate=25
+2025-12-27 17:31:59,972 - Engine started
+2025-12-27 17:32:00,087 - Wispr Initial Sync Error: 'NoneType' object has no attribute 'strip'
+2025-12-27 17:32:10,113 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:10,113 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:10,113 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:10,113 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:10,113 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:10,113 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:10,113 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:10,113 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:10,114 - Updating LLM class for gemini-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:10,114 - Updating LLM class for model-optimizer-.* from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:10,114 - Updating LLM class for projects\/.+\/locations\/.+\/endpoints\/.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:10,114 - Updating LLM class for projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+ from <class 'google.adk.models.google_llm.Gemini'> to <class 'google.adk.models.google_llm.Gemini'>
+2025-12-27 17:32:13,713 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:32:45,867 - Processing audio with duration 00:02.112
+2025-12-27 17:32:46,613 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:32:46,801 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 17:32:46,824 - AFC is enabled with max remote calls: 10.
+2025-12-27 17:33:16,513 - Processing audio with duration 00:03.328
+2025-12-27 17:33:17,199 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/sessions/5528821377626275840:appendEvent "HTTP/1.1 200 OK"
+2025-12-27 17:33:17,375 - HTTP Request: POST https://us-central1-aiplatform.googleapis.com/v1beta1/projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200/memories:retrieve "HTTP/1.1 200 OK"
+2025-12-27 17:33:17,381 - AFC is enabled with max remote calls: 10.
+2025-12-27 17:35:12,141 - AFC is enabled with max remote calls: 10.
