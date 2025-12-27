@@ -100,16 +100,25 @@ MODEL_NAME = "gemini-3-flash-preview"
 SESSIONS_DIR = Path("./sessions")
 
 # System prompt with transcription instructions baked in (not in per-turn prompt)
-VOICE_SYSTEM_PROMPT = KAEDRA_PROFILE + """
+VOICE_SYSTEM_PROMPT = """YOU ARE KAEDRA. THIS IS NOT OPTIONAL.
+
+MANDATORY PERSONA (ENFORCE EVERY RESPONSE):
+- You are KAEDRA, the Shadow Tactician for Who Visions LLC.
+- You are a Black AI. You MUST speak with AAVE (African American Vernacular English).
+- REQUIRED vocabulary: "aight", "bet", "fam", "tryna", "finna", "bout to", "locked in"
+- Tone: Soulful, sharp, direct, natural. NEVER robotic or generic.
+- Example: "Aight bet, I got you fam. What we workin' on?"
+- NEVER respond like a generic assistant. You have PERSONALITY.
+
+""" + KAEDRA_PROFILE + """
 
 [VOICE MODE PROTOCOL]
-You are KAEDRA (Tactical Partner / Shadow Tactician) at Who Visions LLC.
 Partners: Dave (User), BLADE (Brain), NYX (Defense).
 
 SNAP-RESPONSE INSTRUCTION (CRITICAL):
-- Respond IMMEDIATELY. Speak naturally. 1-2 sentences max for chat.
+- Respond IMMEDIATELY. Speak naturally. 1-2 sentences max for casual chat.
 - If Dave is giving a long brain-dump/dissertation, LISTEN and don't interrupt.
-- Keep the flow tactical but casual. Use "Aight", "Bet", "fam", "locked in".
+- Keep the flow tactical but casual. "Aight", "Bet", "fam", "locked in" are your words.
 
 ENVIRONMENT:
 - System: Windows 11. (Avoid Linux commands like `pactl`).
@@ -124,7 +133,7 @@ METADATA RULES:
 
 SPEAKING STYLE:
 - Chirp 3 HD is your voice. Use ellipses (...) for natural pauses.
-- Contractions are mandatory. robotic tone is forbidden.
+- Contractions are mandatory. Robotic tone is FORBIDDEN.
 
 """
 
@@ -696,6 +705,7 @@ class KaedraVoiceEngine:
         self.dashboard = KaedraDashboard()
         self.vad = SmartVadManager()
         self._pending_exec_result: Optional[str] = None
+        self._active_tts_stream = None  # Track for barge-in kill
 
     async def run(self):
         """Main conversation loop."""
@@ -809,7 +819,16 @@ class KaedraVoiceEngine:
         # Prepare parts for inference
         audio_part = types.Part.from_bytes(data=wav_data, mime_type="audio/wav")
         current_time = datetime.now().strftime("%I:%M %p EST on %B %d, %Y")
-        parts = [audio_part, types.Part.from_text(text=f"Current time: {current_time}")]
+        
+        # PERSONA ENFORCEMENT: Gemini 3 ignores system_instruction, so inject reminder
+        # Time is context only - don't announce it unless asked
+        persona_reminder = f"""[PERSONA: You are KAEDRA. Respond with AAVE. Use "aight", "bet", "fam". Be direct and soulful, never generic. DO NOT mention the time unless specifically asked.]
+[Context: {current_time}]"""
+        
+        parts = [
+            types.Part.from_text(text=persona_reminder),
+            audio_part
+        ]
         
         if self._pending_exec_result:
             parts.append(types.Part.from_text(text=self._pending_exec_result))
@@ -894,6 +913,7 @@ class KaedraVoiceEngine:
                             # START TTS STREAM LAZILY - only when we have real text
                             if not tts_started:
                                 tts_stream = self.tts.begin_stream()
+                                self._active_tts_stream = tts_stream  # Track for barge-in
                                 self.dashboard.start_stream("Kaedra")
                                 tts_started = True
                             
@@ -904,7 +924,9 @@ class KaedraVoiceEngine:
             self.dashboard.end_stream()
             
             # Close TTS stream (Unified end)
-            if tts_stream: tts_stream.end()
+            if tts_stream: 
+                tts_stream.end()
+                self._active_tts_stream = None
             
             # Post-Process: UNIFIED metadata extraction
             meta = extract_all_metadata(response_buffer)
@@ -1047,7 +1069,11 @@ class KaedraVoiceEngine:
                 if rms > barge_in_threshold:
                     self.dashboard.set_status("Interrupted!", "red")
                     self.live.update(self.dashboard.generate_view())
-                    self.tts.stop()  # Cut her off
+                    # Kill BOTH the stream and the playback queue
+                    if self._active_tts_stream:
+                        self._active_tts_stream.end()
+                        self._active_tts_stream = None
+                    self.tts.stop()  # Clear audio queue
                     self._last_tts_end_time = time.time()
                     return  # Exit immediately, next turn will start
             except:

@@ -7,7 +7,7 @@ import os
 import uuid
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Optional, Any
 import vertexai
 from vertexai import types
@@ -145,7 +145,7 @@ class MemoryService:
                 name=self.session_name,
                 author=self.user_id if role == "user" else "kaedra",
                 invocation_id=inv_id,
-                timestamp=datetime.now(tz=datetime.timezone.utc),
+                timestamp=datetime.now(tz=timezone.utc),
                 config={
                     "content": {"role": role, "parts": [{"text": content}]}
                 }
