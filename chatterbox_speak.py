@@ -44,8 +44,9 @@ from kaedra.services.wispr import WisprService
 from kaedra.agents.kaedra import KAEDRA_PROFILE
 from kaedra.services.tts import StreamWorker  # Reusing existing worker
 
-# Chatterbox TTS
-os.environ['HF_TOKEN'] = os.getenv('HF_TOKEN', 'REDACTED_TOKEN')
+# Chatterbox TTS - HF_TOKEN must be set externally (do not hardcode!)
+if not os.getenv('HF_TOKEN'):
+    raise EnvironmentError("HF_TOKEN environment variable required for Chatterbox TTS")
 from chatterbox.tts_turbo import ChatterboxTurboTTS
 
 # Optional STT for RAG
