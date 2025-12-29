@@ -30,6 +30,14 @@ AGENT_RESOURCE_NAME = os.getenv(
 LIFX_TOKEN = os.getenv("LIFX_TOKEN", "")
 
 # ══════════════════════════════════════════════════════════════════════════════
+# INVOICE SERVICE CONFIGURATION (Stripe + Square)
+# ══════════════════════════════════════════════════════════════════════════════
+
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+SQUARE_ACCESS_TOKEN = os.getenv("SQUARE_ACCESS_TOKEN", "")
+SQUARE_ENVIRONMENT = os.getenv("SQUARE_ENVIRONMENT", "sandbox")  # or "production"
+
+# ══════════════════════════════════════════════════════════════════════════════
 # MODEL REGISTRY
 # ══════════════════════════════════════════════════════════════════════════════
 
