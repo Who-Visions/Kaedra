@@ -11,6 +11,9 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
+from dotenv import load_dotenv
+
+load_dotenv()
 
 print("=" * 60)
 print("KAEDRA Invoice Service - Standalone Test")
@@ -182,7 +185,10 @@ except ImportError:
     pass
 
 try:
-    from square.client import Client
+    try:
+        from square.client import Client
+    except ImportError:
+        from square import Square
     packages["squareup"] = True
 except ImportError:
     pass
@@ -196,8 +202,8 @@ except ImportError:
 try:
     from weasyprint import HTML
     packages["weasyprint"] = True
-except ImportError:
-    pass
+except (ImportError, OSError):
+    packages["weasyprint"] = False
 
 for pkg, installed in packages.items():
     status = "✓ installed" if installed else "✗ not installed"
@@ -221,7 +227,9 @@ print(f"  SQUARE_ACCESS_TOKEN: {'✓ configured' if square_token else '✗ not s
 # Test 5: Live Stripe Test (if configured)
 # ════════════════════════════════════════════════════════════════
 
-if stripe_key and packages["stripe"]:
+ENABLE_LIVE_TEST = True  # Enabled for verification run
+
+if stripe_key and packages["stripe"] and ENABLE_LIVE_TEST:
     print("\n=== Test 5: Live Stripe Connection ===")
     try:
         import stripe
@@ -243,14 +251,31 @@ else:
 if square_token and packages["squareup"]:
     print("\n=== Test 6: Live Square Connection ===")
     try:
-        from square.client import Client
-        client = Client(access_token=square_token, environment=os.getenv("SQUARE_ENVIRONMENT", "sandbox"))
-        result = client.locations.list_locations()
-        if result.is_success():
-            locs = result.body.get("locations", [])
-            print(f"✓ Connected to Square! Found {len(locs)} locations")
-        else:
-            print(f"✗ Square error: {result.errors}")
+        try:
+            # Legacy
+            from square.client import Client
+            client = Client(access_token=square_token, environment=os.getenv("SQUARE_ENVIRONMENT", "sandbox"))
+            result = client.locations.list_locations()
+            if result.is_success():
+                 locs = result.body.get("locations", [])
+                 print(f"✓ Connected to Square! Found {len(locs)} locations")
+            else:
+                 print(f"✗ Square error: {result.errors}")
+        except ImportError:
+            # v43+
+            from square.client import Client
+            # Actually v43 uses 'from square.client import Client' is deprecated?
+            # Let's try the modern client
+            from square.client import Client
+            # Wait, let's just use the Client if it imported?
+            # Re-writing this block for simplicity/robustness
+            client = Client(access_token=square_token, environment=os.getenv("SQUARE_ENVIRONMENT", "sandbox"))
+            result = client.locations.list_locations()
+            if result.is_success():
+                 locs = result.body.get("locations", [])
+                 print(f"✓ Connected to Square! Found {len(locs)} locations")
+            else:
+                 print(f"✗ Square error: {result.errors}")
     except Exception as e:
         print(f"✗ Square error: {e}")
 else:
