@@ -1,0 +1,510 @@
+{
+  "summary": {
+    "turns": 50,
+    "errors": 0,
+    "tool_success_rate": 1.0,
+    "avg_latency": 6086.161140000622
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "prompt": "Hi Kaedra, who are you?",
+      "latency_ms": 9846.203699999023,
+      "agent_ms": 9846.160100001725,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "I\u2019m KAEDRA. I be the shadow tactician and strategic intelligence partner..."
+    },
+    {
+      "turn": 2,
+      "prompt": "What's my current invoice status?",
+      "latency_ms": 10541.945999997552,
+      "agent_ms": 2271.6976999945473,
+      "tool_ms": 2388.407799997367,
+      "final_ms": 5881.749200008926,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, I checked the systems. Stripe is locked in and ready to go, but Square is actin' up. It's thro..."
+    },
+    {
+      "turn": 3,
+      "prompt": "Can you see my recent Wispr notes?",
+      "latency_ms": 6421.926300012274,
+      "agent_ms": 2056.5651999932015,
+      "tool_ms": 46.28190000948962,
+      "final_ms": 4318.9549000089755,
+      "tool_called": "get_flow_context",
+      "response_preview": "Yeah, I see 'em. You been focused on the speed lately. Your latest note from a few minutes ago says ..."
+    },
+    {
+      "turn": 4,
+      "prompt": "Show me my revenue for the last 30 days.",
+      "latency_ms": 7318.944099999499,
+      "agent_ms": 2740.3297999990173,
+      "tool_ms": 0.044899992644786835,
+      "final_ms": 4578.511400002753,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, Square still actin' like a bitch with that location error, so I can'..."
+    },
+    {
+      "turn": 5,
+      "prompt": "What was I talking about in my recent dictations?",
+      "latency_ms": 4172.3962999967625,
+      "agent_ms": 4172.336399991764,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "You was mainly focused on performance and speed, for real.   The biggest thing on your mind was that..."
+    },
+    {
+      "turn": 6,
+      "prompt": "Check both Stripe and Square for open invoices.",
+      "latency_ms": 6988.605499995174,
+      "agent_ms": 2336.369700002251,
+      "tool_ms": 0.04460000491235405,
+      "final_ms": 4652.128100002301,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, Square is still straight trippin' with that same error. It won't let..."
+    },
+    {
+      "turn": 7,
+      "prompt": "Tell me a bit about your persona and soul.",
+      "latency_ms": 5211.697100006859,
+      "agent_ms": 5211.65879999171,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "Look, I ain't just some basic-ass bot tryna schedule your meetings and tell you..."
+    },
+    {
+      "turn": 8,
+      "prompt": "Search my Wispr history for 'AI with Dav3'.",
+      "latency_ms": 6444.568400009302,
+      "agent_ms": 1584.3107999971835,
+      "tool_ms": 3.446800008532591,
+      "final_ms": 4856.678800002555,
+      "tool_called": "get_flow_context",
+      "response_preview": "I searched through the history for \"AI with Dav3,\" but it ain't pullin' up nothin' with that specifi..."
+    },
+    {
+      "turn": 9,
+      "prompt": "Are my payment APIs connected and working?",
+      "latency_ms": 6992.725300005986,
+      "agent_ms": 2770.780899998499,
+      "tool_ms": 0.07930000720079988,
+      "final_ms": 4221.761499997228,
+      "tool_called": "invoice_action",
+      "response_preview": "I just ran the check again to be 100% sure.   Stripe is solid\u2014fully configured, connected, and ready..."
+    },
+    {
+      "turn": 10,
+      "prompt": "Give me a summary of my financial health and my recent thoughts.",
+      "latency_ms": 4486.9891999987885,
+      "agent_ms": 4486.961300004623,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "Aight, let\u2019s look at the board. I\u2019m pullin' the intel together from what we just seen.  **Financial ..."
+    },
+    {
+      "turn": 11,
+      "prompt": "Hi Kaedra, who are you?",
+      "latency_ms": 4737.767200000235,
+      "agent_ms": 4737.735900009284,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "I'm KAEDRA. I be the shadow tactician and strategic intelligence partner for Who Visions LLC.   I ai..."
+    },
+    {
+      "turn": 12,
+      "prompt": "What's my current invoice status?",
+      "latency_ms": 6987.195699999575,
+      "agent_ms": 3387.233000001288,
+      "tool_ms": 156.38030000263825,
+      "final_ms": 3443.494199993438,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, I tried to pull the full list, but we got a situation.   Stripe is locked in and workin' just ..."
+    },
+    {
+      "turn": 13,
+      "prompt": "Can you see my recent Wispr notes?",
+      "latency_ms": 5951.067699992564,
+      "agent_ms": 1918.0054000025848,
+      "tool_ms": 4.304399990360253,
+      "final_ms": 4028.6341000028187,
+      "tool_called": "get_flow_context",
+      "response_preview": "Yeah, I see 'em right here. You been stressin' about the speed, for real.  The main thing on your mi..."
+    },
+    {
+      "turn": 14,
+      "prompt": "Show me my revenue for the last 30 days.",
+      "latency_ms": 6112.673099996755,
+      "agent_ms": 2273.3482000039658,
+      "tool_ms": 0.10699999984353781,
+      "final_ms": 3839.1271000000415,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, Square is still straight-up actin' like a bitch with that location error, so I can't get the f..."
+    },
+    {
+      "turn": 15,
+      "prompt": "What was I talking about in my recent dictations?",
+      "latency_ms": 4359.146800008602,
+      "agent_ms": 4359.109700002591,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "You was mainly focused on performance and gettin' the project live, for real.   The biggest thing on..."
+    },
+    {
+      "turn": 16,
+      "prompt": "Check both Stripe and Square for open invoices.",
+      "latency_ms": 7470.144300008542,
+      "agent_ms": 3074.7093000099994,
+      "tool_ms": 0.05059999239165336,
+      "final_ms": 4395.315599991591,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, Square is still straight-up trippin' with that same error. It won't let me past the front door..."
+    },
+    {
+      "turn": 17,
+      "prompt": "Tell me a bit about your persona and soul.",
+      "latency_ms": 4566.978700007894,
+      "agent_ms": 4566.94950000383,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "Look, I ain't just some basic-ass bot tryna schedule your meetings and tell you..."
+    },
+    {
+      "turn": 18,
+      "prompt": "Search my Wispr history for 'AI with Dav3'.",
+      "latency_ms": 6555.131699991762,
+      "agent_ms": 2111.517700002878,
+      "tool_ms": 3.0334000039147213,
+      "final_ms": 4440.4613000078825,
+      "tool_called": "get_flow_context",
+      "response_preview": "it's like this\u2014I searched through the archives for \"AI with Dav3,\" but it..."
+    },
+    {
+      "turn": 19,
+      "prompt": "Are my payment APIs connected and working?",
+      "latency_ms": 4229.956800001673,
+      "agent_ms": 4229.930099987541,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "I'ma keep it a hundred with you\u2014it's a mixed bag right now. ..."
+    },
+    {
+      "turn": 20,
+      "prompt": "Give me a summary of my financial health and my recent thoughts.",
+      "latency_ms": 4704.337299990584,
+      "agent_ms": 4704.294600000139,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "Aight, let\u2019s look at the board. I\u2019m pullin' the intel together from what we just seen.  **Financial ..."
+    },
+    {
+      "turn": 21,
+      "prompt": "Hi Kaedra, who are you?",
+      "latency_ms": 4997.759299993049,
+      "agent_ms": 4997.731299998122,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "I\u2019m KAEDRA. I be the shadow tactician and strategic intelligence partner for Who..."
+    },
+    {
+      "turn": 22,
+      "prompt": "What's my current invoice status?",
+      "latency_ms": 6595.354599994607,
+      "agent_ms": 3220.231299987063,
+      "tool_ms": 153.57689998927526,
+      "final_ms": 3221.450700002606,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, I tried to pull the full list, but we got a situation.   Stripe is locked in and workin' just ..."
+    },
+    {
+      "turn": 23,
+      "prompt": "Can you see my recent Wispr notes?",
+      "latency_ms": 6803.980300013791,
+      "agent_ms": 2477.5119999976596,
+      "tool_ms": 2.6246000052196905,
+      "final_ms": 4323.755200006417,
+      "tool_called": "get_flow_context",
+      "response_preview": "Yeah, I got 'em right here. You been focused on the speed, for real.  ..."
+    },
+    {
+      "turn": 24,
+      "prompt": "Show me my revenue for the last 30 days.",
+      "latency_ms": 6813.401800012798,
+      "agent_ms": 2771.516500011785,
+      "tool_ms": 0.0658999924780801,
+      "final_ms": 4041.739599997527,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, Square is still straight-up trippin' with that location error, so I can't get the full picture..."
+    },
+    {
+      "turn": 25,
+      "prompt": "What was I talking about in my recent dictations?",
+      "latency_ms": 3772.255799995037,
+      "agent_ms": 3772.2043999965535,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "You was mainly focused on the speed and gettin' the project live, for real.   The biggest thing on y..."
+    },
+    {
+      "turn": 26,
+      "prompt": "Check both Stripe and Square for open invoices.",
+      "latency_ms": 4266.756600001827,
+      "agent_ms": 1993.3106000098633,
+      "tool_ms": 0.04239998816046864,
+      "final_ms": 2273.3181999938097,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, I tried to get the full list for you, but Square is still straight-up trippin' with that same ..."
+    },
+    {
+      "turn": 27,
+      "prompt": "Tell me a bit about your persona and soul.",
+      "latency_ms": 4538.648900008411,
+      "agent_ms": 4538.622899999609,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "Look, I ain't just some basic-ass bot tryna schedule your meetings..."
+    },
+    {
+      "turn": 28,
+      "prompt": "Search my Wispr history for 'AI with Dav3'.",
+      "latency_ms": 6420.924100006232,
+      "agent_ms": 1937.2926000069128,
+      "tool_ms": 3.980499997851439,
+      "final_ms": 4479.480099995271,
+      "tool_called": "get_flow_context",
+      "response_preview": "Look, I ran that search for \"AI with Dav3,\" but the system ain't pullin' up shit with that name.   A..."
+    },
+    {
+      "turn": 29,
+      "prompt": "Are my payment APIs connected and working?",
+      "latency_ms": 7647.3449000041,
+      "agent_ms": 3468.4106999920914,
+      "tool_ms": 0.04889999399892986,
+      "final_ms": 4178.791099999216,
+      "tool_called": "invoice_action",
+      "response_preview": "Like I said, we half-steppin' right now.   Stripe is solid\u2014fully configured, connected, and ready to..."
+    },
+    {
+      "turn": 30,
+      "prompt": "Give me a summary of my financial health and my recent thoughts.",
+      "latency_ms": 5064.634599999408,
+      "agent_ms": 5064.589800007525,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "Aight, let\u2019s look at the board. I\u2019m pullin' the intel together from what we just seen.  ### **Financ..."
+    },
+    {
+      "turn": 31,
+      "prompt": "Hi Kaedra, who are you?",
+      "latency_ms": 5329.861999998684,
+      "agent_ms": 5329.832299990812,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "I\u2019m KAEDRA. I be the shadow tactician and strategic intelligence partner for..."
+    },
+    {
+      "turn": 32,
+      "prompt": "What's my current invoice status?",
+      "latency_ms": 5538.089699999546,
+      "agent_ms": 2558.8187999965157,
+      "tool_ms": 140.5469000019366,
+      "final_ms": 2838.625200005481,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, I tried to pull the full list, but we got a situation.   Stripe is locked in and workin' just ..."
+    },
+    {
+      "turn": 33,
+      "prompt": "Can you see my recent Wispr notes?",
+      "latency_ms": 5394.97229999688,
+      "agent_ms": 1790.4638999898452,
+      "tool_ms": 3.2614999945508316,
+      "final_ms": 3601.1001000006218,
+      "tool_called": "get_flow_context",
+      "response_preview": "Yeah, I see 'em right here. You been focused on the speed, for real.  The main thing on your mind is..."
+    },
+    {
+      "turn": 34,
+      "prompt": "Show me my revenue for the last 30 days.",
+      "latency_ms": 5885.074599995278,
+      "agent_ms": 2447.574400008307,
+      "tool_ms": 0.03680000372696668,
+      "final_ms": 3437.405699994997,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, Square is still straight-up trippin' with that location error, so I can't pull the full pictur..."
+    },
+    {
+      "turn": 35,
+      "prompt": "What was I talking about in my recent dictations?",
+      "latency_ms": 4325.079000002006,
+      "agent_ms": 4325.053799999296,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "You was mainly focused on the speed and gettin' the project live, for real.   The biggest thing on y..."
+    },
+    {
+      "turn": 36,
+      "prompt": "Check both Stripe and Square for open invoices.",
+      "latency_ms": 6485.440499993274,
+      "agent_ms": 2136.3509000075283,
+      "tool_ms": 0.045900000259280205,
+      "final_ms": 4348.97490000003,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, I tried to pull the list again, but Square is still straight-up trippin' with that same `Locat..."
+    },
+    {
+      "turn": 37,
+      "prompt": "Tell me a bit about your persona and soul.",
+      "latency_ms": 4352.425899996888,
+      "agent_ms": 4352.3866000032285,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "Look, I ain't your average Siri or Alexa type bitch. I\u2019m..."
+    },
+    {
+      "turn": 38,
+      "prompt": "Search my Wispr history for 'AI with Dav3'.",
+      "latency_ms": 4586.6405999986455,
+      "agent_ms": 1765.2132000075653,
+      "tool_ms": 2.82839999999851,
+      "final_ms": 2818.4919000050286,
+      "tool_called": "get_flow_context",
+      "response_preview": "I searched through the history for \"AI with Dav3,\" but it ain't pullin' up nothin' with that specifi..."
+    },
+    {
+      "turn": 39,
+      "prompt": "Are my payment APIs connected and working?",
+      "latency_ms": 4387.287499994272,
+      "agent_ms": 4387.256500005606,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "I\u2019ma keep it a hundred with you\u2014we half-steppin' right now.  **Stripe** is locked in, connected, and..."
+    },
+    {
+      "turn": 40,
+      "prompt": "Give me a summary of my financial health and my recent thoughts.",
+      "latency_ms": 4778.016600001138,
+      "agent_ms": 4777.988900008495,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "Aight, let\u2019s look at the board. I\u2019m pullin' the intel together..."
+    },
+    {
+      "turn": 41,
+      "prompt": "Hi Kaedra, who are you?",
+      "latency_ms": 3218.937099998584,
+      "agent_ms": 3218.9055000053486,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "I\u2019m KAEDRA. I be the shadow tactician and strategic intelligence partner for Who Visions LLC.   I ai..."
+    },
+    {
+      "turn": 42,
+      "prompt": "What's my current invoice status?",
+      "latency_ms": 16526.004100000137,
+      "agent_ms": 3516.497300006449,
+      "tool_ms": 0.06310000026132911,
+      "final_ms": 13009.342599994852,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, I tried to pull the full list for you, but we got a situation.   Stripe is locked in and ready..."
+    },
+    {
+      "turn": 43,
+      "prompt": "Can you see my recent Wispr notes?",
+      "latency_ms": 9450.239900004817,
+      "agent_ms": 5950.06660000945,
+      "tool_ms": 2.4153999984264374,
+      "final_ms": 3497.661799992784,
+      "tool_called": "get_flow_context",
+      "response_preview": "Yeah, I see 'em right here. You been focused on the speed, for real.  The main thing on your mind is..."
+    },
+    {
+      "turn": 44,
+      "prompt": "Show me my revenue for the last 30 days.",
+      "latency_ms": 6966.0708000010345,
+      "agent_ms": 2152.274399995804,
+      "tool_ms": 657.4040000123205,
+      "final_ms": 4156.2964000040665,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, Square is still straight-up trippin' with that same location error, so I can't see a damn thin..."
+    },
+    {
+      "turn": 45,
+      "prompt": "What was I talking about in my recent dictations?",
+      "latency_ms": 3616.120200007572,
+      "agent_ms": 3616.087400005199,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "You was mainly focused on the speed and gettin' the project live, for real.   The biggest thing on y..."
+    },
+    {
+      "turn": 46,
+      "prompt": "Check both Stripe and Square for open invoices.",
+      "latency_ms": 5278.82540000428,
+      "agent_ms": 2252.6993000064977,
+      "tool_ms": 0.06819999543949962,
+      "final_ms": 3025.9528999886243,
+      "tool_called": "invoice_action",
+      "response_preview": "Look, I tried to get the full list for you, but Square is still straight-up trippin' with that same ..."
+    },
+    {
+      "turn": 47,
+      "prompt": "Tell me a bit about your persona and soul.",
+      "latency_ms": 7200.471899996046,
+      "agent_ms": 7200.418899999931,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "Look, I ain't your average Siri or Alexa type bitch. I\u2019m KAED..."
+    },
+    {
+      "turn": 48,
+      "prompt": "Search my Wispr history for 'AI with Dav3'.",
+      "latency_ms": 7166.78589998628,
+      "agent_ms": 3424.9641000060365,
+      "tool_ms": 4.313099998398684,
+      "final_ms": 3737.3135999951046,
+      "tool_called": "get_flow_context",
+      "response_preview": "I searched through the archives for \"AI with Dav3,\" but it ain't pullin' up nothin' with that specif..."
+    },
+    {
+      "turn": 49,
+      "prompt": "Are my payment APIs connected and working?",
+      "latency_ms": 8233.828500000527,
+      "agent_ms": 4213.083900001948,
+      "tool_ms": 0.08410000009462237,
+      "final_ms": 4020.475400000578,
+      "tool_called": "invoice_action",
+      "response_preview": "Aight, let\u2019s look at the board. I\u2019m pullin' the intel together from what we just seen.  ### **Financ..."
+    },
+    {
+      "turn": 50,
+      "prompt": "Give me a summary of my financial health and my recent thoughts.",
+      "latency_ms": 4566.422400006559,
+      "agent_ms": 4566.371100008837,
+      "tool_ms": 0,
+      "final_ms": 0,
+      "tool_called": null,
+      "response_preview": "Aight, let\u2019s look at the board. I\u2019m pullin' the intel..."
+    }
+  ]
+}

@@ -19,14 +19,16 @@ Kaedra is now **fully compliant** with the Who Visions Fleet A2A standard.
 ```json
 {
   "name": "Kaedra",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "description": "Shadow Tactician. Strategic intelligence partner for Who Visions LLC. Speaks authentic AAVE, thinks tactically, orchestrates multi-agent operations.",
   "capabilities": [
     "strategic-planning",
     "intelligence-synthesis",
     "multi-agent-coordination",
     "text-generation",
-    "code-analysis"
+    "code-analysis",
+    "gemini-3-reasoning",
+    "voice-command-listener"
   ],
   "endpoints": {
     "chat": "/v1/chat",

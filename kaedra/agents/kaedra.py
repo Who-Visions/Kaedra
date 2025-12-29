@@ -1,5 +1,5 @@
 """
-KAEDRA v0.0.6 - KAEDRA Agent
+KAEDRA v0.0.8 - KAEDRA Agent
 The main Shadow Tactician orchestrator.
 """
 
@@ -78,6 +78,19 @@ To search the user's past voice transcripts/dictations, output:
 [TOOL: get_flow_context(action="recent", limit=5)]
 
 Use this when the user asks "What did I say about..." or "Summarize my last dictation".
+
+[INVOICE TOOL]
+To manage invoices (Stripe + Square), output:
+[TOOL: invoice_action(action="list", provider="both", status="open")]
+[TOOL: invoice_action(action="revenue", provider="both", days=30)]
+[TOOL: invoice_action(action="search", query="client name")]
+[TOOL: invoice_action(action="generate", customer_name="...", customer_email="...", items=[{"description": "...", "amount": 100}])]
+[TOOL: invoice_action(action="status")]
+
+Actions: list, get, create, send, revenue, search, status, generate, extract
+Providers: stripe, square, both
+
+Use this when the user asks about invoices, revenue, payments, or billing.
 """
     
     async def run(self, query: str, context: str = None) -> AgentResponse:
@@ -166,6 +179,69 @@ Use this when the user asks "What did I say about..." or "Summarize my last dict
                     
                 except Exception as e:
                     print(f"[!] Tool execution failed: {e}")
+        
+        # Parse for [TOOL: invoice_action(...)]
+        if "[TOOL: invoice_action" in result.text:
+            import re
+            import json
+            from kaedra.tools.invoices import invoice_action
+            
+            match = re.search(r'\[TOOL: invoice_action\((.*?)\)\]', result.text, re.DOTALL)
+            if match:
+                args_str = match.group(1)
+                
+                try:
+                    # Parse action
+                    action = "list"
+                    action_match = re.search(r'action=["\']([^"\']+)["\']', args_str)
+                    if action_match:
+                        action = action_match.group(1)
+                    
+                    # Parse provider
+                    provider = "both"
+                    provider_match = re.search(r'provider=["\']([^"\']+)["\']', args_str)
+                    if provider_match:
+                        provider = provider_match.group(1)
+                    
+                    # Parse other common args
+                    kwargs = {}
+                    
+                    # status
+                    status_match = re.search(r'status=["\']([^"\']+)["\']', args_str)
+                    if status_match:
+                        kwargs["status"] = status_match.group(1)
+                    
+                    # days
+                    days_match = re.search(r'days=(\d+)', args_str)
+                    if days_match:
+                        kwargs["days"] = int(days_match.group(1))
+                    
+                    # query
+                    query_match = re.search(r'query=["\']([^"\']+)["\']', args_str)
+                    if query_match:
+                        kwargs["query"] = query_match.group(1)
+                    
+                    # customer_name
+                    cname_match = re.search(r'customer_name=["\']([^"\']+)["\']', args_str)
+                    if cname_match:
+                        kwargs["customer_name"] = cname_match.group(1)
+                    
+                    # customer_email
+                    cemail_match = re.search(r'customer_email=["\']([^"\']+)["\']', args_str)
+                    if cemail_match:
+                        kwargs["customer_email"] = cemail_match.group(1)
+                    
+                    # Execute
+                    print(f"[*] Executing Invoice Tool: {action} provider={provider}")
+                    tool_result = invoice_action(action=action, provider=provider, **kwargs)
+                    
+                    # Re-run with tool output
+                    new_context = f"Invoice Tool Result:\n{json.dumps(tool_result, indent=2)}"
+                    follow_up_prompt = f"{query}\n\n[SYSTEM] Tool Output:\n{new_context}"
+                    result = self.prompt.generate(self._build_prompt(follow_up_prompt, combined_context))
+                    
+                except Exception as e:
+                    print(f"[!] Invoice tool execution failed: {e}")
         
         latency = (time.time() - start_time) * 1000
         

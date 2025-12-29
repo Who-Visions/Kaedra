@@ -28,10 +28,9 @@ SERVICE_ROLE = "Shadow Tactician"
 SERVICE_DESCRIPTION = "Strategic intelligence partner for Who Visions LLC. Speaks authentic AAVE, thinks tactically, orchestrates multi-agent operations."
 CLOUD_RUN_URL = "https://kaedra-69017097813.us-central1.run.app"
 
-app = FastAPI(
     title="Kaedra API",
     description="Shadow Tactician Agent API",
-    version="0.0.7"
+    version="0.0.8"
 )
 
 # -------------------------------------------------------------------------
@@ -51,7 +50,7 @@ app.add_middleware(
 
 A2A_CARD = {
     "name": "Kaedra",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "id": "kaedra-shadow-tactician",
     "description": SERVICE_DESCRIPTION,
     "role": SERVICE_ROLE,
@@ -241,7 +240,7 @@ async def health_check():
     return {
         "status": "ok",
         "service": "kaedra-shadow-tactician",
-        "version": "0.0.6",
+        "version": "0.0.8",
         "grounding_enabled": True
     }
 
@@ -250,7 +249,7 @@ async def root():
     return {
         "status": "online",
         "agent": "Kaedra",
-        "version": "0.0.6",
+        "version": "0.0.8",
         "docs": "/docs"
     }
 
@@ -475,7 +474,7 @@ async def get_agent_card_standard():
         "description": SERVICE_DESCRIPTION,
         "icon": SERVICE_ICON,
         "role": SERVICE_ROLE,
-        "version": "0.0.6",
+        "version": "0.0.8",
         "capabilities": [
             "strategic-planning",
             "intelligence-synthesis",
