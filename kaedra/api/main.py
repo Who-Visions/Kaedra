@@ -28,6 +28,7 @@ SERVICE_ROLE = "Shadow Tactician"
 SERVICE_DESCRIPTION = "Strategic intelligence partner for Who Visions LLC. Speaks authentic AAVE, thinks tactically, orchestrates multi-agent operations."
 CLOUD_RUN_URL = "https://kaedra-69017097813.us-central1.run.app"
 
+app = FastAPI(
     title="Kaedra API",
     description="Shadow Tactician Agent API",
     version="0.0.8"
