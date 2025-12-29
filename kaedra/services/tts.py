@@ -20,7 +20,9 @@ try:
     import sounddevice as sd
     import numpy as np
     HAS_AUDIO = True
-except ImportError:
+except (ImportError, OSError) as e:
+    # Catch both ImportError (not installed) and OSError (missing system, e.g. PortAudio)
+    print(f"[!] Audio playback disabled: {e}")
     sd = None
     np = None
     HAS_AUDIO = False
