@@ -97,6 +97,23 @@ class SoulfulSkill(BaseSkill):
     async def should_activate(self, context: SkillContext) -> bool:
         return True # Default fallback
 
+class InvoiceSkill(BaseSkill):
+    name = "Financial Operations"
+    
+    @property
+    def system_prompt_extension(self) -> str:
+        return """
+[ACTIVE SKILL: FINANCIAL OPS]
+- Role: Financial Controller for Who Visions LLC.
+- Focus: Invoicing, revenue tracking, and payment verification.
+- Capabilities: Create invoices (Stripe/Square), check revenue, list overdue payments.
+- Style: Precise, professional, money-minded.
+"""
+
+    async def should_activate(self, context: SkillContext) -> bool:
+        keywords = ["invoice", "payment", "stripe", "square", "revenue", "bill", "money", "paid"]
+        return any(kw in context.user_transcription.lower() for kw in keywords)
+
 class SkillManager:
     """Manages skill registration and selection."""
     
@@ -104,6 +121,7 @@ class SkillManager:
         self.skills: List[BaseSkill] = [
             PhotographySkill(),
             TacticalSkill(),
+            InvoiceSkill(),
             IntrospectiveSkill(),
             SoulfulSkill() 
         ]
