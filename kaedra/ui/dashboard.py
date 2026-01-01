@@ -12,6 +12,7 @@ class KaedraDashboard:
         self.console = Console()
         self.status = "INITIALIZING"
         self.mic_status = "OFF"
+        self.mic_level = 0.0
         self.active_lights = []
         self.last_tokens = 0
         self.total_cost = 0.0
@@ -24,6 +25,9 @@ class KaedraDashboard:
 
     def set_mic(self, status: str):
         self.mic_status = status
+
+    def set_mic_level(self, level: float):
+        self.mic_level = level
 
     def set_lights(self, lights: list):
         self.active_lights = lights
@@ -38,16 +42,18 @@ class KaedraDashboard:
     def start_stream(self, role: str, color: str = "magenta"):
         self.stream_buffer = [f"[{color}]{role}: [/{color}]"]
 
-    def print_stream(self, text: str, color: str = "magenta"):
-        self.stream_buffer.append(text)
+    def print_stream(self, text: str, color: str = "magenta", style: str = None):
+        # Print immediately for live streaming effect
+        self.console.print(text, end="", style=style or color)
 
     def end_stream(self):
-        full_text = "".join(self.stream_buffer)
-        pass
+        self.console.print()  # Newline after stream ends
 
     def update_history(self, role: str, message: str, color: str = "white"):
+        # Print immediately for scrolling chat log
+        self.console.print(f"[bold {color}]{role}:[/bold {color}] {message}")
         self.history.append((role, message, color))
-        if len(self.history) > 8:
+        if len(self.history) > 100:  # Keep more history for scrollback
             self.history.pop(0)
 
     def generate_view(self):
@@ -64,10 +70,16 @@ class KaedraDashboard:
         header_table.add_column(justify="left", ratio=1)
         header_table.add_column(justify="center", ratio=1)
         header_table.add_column(justify="right", ratio=1)
+        # Level meter
+        meter_len = 20
+        filled = int(min(self.mic_level, 1.0) * meter_len)
+        bar = "█" * filled + "░" * (meter_len - filled)
+        mic_display = f"Mic: {'[green]ON[/green]' if self.mic_status!='OFF' else '[red]OFF[/red]'} [{bar}]"
+
         header_table.add_row(
             f"Status: {self.status}",
             f"[bold magenta]KAEDRA MODULAR ENGINE[/bold magenta] {poly_status}",
-            f"Mic: {'[green]ON[/green]' if self.mic_status!='OFF' else '[red]OFF[/red]'}"
+            mic_display
         )
         
         layout["header"].update(Panel(header_table, style="cyan", box=box.ROUNDED))

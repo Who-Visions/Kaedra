@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(override=True)
 except ImportError:
     pass
 
@@ -28,6 +28,7 @@ AGENT_RESOURCE_NAME = os.getenv(
 # ══════════════════════════════════════════════════════════════════════════════
 
 LIFX_TOKEN = os.getenv("LIFX_TOKEN", "")
+NOTION_TOKEN = os.getenv("NOTION_TOKEN", "")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # INVOICE SERVICE CONFIGURATION (Stripe + Square)
@@ -45,13 +46,13 @@ MODELS = {
     "flash": "gemini-3-flash-preview",         # Latest Flash V3 (Preview)
     "pro": "gemini-3-pro-preview",             # Latest Pro V3 (Preview)
     "ultra": "gemini-3-pro-preview",           # Using Pro V3 for Ultra slot
-    "tts-flash": "en-US-Journey-F",            # Journey (Expressive, Fast) - Replaces Gemini Flash TTS
-    "tts-flash-lite": "en-US-Neural2-C",       # Neural2 (Ultra Fast) - Replaces Gemini Flash Lite
-    "tts-pro": "en-US-Studio-O",               # Studio (High Res)
-    "tts": "en-US-Journey-F",                  # Default
+    "tts-flash": "gemini-2.5-flash-preview-tts:Kore", # Gemini 2.5 Flash TTS (Updated)
+    "tts-flash-lite": "gemini-2.5-flash-preview-tts:Kore", # Fallback to Flash for now
+    "tts-pro": "gemini-2.5-pro-preview-tts:Aoede",     # Gemini 2.5 Pro TTS (Updated)
+    "tts": "gemini-2.5-flash-preview-tts:Kore",        # Default to Native Gemini 2.5
     "chirp-kore": "en-US-Chirp3-HD-Kore",      # Chirp 3 HD (US, Female) - Fast Stream
-    "hifi-kore": "gemini-2.5-flash-tts:Kore", # High Fidelity (24kHz) - Premium Stream!
-    "hifi-pro": "gemini-2.5-pro-tts:Aoede",    # Ultra High Detail (24kHz) - Female
+    "hifi-kore": "gemini-2.5-flash-preview-tts:Kore", # High Fidelity (24kHz)
+    "hifi-pro": "gemini-2.5-pro-preview-tts:Aoede",    # Ultra High Detail (24kHz)
     "lite-kore": "gemini-2.5-flash-lite-preview-tts:Kore", # Cost Efficient HiFi
     "chirp-leda": "en-US-Chirp3-HD-Leda",      # Chirp 3 HD (US, Female)
     "chirp-zephyr": "en-US-Chirp3-HD-Zephyr",  # Chirp 3 HD (US, Female)

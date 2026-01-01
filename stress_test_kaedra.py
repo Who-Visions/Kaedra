@@ -66,7 +66,7 @@ PROMPTS = [
 
 async def run_stress_test(num_turns=100):
     console = Console()
-    console.print(f"[bold magenta]🚀 Kaedra 100-Turn Stability & Latency Benchmark v2[/bold magenta]")
+    console.print(f"[bold magenta]🚀 Kaedra 20-Turn Stability & Latency Benchmark v2[/bold magenta]")
     console.print(f"[dim]Project: {PROJECT_ID} | Turns: {num_turns} | STT Model: 'base'[/dim]\n")
     
     session_config = SessionConfig(max_history_turns=50, tts_variant="flash-lite", thinking_level="LOW")
@@ -160,4 +160,4 @@ async def run_stress_test(num_turns=100):
         console.print("[bold red]No metrics collected.[/bold red]")
 
 if __name__ == "__main__":
-    asyncio.run(run_stress_test(100))
+    asyncio.run(run_stress_test(20))

@@ -78,6 +78,39 @@ class Invoice:
         if self.due_date and not self.is_paid:
             return datetime.now() > self.due_date
         return False
+    
+    def to_markdown(self) -> str:
+        """Generate a clean Markdown representation of the invoice."""
+        lines = []
+        lines.append(f"# Invoice {self.id}")
+        lines.append(f"**Date:** {self.created_at.strftime('%Y-%m-%d')}")
+        if self.due_date:
+            lines.append(f"**Due:** {self.due_date.strftime('%Y-%m-%d')}")
+        lines.append(f"**Status:** {self.status.upper()}")
+        
+        lines.append("\n---")
+        
+        lines.append(f"\n**Bill To:**")
+        lines.append(f"{self.customer_name}")
+        if self.customer_email:
+            lines.append(f"{self.customer_email}")
+            
+        lines.append("\n## Items")
+        lines.append("| Description | Qty | Price | Total |")
+        lines.append("| :--- | :---: | :---: | :---: |")
+        
+        for item in self.items:
+            total = item.amount * item.quantity
+            lines.append(f"| {item.description} | {item.quantity} | ${item.amount:.2f} | ${total:.2f} |")
+            
+        lines.append("\n---")
+        lines.append(f"**Total Due: ${self.amount_due:.2f}**")
+        lines.append(f"**Amount Paid: ${self.amount_paid:.2f}**")
+        
+        if self.url:
+            lines.append(f"\n[View Online Invoice]({self.url})")
+            
+        return "\n".join(lines)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -697,7 +730,11 @@ class InvoiceService:
         
         if self.square_token:
             try:
-                self.square.client.locations.list_locations()
+                # Try modern SDK first
+                if hasattr(self.square.client.locations, 'list'):
+                    self.square.client.locations.list()
+                else:
+                    self.square.client.locations.list_locations()
                 status["square"]["connected"] = True
             except Exception as e:
                 status["square"]["error"] = str(e)

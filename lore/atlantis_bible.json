@@ -1,0 +1,784 @@
+{
+  "setting_bible": {
+    "name": "ATLANTIS_MYTH_ENGINE",
+    "version": "1.0.0",
+    "tone": [
+      "mythic",
+      "high-stakes",
+      "prestige-sci-fi",
+      "occult-political-thriller"
+    ],
+    "core_premise": "Atlantis is both a place and a recursion generator: each era reinterprets it, and those interpretations spawn factions, technologies, and karmic loops.",
+    "canon_layer": {
+      "source": "Plato",
+      "macro_geography": {
+        "location": "Beyond the Pillars of Hercules (Atlantic)",
+        "scale": "Bigger than Libya and Asia combined",
+        "post_fall_state": "Sea becomes shallow and muddy, blocking passage"
+      },
+      "capital_layout": {
+        "form": "Concentric rings of land and water around central island",
+        "central_island_diameter_miles": 5.7,
+        "connectivity": [
+          "tunnels",
+          "bridges",
+          "ship channels"
+        ],
+        "outer_ring_function": "Mega-harbor for large fleets"
+      },
+      "materials_visuals": {
+        "defensive_walls": {
+          "system": "Triple wall",
+          "plating": [
+            "brass",
+            "tin",
+            "oricalcum"
+          ],
+          "visual_effect": "Blinding metallic halo around city"
+        },
+        "poseidon_temple": {
+          "primary_material": "silver",
+          "ornament": "gold pinnacles",
+          "iconic_statue": "Colossal gold chariot of Poseidon"
+        }
+      },
+      "governance": {
+        "structure": "Ten kings, descendants of Poseidon through Atlas",
+        "law_medium": "Sacred laws carved on orichalcum",
+        "council_cycle": "Every fifth and sixth year, alternating",
+        "council_purpose": "Judge infractions and renew sacred unity"
+      },
+      "economy_infrastructure": {
+        "agri_plain": "Rectangular plain with two harvests per year",
+        "main_canal": {
+          "width_ft": 300,
+          "depth_ft": 100,
+          "length_miles": 1125,
+          "purpose": [
+            "irrigation",
+            "transport",
+            "strategic logistics"
+          ]
+        },
+        "channel_grid": "Smaller canals forming a transport and irrigation mesh"
+      },
+      "decline_arc": {
+        "golden_age": "Virtuous, disciplined, quasi-divine governance",
+        "moral_drift": "Divine element diminishes over generations",
+        "failure_mode": [
+          "greed",
+          "imperial expansion",
+          "decadence"
+        ],
+        "cataclysm": "One-day collapse and submergence"
+      }
+    },
+    "interpretation_lenses": [
+      {
+        "lens_id": "L_PHILOSOPHICAL",
+        "name": "Moral Allegory",
+        "thesis": "Atlantis versus Athens as virtue versus imperial appetite. The city collapses when restraint loses to expansion and the earth refuses to carry the weight.",
+        "in_world_agents": [
+          "academies",
+          "civic philosophers",
+          "ethics councils"
+        ],
+        "plot_uses": [
+          "propaganda wars",
+          "state legitimacy battles",
+          "trial arcs"
+        ],
+        "evidence": [
+          "Concentric city geometry treated as moral architecture",
+          "Canal grid read as domination over nature",
+          "Orichalcum law tablets reframed as ethical covenant"
+        ],
+        "failure_mode": "Turns complex causes into moral punishment and weaponizes virtue as censorship."
+      },
+      {
+        "lens_id": "L_SKEPTICAL_ACADEMIC",
+        "name": "Records Silence",
+        "thesis": "If Atlantis was materially real at that scale, it should appear in trade, ecology, maps, and strata. The absence is the argument, so the myth is treated as constructed or miscopied.",
+        "in_world_agents": [
+          "historians",
+          "archivists",
+          "cartographers"
+        ],
+        "plot_uses": [
+          "forensic lore hunts",
+          "debunking as cover up",
+          "evidence wars"
+        ],
+        "evidence": [
+          "Missing corroboration outside canonical texts",
+          "Reclassification of anomalies as hoaxes or misidentifications",
+          "Map traditions that erase blank zones as non places"
+        ],
+        "failure_mode": "Confuses lack of access with lack of existence, then calls it rigor."
+      },
+      {
+        "lens_id": "L_NEOPLATONIC",
+        "name": "Mind vs Matter",
+        "thesis": "Atlantis is simultaneously historical and symbolic, a recurring metaphysical conflict where consciousness and structure co create reality. The city is a resonant machine, not just a ruin.",
+        "in_world_agents": [
+          "mystics",
+          "veil interpreters",
+          "dream mathematicians"
+        ],
+        "plot_uses": [
+          "metaphysical duels",
+          "ritual philosophy",
+          "inner war made physical"
+        ],
+        "evidence": [
+          "Geometry that behaves like an interface, not decoration",
+          "Orichalcum behaving as mind responsive substrate",
+          "Reality shifts localized to ritual circuits and grid nodes"
+        ],
+        "failure_mode": "Over reads patterns until it starts manufacturing destiny."
+      }
+    ],
+    "veilverse_adaptation": {
+      "veil_mapping": {
+        "oricalcum": {
+          "veil_function": [
+            "conductor",
+            "memory-metal",
+            "sigil substrate"
+          ],
+          "risk_profile": [
+            "addiction",
+            "resonance corruption",
+            "timeline bleed"
+          ],
+          "gameplay_tags": [
+            "crafting",
+            "ritual tech",
+            "rare resource wars"
+          ]
+        },
+        "concentric_city": {
+          "veil_function": [
+            "defensive recursion circuit",
+            "ritual geometry amplifier"
+          ],
+          "risk_profile": [
+            "feedback loops",
+            "sealed trauma chambers"
+          ],
+          "gameplay_tags": [
+            "dungeon rings",
+            "layered boss zones",
+            "ring-gate traversal"
+          ]
+        },
+        "canal_grid": {
+          "veil_function": [
+            "logistics weapon",
+            "emotion routing",
+            "supply-chain dominance"
+          ],
+          "risk_profile": [
+            "chokepoint tyranny",
+            "flood-switch blackmail"
+          ],
+          "gameplay_tags": [
+            "heist routes",
+            "naval warfare",
+            "sabotage missions"
+          ]
+        },
+        "great_crystal": {
+          "veil_function": [
+            "planetary-scale reactor",
+            "dream broadcast tower",
+            "weather shaping"
+          ],
+          "risk_profile": [
+            "cataclysm cascade",
+            "mass mind capture",
+            "reality softening"
+          ],
+          "gameplay_tags": [
+            "raid objective",
+            "world event trigger",
+            "moral choice engine"
+          ]
+        }
+      },
+      "design_rule": "Atlantis is never only history. It is a reusable recursion template that manifests as factions, artifacts, and repeating moral failures."
+    }
+  },
+  "factions": [
+    {
+      "faction_id": "F_VIRTUE_CLASS",
+      "name": "Virtue-Class Atlanteans",
+      "era": "Golden Age",
+      "alignment": "order",
+      "core_values": [
+        "duty",
+        "restraint",
+        "service",
+        "sacred law"
+      ],
+      "governance_style": [
+        "council accountability",
+        "ritualized judgment cycles"
+      ],
+      "signature_assets": [
+        "law tablets (oricalcum)",
+        "canal engineering guilds",
+        "harbor defense lattice"
+      ],
+      "combat_doctrine": [
+        "defense-first",
+        "discipline over conquest"
+      ],
+      "archetypes": [
+        "LAW_KING",
+        "CANAL_PRIEST_ENGINEER",
+        "RESTRAINT_WARRIOR"
+      ],
+      "conflicts": [
+        "F_EMPIRE_CLASS",
+        "F_SONS_OF_BELIAL"
+      ]
+    },
+    {
+      "faction_id": "F_EMPIRE_CLASS",
+      "name": "Late Atlantean Empire-Class",
+      "era": "Decline",
+      "alignment": "domination",
+      "core_values": [
+        "spectacle",
+        "expansion",
+        "wealth",
+        "legacy worship"
+      ],
+      "governance_style": [
+        "law-bending populism",
+        "elite patronage networks"
+      ],
+      "signature_assets": [
+        "fleet megabays",
+        "temple-industrial complexes",
+        "oricalcum markets"
+      ],
+      "combat_doctrine": [
+        "naval supremacy",
+        "mass mobilization"
+      ],
+      "archetypes": [
+        "ADMIRAL_OVERLORD",
+        "ORICALCUM_MAGNATE",
+        "POPULIST_KING"
+      ],
+      "conflicts": [
+        "F_VIRTUE_CLASS",
+        "F_LAW_OF_ONE"
+      ]
+    },
+    {
+      "faction_id": "F_LAW_OF_ONE",
+      "name": "Law-of-One Custodians",
+      "era": "Occult / New Age lens timeline",
+      "alignment": "harmonization",
+      "core_values": [
+        "cosmic law",
+        "communal ethics",
+        "tech restraint",
+        "telepathic transparency"
+      ],
+      "governance_style": [
+        "telepathic consensus",
+        "ritual audits of intent"
+      ],
+      "signature_assets": [
+        "mystery school blueprints",
+        "seal-of-alignment protocols",
+        "dream archives"
+      ],
+      "combat_doctrine": [
+        "containment",
+        "non-lethal disruption",
+        "sabotage of corrupt reactors"
+      ],
+      "archetypes": [
+        "ARCHIVIST_SEEDER",
+        "INTENT_JUDGE",
+        "REACTOR_SABOTEUR_DEFECTOR"
+      ],
+      "conflicts": [
+        "F_SONS_OF_BELIAL",
+        "F_EMPIRE_CLASS"
+      ]
+    },
+    {
+      "faction_id": "F_SONS_OF_BELIAL",
+      "name": "Sons of Belial Technocrats",
+      "era": "Occult / New Age lens timeline",
+      "alignment": "exploitation",
+      "core_values": [
+        "power hoarding",
+        "biopower",
+        "occult secrecy",
+        "material supremacy"
+      ],
+      "governance_style": [
+        "black clique priesthood",
+        "knowledge monopolies",
+        "coercive initiation"
+      ],
+      "signature_assets": [
+        "crystal weapons",
+        "mind-binding rites",
+        "secret society cells"
+      ],
+      "combat_doctrine": [
+        "psychic domination",
+        "shock-and-awe artifacts"
+      ],
+      "archetypes": [
+        "BLACK_RITE_PRIEST",
+        "CRYSTAL_WEAPONEER",
+        "MEMORY_THIEF"
+      ],
+      "conflicts": [
+        "F_LAW_OF_ONE",
+        "F_VIRTUE_CLASS",
+        "F_DIASPORA_ORDERS"
+      ]
+    },
+    {
+      "faction_id": "F_DIASPORA_ORDERS",
+      "name": "Post-Cataclysm Diaspora Orders",
+      "era": "After the Fall",
+      "alignment": "fractured",
+      "core_values": [
+        "survival",
+        "legacy preservation",
+        "reinvention"
+      ],
+      "governance_style": [
+        "mystery schools",
+        "local assimilation",
+        "cult splintering"
+      ],
+      "signature_assets": [
+        "half-remembered tech fragments",
+        "portable rites",
+        "myth cover identities"
+      ],
+      "combat_doctrine": [
+        "infiltration",
+        "cultural camouflage",
+        "proxy wars through disciples"
+      ],
+      "archetypes": [
+        "EXILED_ENGINEER_DEITY",
+        "REINCARNATED_LOOPER",
+        "CULT_FOUNDER"
+      ],
+      "conflicts": [
+        "F_SONS_OF_BELIAL",
+        "F_SKEPTIC_LEAGUE"
+      ]
+    },
+    {
+      "faction_id": "F_SKEPTIC_LEAGUE",
+      "name": "The Skeptic League",
+      "era": "Any modernized period",
+      "alignment": "disproof",
+      "core_values": [
+        "records integrity",
+        "anti-myth",
+        "institutional credibility"
+      ],
+      "governance_style": [
+        "peer tribunals",
+        "controlled disclosure"
+      ],
+      "signature_assets": [
+        "sealed archives",
+        "cartographic redactions",
+        "history sanitizers"
+      ],
+      "combat_doctrine": [
+        "information warfare",
+        "reputation assassinations"
+      ],
+      "archetypes": [
+        "ARISTOTLE_STANDIN",
+        "ARCHIVE_WARDEN",
+        "MAP_CENSOR"
+      ],
+      "conflicts": [
+        "F_DIASPORA_ORDERS",
+        "F_LAW_OF_ONE"
+      ]
+    }
+  ],
+  "tech_and_metaphysics": {
+    "tech_trees": [
+      {
+        "tree_id": "T_CLASSICAL_ENGINEERING",
+        "name": "Material Engineering",
+        "nodes": [
+          {
+            "node_id": "N_CANAL_GRID",
+            "name": "Canal Grid Logistics",
+            "functions": [
+              "irrigation",
+              "transport",
+              "military routing"
+            ],
+            "plot_hooks": [
+              "flood-switch sabotage",
+              "supply chain siege",
+              "harbor choke control"
+            ],
+            "tags": [
+              "infrastructure-as-weapon",
+              "logistics",
+              "city-machine"
+            ]
+          },
+          {
+            "node_id": "N_RING_CITY_DEFENSE",
+            "name": "Concentric City Defense",
+            "functions": [
+              "layered defense",
+              "naval docking",
+              "tunnel ambush routes"
+            ],
+            "plot_hooks": [
+              "ring breach sequence",
+              "inner-island vault heist",
+              "tunnel war"
+            ],
+            "tags": [
+              "fortress-city",
+              "layered-zones",
+              "ritual-geometry"
+            ]
+          },
+          {
+            "node_id": "N_ORICALCUM_METAL",
+            "name": "Orichalcum",
+            "functions": [
+              "wealth store",
+              "symbolic authority",
+              "advanced conductor in Veil mapping"
+            ],
+            "plot_hooks": [
+              "law tablet theft",
+              "market manipulation",
+              "memory-metal awakening"
+            ],
+            "tags": [
+              "rare-resource",
+              "authority-token",
+              "veil-reactive"
+            ]
+          },
+          {
+            "node_id": "N_NAVAL_SUPREMACY",
+            "name": "Naval Supremacy",
+            "functions": [
+              "fleet projection",
+              "harbor dominance",
+              "amphibious warfare"
+            ],
+            "plot_hooks": [
+              "ghost fleet returns",
+              "harbor mega-battle",
+              "ship-tunnel infiltration"
+            ],
+            "tags": [
+              "warfare",
+              "empire",
+              "spectacle"
+            ]
+          }
+        ]
+      },
+      {
+        "tree_id": "T_SPIRITUAL_ENGINEERING",
+        "name": "Spiritual Engineering",
+        "nodes": [
+          {
+            "node_id": "N_GREAT_CRYSTAL",
+            "name": "Great Crystal Reactor",
+            "functions": [
+              "energy generation",
+              "communication",
+              "weather influence",
+              "healing or harm"
+            ],
+            "plot_hooks": [
+              "reactor corruption arc",
+              "planetary broadcast mind-lock",
+              "cataclysm trigger"
+            ],
+            "tags": [
+              "world-engine",
+              "moral-risk",
+              "apocalypse-switch"
+            ]
+          },
+          {
+            "node_id": "N_TELEPATHIC_GOVERNANCE",
+            "name": "Telepathic Governance",
+            "functions": [
+              "transparent intent",
+              "consensus rule",
+              "reduced written law dependency"
+            ],
+            "plot_hooks": [
+              "truth collapse event",
+              "psychic coup",
+              "consensus fracture civil war"
+            ],
+            "tags": [
+              "social-tech",
+              "mind-politics",
+              "trust-economy"
+            ]
+          },
+          {
+            "node_id": "N_DREAM_CONSCIOUSNESS",
+            "name": "Dream-Consciousness Interface",
+            "functions": [
+              "imagistic perception",
+              "life-force manipulation",
+              "weather shaping"
+            ],
+            "plot_hooks": [
+              "dream plague",
+              "memory rewriting cult",
+              "reality softening zone"
+            ],
+            "tags": [
+              "oneiric",
+              "metaphysics",
+              "reality-editing"
+            ]
+          },
+          {
+            "node_id": "N_MYSTERY_SCHOOL_SEEDING",
+            "name": "Mystery School Seeding",
+            "functions": [
+              "knowledge preservation",
+              "diaspora influence",
+              "long-game infiltration"
+            ],
+            "plot_hooks": [
+              "school war",
+              "initiation test arc",
+              "lost doctrine retrieval"
+            ],
+            "tags": [
+              "diaspora",
+              "long-game",
+              "secret-orders"
+            ]
+          }
+        ]
+      }
+    ],
+    "metaphysical_rules": [
+      {
+        "rule_id": "R_MORAL_DRIFT",
+        "statement": "As divine cohesion fades, tech amplification increases harm potential.",
+        "failure_symptoms": [
+          "spectacle escalation",
+          "law bending",
+          "resource hoarding"
+        ]
+      },
+      {
+        "rule_id": "R_RESONANCE_CORRUPTION",
+        "statement": "Veil-reactive materials and crystals mirror user intent and amplify hidden motives.",
+        "failure_symptoms": [
+          "timeline bleed",
+          "addiction loops",
+          "mass hysteria"
+        ]
+      },
+      {
+        "rule_id": "R_RESET_EVENT",
+        "statement": "Misuse triggers geo-spiritual backlash: flood, collapse, or forced timeline reset.",
+        "failure_symptoms": [
+          "weather anomalies",
+          "dream storms",
+          "infrastructure turning hostile"
+        ]
+      }
+    ]
+  },
+  "character_archetypes": [
+    {
+      "archetype_id": "A_LAW_KING",
+      "role": "Lawgiver-King",
+      "core_conflict": "Maintain sacred law while empire pressure demands spectacle.",
+      "signature_choice": "Punish a popular ally to preserve legitimacy.",
+      "tags": [
+        "leadership",
+        "ethics",
+        "statecraft"
+      ]
+    },
+    {
+      "archetype_id": "A_CANAL_PRIEST_ENGINEER",
+      "role": "Canal Architect-Priest",
+      "core_conflict": "Infrastructure can feed people or starve enemies. The line blurs fast.",
+      "signature_choice": "Refuse weaponization and become a target.",
+      "tags": [
+        "infrastructure",
+        "sabotage",
+        "moral-technology"
+      ]
+    },
+    {
+      "archetype_id": "A_RESTRAINT_WARRIOR",
+      "role": "Discipline Warrior",
+      "core_conflict": "Win without becoming the thing you fight.",
+      "signature_choice": "Spare the enemy who will return later with consequences.",
+      "tags": [
+        "combat",
+        "honor",
+        "long-game"
+      ]
+    },
+    {
+      "archetype_id": "A_ADMIRAL_OVERLORD",
+      "role": "Empire Admiral",
+      "core_conflict": "Hyper-competent war machine with a hollow core.",
+      "signature_choice": "Choose conquest over stability, triggering collapse.",
+      "tags": [
+        "fleet",
+        "empire",
+        "hubris"
+      ]
+    },
+    {
+      "archetype_id": "A_ORICALCUM_MAGNATE",
+      "role": "Orichalcum Mogul",
+      "core_conflict": "Controls the conductor-metal that powers law, tech, and legitimacy.",
+      "signature_choice": "Rig the sacred supply chain and rewrite power.",
+      "tags": [
+        "economy",
+        "corruption",
+        "resource-control"
+      ]
+    },
+    {
+      "archetype_id": "A_REACTOR_SABOTEUR_DEFECTOR",
+      "role": "Belial Defector",
+      "core_conflict": "Stop the reactor without becoming a mass murderer.",
+      "signature_choice": "Disable the crystal slowly, risking capture, or fast, risking catastrophe.",
+      "tags": [
+        "thriller",
+        "moral-choice",
+        "sabotage"
+      ]
+    },
+    {
+      "archetype_id": "A_ARCHIVIST_SEEDER",
+      "role": "Mystery School Archivist",
+      "core_conflict": "Preserve truth while ensuring it is not weaponized.",
+      "signature_choice": "Hide key doctrine behind a dangerous initiation.",
+      "tags": [
+        "secrets",
+        "diaspora",
+        "legacy"
+      ]
+    },
+    {
+      "archetype_id": "A_REINCARNATED_LOOPER",
+      "role": "Modern Recurrence Vessel",
+      "core_conflict": "Repeats Atlantean mistakes in a new era with new tools.",
+      "signature_choice": "Break the loop by sacrificing power and identity.",
+      "tags": [
+        "modern",
+        "karma-loop",
+        "character-arc"
+      ]
+    }
+  ],
+  "story_patterns": [
+    {
+      "pattern_id": "P_GOLDEN_TO_FLOOD",
+      "sequence": [
+        "golden age",
+        "moral drift",
+        "tech misuse",
+        "backlash",
+        "reset"
+      ],
+      "use_cases": [
+        "season arc",
+        "faction origin",
+        "world event"
+      ]
+    },
+    {
+      "pattern_id": "P_SURVIVOR_SEEDING",
+      "sequence": [
+        "fall",
+        "refugees",
+        "cultural camouflage",
+        "mystery schools",
+        "future conflict"
+      ],
+      "use_cases": [
+        "prequel hooks",
+        "hidden founders",
+        "artifact trails"
+      ]
+    },
+    {
+      "pattern_id": "P_MYTH_AS_INTERFACE",
+      "sequence": [
+        "era anxiety",
+        "Atlantis reinterpretation",
+        "new faction",
+        "new tech taboo",
+        "repeat"
+      ],
+      "use_cases": [
+        "anthology structure",
+        "timeline branching",
+        "metanarrative reveals"
+      ]
+    }
+  ],
+  "quick_use_tags": {
+    "faction_tags": [
+      "order",
+      "domination",
+      "harmonization",
+      "exploitation",
+      "fractured",
+      "disproof"
+    ],
+    "tech_tags": [
+      "infrastructure-as-weapon",
+      "ritual-geometry",
+      "memory-metal",
+      "planetary-reactor",
+      "mind-politics",
+      "reality-editing",
+      "secret-orders"
+    ],
+    "plot_tags": [
+      "heist",
+      "trial",
+      "civil-war",
+      "artifact-hunt",
+      "sabotage",
+      "diaspora-infiltration",
+      "timeline-bleed"
+    ]
+  }
+}

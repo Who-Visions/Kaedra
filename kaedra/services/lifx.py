@@ -8,6 +8,7 @@ API Docs: https://api.developer.lifx.com/reference/introduction
 import os
 import requests
 from typing import Optional, Literal
+from urllib.parse import quote
 from dataclasses import dataclass
 
 
@@ -65,7 +66,7 @@ class LIFXService:
     
     def list_lights(self, selector: str = "all") -> list[LightState]:
         """Get all lights or filtered by selector."""
-        data = self._request("GET", f"/lights/{selector}")
+        data = self._request("GET", f"/lights/{quote(selector)}")
         if isinstance(data, list):
             return [
                 LightState(
@@ -97,7 +98,7 @@ class LIFXService:
     
     def set_power(self, selector: str = "all", power: Literal["on", "off"] = "on", duration: float = 1.0) -> dict:
         """Turn lights on or off."""
-        return self._request("PUT", f"/lights/{selector}/state", json={
+        return self._request("PUT", f"/lights/{quote(selector)}/state", json={
             "power": power,
             "duration": duration
         })
@@ -151,7 +152,7 @@ class LIFXService:
         if infrared is not None:
             payload["infrared"] = max(0.0, min(1.0, infrared))
         
-        return self._request("PUT", f"/lights/{selector}/state", json=payload)
+        return self._request("PUT", f"/lights/{quote(selector)}/state", json=payload)
     
     def set_color(self, selector: str = "all", color: str = "white", brightness: Optional[float] = None, duration: float = 1.0) -> dict:
         """Set light color."""

@@ -1,0 +1,68 @@
+[03:56:36] YOU: No, Oklahoma.
+[03:56:59] CALLER: 8:45 PM. So three different ways that you can pronounce this. They've covered all of them and that works really well. And they've also got this this final bit of the prompt here, which is: "Never say o'clock. Instead just say o'clock, never o'clock." So very small formatting as you can see, a lot of these things can make a big difference in the pronunciation of of these things. It's just changed it from from this to that. So anyways, this is non-negotiable. Always say AM or PM. That's just one of the ways I've prompted it, like you saw in that secondary demo that I ran on asking what the opening hours were. It didn't actually say AM or PM. It just said in the morning or in the afternoon.
+[03:57:12] YOU: No, Oklahoma.
+[03:57:23] CALLER: learn and so maybe that bit of prompting can help clarify things. So let's give that a save and let's see how that sounds. Hey, I was wondering what your opening hours were? Oh, hey. Yeah, so we're open from 7:35 AM to 5:45 PM. Let me know if you need help with anything else. Cool, so we'll give it one more try. Hey, what were your opening hours? Oh, hey. Yeah, so we're open from 7:35 AM to 5:45 PM. Let me know if you need anything else. So there you have it, slightly slowed down in how it's pronouncing those words. It might still seem
+[03:57:37] YOU: Okay, this is really good. It's catching very...
+[03:57:44] CALLER: Very similar overall, but I guarantee you when you start to scale this system with this prompt, it's going to be far more reliable. And so these are the small little things that you need to look into when you're building out these systems is to add things like this to to really create more deterministic outputs. Obviously, it's not going to follow your instructions 100% all the time out of the gate, but you just gotta add to it and obviously, this is non-negotiable. Always say AM or PM has helped to to put that in there and keep it saying the same thing, which is always good when you're making a system and building a prompt to make it more reliable over time. Next, I'm going to explain how to read a website URL.
+[03:58:05] YOU: long context from YouTube. And as I speak over it, it should be able to pick me up. So let me go ahead and pause this YouTube. That way, we'll create a large pause in YouTube. And we need to play a different YouTube video. You know what? Let's play the Y files.
+[03:58:15] CALLER: So usually, these agents are quite good at reading out a website address straight into the prompt, although for domains that have abbreviations like a state, for example, New York or L.A., it won't really detect this, and we can see that in action right here with dot n y. The prompt text is showing the correct URL, but the spoken audio is saying dot n dot y dot gov. Now let's see what happens when we try dot n y c. The spoken audio says dot n y c, but the text in the prompt is only showing dot n. This is something to be aware of when designing your agents.
+[03:58:36] YOU: A hybrid call is doing really well. Taking up two different audio input and transcribing it. Impressed, impressed.
+[03:58:40] CALLER: This episode of The Why Files is brought to you by The Why Files Operation Podcast. Deep dives and longer stories every week. Humans are the apex predator. Not an apex predator,
+[03:59:05] YOU: Hmm.
+[03:59:11] CALLER: The apex predator. There's no animal on Earth that is stronger, more intelligent, or more adaptable than Homo sapiens. But telling the human story from the beginning is difficult. It was a time when two words defined our world: fear and violence. It was a time when we were not the apex predator. We were their prey. We emerged from our caves during the day, hoping we wouldn't be hunted by the monsters in the woods. So vicious were these monsters, they still live in our myths...
+[03:59:36] YOU: Please open. Come on. Come on, original gourmet premium puppies. baking since 1993.
+[03:59:44] CALLER: They are the stuff of nightmares. They created a generational trauma embedded into our DNA over hundreds of thousands of years of evolution. These creatures were stronger, faster, and when it came to combat, more intelligent than we were. It's a miracle any of us are even here. This is the story of how modern humans conquered the monsters and won the battle for the world. But here's the thing. Those fearsome monsters defeated by humans... were other humans.
+[04:00:06] YOU: The Wi files. Oh my god. It's 10 though. Gourmet Premium puppies. I said cookies, but it's close enough.
+[04:00:10] CALLER: Until next time, be safe. Be kind and know that you are appreciated. Sir, I'm gonna need you to come with us. Uh, okay. Hello? Can anybody hear me? I don't know why I'm here. Take off the pillowcase. You are in judgment.
+[04:00:34] YOU: give this two and tight
+[04:00:39] CALLER: We're with the CFP.
+CFP? I-I don't know what that is. I never heard of that.
+Yeah, that's not your concern.
+Uh... okay.
+We have been following your show and we have reason to believe...
+[04:01:05] YOU: gravity. Anti-gravity can see what's going on. I'm going to give the anti-gravity a pat on the back for the first time because they actually did a good job.
+[04:01:26] CALLER: Hey dude, I thought I was gonna do the investigation this time.
+Well if you're gonna do it, then do it, stop sitting there, and do it.
+Alright, jeez.
+We have been following your show and we have reason to believe that you have far more information on your topics than you've been sharing.
+Uh-huh, what?
+[04:02:03] CALLER: We have been following your show.
+No, no, I-I-I heard you, I just- I just don't know what that means.
+We have been following your show.
+He speaks English, you moron.
+Your question is confusing.
+My question is not confusing.
+Yeah, it is.
+He's just playing dumb.
+No, you're dumb.
+You're dumb.
+Well, if you know that I have more information than you already know that I- what I know that you know.
+Just tell us what we want to know!
+Okay, what-what-what episode are you talking about?
+What episode are you talking about?
+I don't know.
+[04:02:46] CALLER: as I state, and it's gonna read it as la instead of L-A. So to handle this, we need quite a dynamic prompt that will only slow down and space out its pronunciation of particular parts of the address. So we can slow down parts of the URL by telling the prompt to use a spoken form of English so that the N would be output as E-N from the AI for the voice model to read more accurately. This might seem a bit confusing, so let me show you. So jumping back into our prompt here, if we go ahead and look at our website address in this example, I've gone ahead and set our website address as blue-
+[04:02:57] CALLER: Blue real estate agents NY. And NY for for New York. A lot of addresses have abbreviated words, letters and stuff like that in there. And to pronounce it properly through a voice agent, it's going to require a little bit of extra prompting on top of this. And so the way that we can handle it is obviously through prompt engineering. But first, let's give it a quick test call and see how it sounds. Hey, what was your website address? Oh hey, yeah, our website is bluerealestateagentsny.com. Let me know if you need help with anything else. So you can see there, it just read out the website address. And it sort of said...
+[04:03:28] CALLER: I thought you were the other researcher.
+No, you're supposed to know this.
+What the f—
+The one that has more information.
+Look guys, I have a podcast that covers all of this.
+The Why Files Operation podcast comes out every week.
+On Mondays, we release the YouTube episodes.
+And then on Wednesdays, we do deep dives into those stories.
+And then we cover unredacted topics that are a little too sensitive for YouTube.
+[04:04:06] CALLER: Makes sense.
+And uh, where does this podcast air?
+The Why Files Operation Podcast. You can get it on Apple, Amazon, Spotify, Pandora, anywhere you listen to podcasts.
+That sounds really convenient, actually.
+Yeah, it's pretty super.
+Okay. Go unlock his cuffs.
+So, can I go?
+Me? Un-uncuff him. You have the keys.
+No, I gave you the keys.
+You did not-
+A parasite.
+Oh, now you're a superhero?
+I just want to be able to help you when the time comes.
+Stop by tearing this thing apart?

@@ -36,7 +36,7 @@ except ImportError:
 
 class StreamWorker:
     """Background worker to play audio stream."""
-    def __init__(self, sample_rate=24000):
+    def __init__(self, sample_rate=24000, device_index=None):
         self.q = queue.Queue()
         self.playing = False
         self.sample_rate = sample_rate
@@ -52,7 +52,8 @@ class StreamWorker:
         self.stream = sd.OutputStream(
             samplerate=self.output_rate,
             channels=1,
-            dtype='int16'
+            dtype='int16',
+            device=device_index
         )
         self.stream.start()
         self._thread = threading.Thread(target=self._run, daemon=True)
@@ -76,6 +77,8 @@ class StreamWorker:
                     # Assume LINEAR16 24kHz (Gemini/Cloud Oneshots)
                     final_data = np.frombuffer(data_bytes, dtype=np.int16)
                 
+                # DEBUG TRACE
+                # print(f"[DEBUG] StreamWorker: Writing {len(final_data)} bytes...") 
                 self.stream.write(final_data)
             except Exception as e:
                 print(f"[!] Playback Error: {e}")
@@ -153,7 +156,7 @@ class StreamingSession:
 
 
 class TTSService:
-    def __init__(self, model_variant: str = "pro"):
+    def __init__(self, model_variant: str = "pro", device_name_filter: str = None):
         self.client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
         # Prioritize 'tts-' prefix to avoid collision with reasoning models
         prefix_key = f"tts-{model_variant}"
@@ -174,15 +177,41 @@ class TTSService:
             "Keep it fly but stay sharp; you are a partner, not just a narrator."
         )
         
-        self.worker = StreamWorker(sample_rate=24000)
+        # Resolve Output Device
+        self.device_index = None
+        if HAS_AUDIO and device_name_filter:
+            try:
+                devices = sd.query_devices()
+                for i, device in enumerate(devices):
+                    if device['max_output_channels'] > 0 and device_name_filter.lower() in device['name'].lower():
+                        print(f"[*] Found Output Device: {device['name']} (Index {i})")
+                        self.device_index = i
+                        break
+                if self.device_index is None:
+                    print(f"[!] Output device '{device_name_filter}' not found. Using default.")
+            except Exception as e:
+                print(f"[!] Error querying output devices: {e}")
+
+        self.worker = StreamWorker(sample_rate=24000, device_index=self.device_index)
         
         # Audio buffer for sentence assembly (fallback)
         self._streaming_client = None
 
+        self._streaming_client = None
+
     def begin_stream(self) -> StreamingSession:
         """Start a new TTS stream session."""
-        # Gemini TTS is now supported in the streaming pathway
-            
+        # Check if we are using Gemini TTS (Streaming not supported natively yet via this class interface easily)
+        # Actually Gemini 2.5 supports streaming audio via Bidi-Live API, but this class uses genai.generate_content for TTS.
+        # generate_content_stream works but it returns text chunks usually, need to check if it streams audio bytes.
+        # For now, if Gemini TTS is selected, we might fallback to oneshot or use Cloud TTS mapping if available.
+        
+        # If model is a Gemini Generative TTS model, we can't use Cloud TextToSpeechClient streaming easily yet
+        # unless we map it to a standard voice or use the Live API.
+        # Returning None forces the engine to use speak() (oneshot).
+        if "gemini" in self.model.lower():
+            return None 
+
         try:
             from google.cloud import texttospeech
         except ImportError:
@@ -208,7 +237,6 @@ class TTSService:
             model_name, voice_name = self.model.split(":", 1)
         
         # Handle Chirp/Cloud naming specifically
-        # (Assuming standard formats like en-US-Chirp3-HD-Kore)
         if "-" in voice_name and not model_name:
              parts = voice_name.split("-")
              if len(parts) >= 2: language_code = f"{parts[0]}-{parts[1]}"
@@ -230,11 +258,20 @@ class TTSService:
         return session
 
     def speak(self, text: str):
-        """Standard oneshot speak (Fallback to cloud oneshot)."""
-        try:
-            self._speak_cloud_oneshot(text)
-        except Exception as e:
-            print(f"[!] TTS Error: {e}")
+        """Standard oneshot speak."""
+        if "gemini" in self.model.lower():
+            try:
+                self._speak_gemini(text)
+            except Exception as e:
+                print(f"[!] Gemini TTS Error: {e} - Falling back to Cloud")
+                try:
+                    self._speak_cloud_oneshot(text)
+                except: pass
+        else:
+            try:
+                self._speak_cloud_oneshot(text)
+            except Exception as e:
+                print(f"[!] TTS Error: {e}")
 
     def _speak_cloud_oneshot(self, text: str):
          # Reuse stream session or separate method? 
@@ -275,12 +312,6 @@ class TTSService:
                 request={"input": synthesis_input, "voice": voice, "audio_config": audio_config}
             )
             
-            # Skip RIFF header (44 bytes) if we are just appending to a raw stream?
-            # Sounddevice raw stream handles int16. WAV usually has header.
-            # If we send Header to stream, it might sound like a "pop".
-            # Better to strip header for raw playback if possible, or just play it.
-            # The 'wav_data' logic in StreamWorker uses np.frombuffer.
-            # Riff header is just metadata, might cause slight noise.
             data = response.audio_content
             if data.startswith(b'RIFF'):
                 data = data[44:] # Simple strip
@@ -290,28 +321,47 @@ class TTSService:
             print(f"[!] OneShot Error: {e}")
 
     def _speak_gemini(self, text: str):
-        """Use Gemini Generative TTS."""
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=text,
-            config=types.GenerateContentConfig(
-                response_modalities=["AUDIO"],
-                speech_config=types.SpeechConfig(
-                    voice_config=types.VoiceConfig(
-                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                            voice_name=self.voice_name,
+        """Use Gemini Generative TTS with optimized streaming."""
+        # Parse model and voice: "gemini-2.5-flash-tts:Kore"
+        if ":" in self.model:
+            model_id, voice_name = self.model.split(":", 1)
+        else:
+            model_id = "gemini-2.5-flash-preview-tts"
+            voice_name = "Kore"
+
+        # OPTIMIZED: Minimal prompt = faster TTFA (Time To First Audio)
+        # The voice and model already carry the character
+        director_prompt = text  # Direct text, no wrapper
+        
+        try:
+            response_stream = self.client.models.generate_content_stream(
+                model=model_id,
+                contents=director_prompt,
+                config=types.GenerateContentConfig(
+                    speech_config=types.SpeechConfig(
+                        voice_config=types.VoiceConfig(
+                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                voice_name=voice_name,
+                            )
                         )
-                    )
+                    ),
                 ),
             )
-        )
-        if not response.candidates: return
-        part = response.candidates[0].content.parts[0]
-        if not part.inline_data: return
-        
-        raw = part.inline_data.data
-        if isinstance(raw, str): raw = base64.b64decode(raw)
-        self.worker.add(raw)
+            
+            for chunk in response_stream:
+                if not chunk.candidates: 
+                    continue
+                part = chunk.candidates[0].content.parts[0]
+                
+                # Immediate playback on audio chunks
+                if part.inline_data:
+                    raw = part.inline_data.data
+                    if isinstance(raw, str): raw = base64.b64decode(raw)
+                    if raw:
+                        self.worker.add(raw)
+                        
+        except Exception as e:
+            print(f"[!] TTS Error: {e}") 
 
     def stop(self):
         """Stop all playback."""

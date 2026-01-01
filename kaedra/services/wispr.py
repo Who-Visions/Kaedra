@@ -7,13 +7,14 @@ from typing import Optional, Callable, Awaitable, List, Dict, Any
 from datetime import datetime
 
 class WisprService:
-    def __init__(self, db_path: str = None, callback: Callable[[str], Awaitable[None]] = None):
+    def __init__(self, db_path: str = None, callback: Callable[[str], Awaitable[None]] = None, wake_word_required: bool = True):
         if db_path is None:
             # Default path for Windows user
             db_path = os.path.expandvars(r"%APPDATA%\Wispr Flow\flow.sqlite")
         
         self.db_path = db_path
         self.callback = callback
+        self.wake_word_required = wake_word_required
         self.running = False
         self.last_processed_timestamp = None
         self._polling_task = None
@@ -110,8 +111,12 @@ class WisprService:
 
     # --- Passive Monitoring Methods (The Ear) ---
 
-    async def start(self):
+    async def start(self, on_commit=None, on_partial=None):
         """Starts the monitoring loop."""
+        # Update callback if provided (UnifiedFlowEngine pattern)
+        if on_commit:
+            self.callback = on_commit
+            
         if self.running:
             return
         
@@ -124,6 +129,10 @@ class WisprService:
         latest = self._get_latest_transcript_entry()
         if latest:
             self.last_processed_timestamp = latest.get('timestamp')
+            txt_preview = (latest.get('formattedText') or latest.get('asrText') or "")[:50]
+            print(f"[*] Wispr Connected. Last Context: '{txt_preview}...'")
+        else:
+            print("[*] Wispr Connected. Waiting for new dictation...")
         
         self._polling_task = asyncio.create_task(self._poll_loop())
 
@@ -146,17 +155,21 @@ class WisprService:
                 entry = self._get_latest_transcript_entry()
                 if entry:
                     timestamp = entry.get('timestamp')
+                    text = entry.get('formattedText') or entry.get('asrText') or ""
+                    
+                    # Process if NEW timestamp OR (Same timestamp but text changed - unlikely for immutable logs but safe)
+                    # Actually, let's stick to timestamp to avoid duplicate processing of the same static row.
+                    # If Wispr updates row in place, we might need to track text hash. 
+                    # For now, faster polling is the key.
                     
                     if timestamp and timestamp != self.last_processed_timestamp:
                         self.last_processed_timestamp = timestamp
-                        
-                        text = entry.get('formattedText') or entry.get('asrText') or ""
                         await self._process_text(text)
                 
-                await asyncio.sleep(1) 
+                await asyncio.sleep(0.2) # 5x faster polling
             except Exception as e:
                 print(f"[!] Error in Wispr poll loop: {e}")
-                await asyncio.sleep(5)
+                await asyncio.sleep(1)
 
     def _get_connection(self):
         """Helper for DB connection."""
@@ -182,10 +195,21 @@ class WisprService:
             conn.close()
 
     async def _process_text(self, text: str):
-        """Analyzes text for wake word."""
+        """Analyzes text for wake word or emits all if streaming."""
         if not text:
             return
         
+        # Mode 1: Continuous Stream (No Wake Word)
+        if not self.wake_word_required:
+            print(f"[Wispr] New Transcript: '{text[:50]}...'")
+            if self.callback:
+                if asyncio.iscoroutinefunction(self.callback):
+                    await self.callback(text)
+                else:
+                    self.callback(text)
+            return
+
+        # Mode 2: Wake Word Only
         lower_text = text.lower()
         if "hey kaedra" in lower_text:
             print(f"[Wispr] Wake word detected in: '{text}'")

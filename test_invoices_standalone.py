@@ -53,6 +53,36 @@ class Invoice:
     def is_paid(self) -> bool:
         return self.status == "paid"
 
+    def to_markdown(self) -> str:
+        """Generate a clean Markdown representation of the invoice."""
+        lines = []
+        lines.append(f"# Invoice {self.id}")
+        lines.append(f"**Date:** {self.created_at.strftime('%Y-%m-%d')}")
+        if self.due_date:
+            lines.append(f"**Due:** {self.due_date.strftime('%Y-%m-%d')}")
+        lines.append(f"**Status:** {self.status.upper()}")
+        
+        lines.append("\n---")
+        
+        lines.append(f"\n**Bill To:**")
+        lines.append(f"{self.customer_name}")
+        if self.customer_email:
+            lines.append(f"{self.customer_email}")
+            
+        lines.append("\n## Items")
+        lines.append("| Description | Qty | Price | Total |")
+        lines.append("| :--- | :---: | :---: | :---: |")
+        
+        for item in self.items:
+            total = item.amount * item.quantity
+            lines.append(f"| {item.description} | {item.quantity} | ${item.amount:.2f} | ${total:.2f} |")
+            
+        lines.append("\n---")
+        lines.append(f"**Total Due: ${self.amount_due:.2f}**")
+        lines.append(f"**Amount Paid: ${self.amount_paid:.2f}**")
+            
+        return "\n".join(lines)
+
 # Create test invoice
 item = InvoiceItem("Web Design", 500.00, 1)
 invoice = Invoice(
@@ -69,6 +99,16 @@ invoice = Invoice(
 )
 print(f"✓ Created InvoiceItem: {item.description} = ${item.total}")
 print(f"✓ Created Invoice: {invoice.id} for {invoice.customer_name}")
+
+# Test Markdown Generation
+try:
+    md_output = invoice.to_markdown()
+    print(f"✓ Generated Markdown Invoice ({len(md_output)} chars)")
+    # Save to verify visually
+    Path("test_invoice.md").write_text(md_output, encoding="utf-8")
+    print("✓ Saved Markdown invoice to test_invoice.md")
+except Exception as e:
+    print(f"✗ Markdown generation failed: {e}")
 
 
 # ════════════════════════════════════════════════════════════════
@@ -234,10 +274,55 @@ if stripe_key and packages["stripe"] and ENABLE_LIVE_TEST:
     try:
         import stripe
         stripe.api_key = stripe_key
-        invoices = stripe.Invoice.list(limit=3)
+        
+        # 1. List Invoices
+        invoices = stripe.Invoice.list(limit=5)
         print(f"✓ Connected to Stripe! Found {len(invoices.data)} invoices")
-        for inv in invoices.data[:3]:
-            print(f"  - {inv.id}: ${inv.amount_due/100:.2f} ({inv.status})")
+        
+        # 2. Seed Data if empty
+        if len(invoices.data) == 0:
+            print("  ! No invoices found. Seeding test data...")
+            try:
+                # Find/Create Customer
+                customers = stripe.Customer.search(query="email:'test@whovisions.com'", limit=1)
+                if customers.data:
+                    cust = customers.data[0]
+                    print(f"  ✓ Found existing customer: {cust.id}")
+                else:
+                    cust = stripe.Customer.create(
+                        email="test@whovisions.com", 
+                        name="Kaedra Test Client",
+                        description="Created by Kaedra Verification Script"
+                    )
+                    print(f"  ✓ Created new customer: {cust.id}")
+                
+                # Create Invoice Item
+                stripe.InvoiceItem.create(
+                    customer=cust.id,
+                    amount=30000,
+                    currency="usd",
+                    description="Web Development Services"
+                )
+                
+                # Create Invoice
+                inv = stripe.Invoice.create(
+                    customer=cust.id,
+                    auto_advance=False # Draft
+                )
+                print(f"  ✓ Created DRAFT Invoice: {inv.id} ($300.00)")
+                
+                # Refresh List
+                invoices = stripe.Invoice.list(limit=5)
+                print(f"  ✓ Refreshed count: {len(invoices.data)}")
+                
+            except Exception as e:
+                print(f"  ✗ Seeding failed: {e}")
+
+        for inv in invoices.data[:5]:
+            status = inv.status or "draft"
+            total = (inv.amount_due or 0) / 100
+            print(f"  - {inv.id}: ${total:.2f} ({status})")
+            
     except Exception as e:
         print(f"✗ Stripe error: {e}")
 else:
@@ -251,31 +336,19 @@ else:
 if square_token and packages["squareup"]:
     print("\n=== Test 6: Live Square Connection ===")
     try:
-        try:
-            # Legacy
-            from square.client import Client
-            client = Client(access_token=square_token, environment=os.getenv("SQUARE_ENVIRONMENT", "sandbox"))
-            result = client.locations.list_locations()
-            if result.is_success():
-                 locs = result.body.get("locations", [])
-                 print(f"✓ Connected to Square! Found {len(locs)} locations")
+        from kaedra.services.invoices import InvoiceService
+        # Use the service refactored logic which supports both SDK versions
+        svc = InvoiceService(square_token=square_token, square_environment=os.getenv("SQUARE_ENVIRONMENT", "sandbox"))
+        if svc.square:
+            # Try to list 1 invoice or check status
+            status = svc.get_status()
+            if status["square"]["connected"]:
+                 print(f"✓ Connected to Square! (Service verified connection)")
             else:
-                 print(f"✗ Square error: {result.errors}")
-        except ImportError:
-            # v43+
-            from square.client import Client
-            # Actually v43 uses 'from square.client import Client' is deprecated?
-            # Let's try the modern client
-            from square.client import Client
-            # Wait, let's just use the Client if it imported?
-            # Re-writing this block for simplicity/robustness
-            client = Client(access_token=square_token, environment=os.getenv("SQUARE_ENVIRONMENT", "sandbox"))
-            result = client.locations.list_locations()
-            if result.is_success():
-                 locs = result.body.get("locations", [])
-                 print(f"✓ Connected to Square! Found {len(locs)} locations")
-            else:
-                 print(f"✗ Square error: {result.errors}")
+                 print(f"✗ Square connection failed: {status['square'].get('error')}")
+        else:
+             print("✗ Square provider not initialized in service")
+
     except Exception as e:
         print(f"✗ Square error: {e}")
 else:

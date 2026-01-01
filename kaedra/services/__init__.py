@@ -1,6 +1,14 @@
 """KAEDRA Services - Memory, Logging, Prompt handling, Web fetching, and Video generation."""
 
-from .memory import MemoryService, MemoryEntry
+try:
+    from .memory import MemoryService, MemoryEntry
+    MEMORY_AVAILABLE = True
+except (ImportError, Exception) as e:
+    print(f"[!] MemoryService unavailable: {e}")
+    MEMORY_AVAILABLE = False
+    MemoryService = None
+    MemoryEntry = None
+
 from .logging import LoggingService, SessionInfo
 from .prompt import PromptService, PromptResult
 from .web import WebService, WebPage

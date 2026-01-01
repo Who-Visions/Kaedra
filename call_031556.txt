@@ -1,0 +1,17 @@
+[03:12:10] CALLER: LLMs where you're thinking in language, reasoning in tokens and
+[03:12:22] CALLER: where you're thinking in a latent space, reasoning and meaning, and languages are
+[03:12:35] CALLER: optional this is the paradigm shift that this paper is talking about and I think
+[03:12:48] CALLER: that maybe just maybe, if this gains more traction, this could be post-LMs.
+[03:13:01] CALLER: essentially what you're looking at in this video is where you have a map
+[03:13:13] CALLER: of the internal understanding over time so each
+[03:13:26] CALLER: dot is essentially what the AI thinks is happening at that moment. So you can see the
+[03:13:38] CALLER: the red ones those are basically the instant guesses but the blue is essentially the
+[03:13:52] CALLER: stabilized understanding. So you have to understand that what you're seeing on the left is essentially
+[03:14:18] CALLER: the vision model what it would be able to see now now what most people are going to ask here is how
+[03:14:30] YOU: Happy.
+[03:14:43] CALLER: How is this even different from a cheap vision model just describing exactly what the video is doing?
+[03:14:56] CALLER: Well, the short answer is that cheap models they talk, but VL Jeppa is...
+[03:15:09] CALLER: understanding. So we need to break down.
+[03:15:21] YOU: I'm about to start it over again right now.
+[03:15:34] YOU: said, okay, I'm about to start it over again right now.
+[03:15:48] CALLER: So Metz's add.
