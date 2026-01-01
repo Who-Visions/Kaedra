@@ -1,0 +1,414 @@
+{
+  "meta": {
+    "title": "Cyberpunk Space Lore Pack",
+    "version": "1.0.0",
+    "source_notes": [
+      "Structured lore extracted from the provided dataset (locations, projects, timeline, segments, conflicts).",
+      "Narrative engine output stored separately under story_output to avoid contaminating canon data."
+    ]
+  },
+  "canon": {
+    "locations": [
+      {
+        "name": "Moon",
+        "type": "celestial_body",
+        "sites": [
+          "Tycho (Taicho) colony",
+          "Copernicus base"
+        ],
+        "role": "first_major_colonization"
+      },
+      {
+        "name": "Crystal Palace",
+        "type": "orbital_station",
+        "role": "luxury_hub_and_power_symbol",
+        "nickname": "Las Vegas of space"
+      },
+      {
+        "name": "Low Earth Orbit",
+        "type": "orbital_zone",
+        "role": "militarized_battleground_then_independent_polities"
+      },
+      {
+        "name": "Mars",
+        "type": "celestial_body",
+        "sites": [
+          "CryoSpace (NASA)",
+          "IsidaSpace (ESA and Neo USSR)"
+        ],
+        "role": "resource_and_research_colonies"
+      },
+      {
+        "name": "Jupiter system",
+        "type": "celestial_zone",
+        "role": "lost_pathfinder_mystery"
+      },
+      {
+        "name": "Colorado Springs",
+        "type": "earth_site",
+        "role": "target_of_mass_driver_strike"
+      },
+      {
+        "name": "Washington DC",
+        "type": "earth_site",
+        "role": "threatened_warning_strike_target"
+      },
+      {
+        "name": "Cape Canaveral",
+        "type": "earth_site",
+        "role": "destroyed_2023_signal_loss_cause"
+      }
+    ],
+    "projects_and_assets": [
+      {
+        "name": "Kilimanjaro Mass Driver",
+        "type": "launch_infrastructure",
+        "owner": "ESA",
+        "partner": "Pan African Alliance",
+        "function": "catapult_materials_and_vessels_to_orbit"
+      },
+      {
+        "name": "Tycho (Taicho) Lunar Colony",
+        "type": "colony",
+        "features": [
+          "multiple_bases",
+          "drilling_and_mining",
+          "ice_extraction_for_water_and_air",
+          "ecosystem_bootstrap"
+        ]
+      },
+      {
+        "name": "Tycho (Taicho) Mass Driver",
+        "type": "launch_infrastructure",
+        "function": "send_materials_back_to_earth_or_deeper_space"
+      },
+      {
+        "name": "Crystal Palace Construction",
+        "type": "megaproject",
+        "start_year": 2000,
+        "complete_year": 2011,
+        "budget_eurodollars": 7000000000,
+        "features": [
+          "casino",
+          "luxury_apartments",
+          "restaurants",
+          "grand_entertainment"
+        ]
+      },
+      {
+        "name": "NASA Explorer Class Deep Space Vehicle",
+        "type": "spacecraft_class",
+        "role": "deep_space_capability_return"
+      },
+      {
+        "name": "Columbus Mars Mission",
+        "type": "manned_colonization_mission",
+        "landing_count": 63,
+        "partners": [
+          "NASA",
+          "JAB"
+        ]
+      },
+      {
+        "name": "O'Neill 2",
+        "type": "orbital_habitat_station",
+        "status": "under_construction_during_revolt",
+        "role": "high_rider_coup_origin"
+      },
+      {
+        "name": "Mere 13",
+        "type": "orbital_battle_station",
+        "role": "major_target_in_first_orbit_war"
+      },
+      {
+        "name": "Pathfinders Jupiter Mission",
+        "type": "exploration_mission",
+        "planned_arrival_year": 2025,
+        "signal_lost_year": 2023,
+        "status_as_of_2077": "missing"
+      }
+    ],
+    "key_people": [
+      {
+        "name": "Elizabeth Kress",
+        "type": "political_figure",
+        "role": "rises_after_colorado_springs_strike"
+      }
+    ],
+    "legendary_groups": [
+      {
+        "name": "The Angels",
+        "type": "rumored_black_ops_group",
+        "associated_with": "Crystal Palace",
+        "traits": [
+          "elite_solos",
+          "strike_from_orbit_then_disappear",
+          "records_absent_or_hidden",
+          "contested_existence"
+        ],
+        "narrative_value": "myth_layer_for_elite_enforcement_or_ritual_assassins"
+      }
+    ],
+    "timeline": [
+      {
+        "year": 1991,
+        "event": "ESA forms and begins Kilimanjaro mass driver project with Pan African Alliance to accelerate orbital logistics."
+      },
+      {
+        "year": 1997,
+        "event": "Mass driver completed, enabling large scale lunar colonization push."
+      },
+      {
+        "year": 2000,
+        "event": "Crystal Palace construction begins using lunar logistics pipeline."
+      },
+      {
+        "year": 2004,
+        "event": "NASA Galileo station abandoned, NASA declines sharply."
+      },
+      {
+        "year": 2005,
+        "event": "Crystal Palace construction delayed by First Corporate War disruptions."
+      },
+      {
+        "year": 2006,
+        "event": "First Corporate War ends, construction resumes with lingering shortages."
+      },
+      {
+        "year": 2008,
+        "event": "First Orbit War (Six Hour War). USAF boards Mere 13, ESA intervenes, Luna mass driver strike hits Colorado Springs, massive orbital destruction."
+      },
+      {
+        "year": 2009,
+        "event": "Failed Crystal Palace takeover attempt linked to US intelligence, ESA issues Washington DC warning strike threat, US backs off."
+      },
+      {
+        "year": 2011,
+        "event": "Crystal Palace completed and opens, ESA holds high orbit dominance and luxury economy."
+      },
+      {
+        "year": 2010,
+        "event": "ESA and USSR attempt Mars venture, then abandon quickly for unknown reasons."
+      },
+      {
+        "year": 2010,
+        "event_type": "decade_note",
+        "event": "ESA maintains dominance, Japan emerges as competitor, corporations gain orbital stations via ESA ties."
+      },
+      {
+        "year": 2022,
+        "month": 9,
+        "event": "Fourth Corporate War spillover: accidental kill sat strike threatens Crystal Palace, High Riders sacrifice to intercept, ESA escalates security response."
+      },
+      {
+        "year": 2022,
+        "month": 9,
+        "day": 29,
+        "event": "High Riders revolt on O'Neill 2, seize station, attack ESA and corporate assets, declare independence and spark broader orbital secessions."
+      },
+      {
+        "year": 2023,
+        "event": "Cape Canaveral destroyed, Pathfinder mission signal lost."
+      },
+      {
+        "year": 2025,
+        "event": "Pathfinder mission planned Jupiter arrival, but signal remains missing."
+      },
+      {
+        "year": 2026,
+        "event": "Signal still not recovered, mission presumed lost or stranded."
+      },
+      {
+        "year": 2077,
+        "event": "Crystal Palace remains premier orbital luxury hub under ESA control, orbit largely independent under High Rider Confederation, Mars expands as mining and research frontier, Jupiter mission unresolved."
+      }
+    ],
+    "segments": [
+      {
+        "id": "seg_000_intro",
+        "timecode_start": "00:00",
+        "timecode_end": "01:03",
+        "title": "Cyberpunk tech leap extends into space",
+        "beat_summary": "Premise: cyberpunk level tech enables serious space expansion, with triumphs and disasters shaping colonization.",
+        "transcript_text": "The world of cyberpunk embraces body modifications and advanced hacking, but the video focuses on the technological jump in space exploration, major missions, losses, standout projects, and future potential beyond Earth."
+      },
+      {
+        "id": "seg_010_mass_driver_origin",
+        "timecode_start": "01:43",
+        "timecode_end": "03:18",
+        "title": "ESA, Kilimanjaro mass driver, and Tycho colony",
+        "beat_summary": "ESA forms, builds mass driver, launches lunar infrastructure, Tycho colony, ice mining for water and air.",
+        "transcript_text": "In 1991 ESA forms and plans a mass driver on Mount Kilimanjaro with Pan African Alliance support. By 1997 the mass driver is operational, launching equipment to colonize the Moon. Tycho colony forms with multiple bases and advanced systems. Ice mining provides water and air, enabling an ecosystem and sustained habitation. A Tycho mass driver later supports return shipments and expansion."
+      },
+      {
+        "id": "seg_020_crystal_palace_build",
+        "timecode_start": "04:18",
+        "timecode_end": "11:06",
+        "title": "Crystal Palace, corporate war delays, and the Six Hour War",
+        "beat_summary": "Crystal Palace build, war disruption, orbit militarizes, mass driver strike on Earth ends conflict.",
+        "transcript_text": "ESA plans Crystal Palace, a luxury station with casino, apartments, restaurants, and entertainment, funded at over 7 billion eurodollars. Construction begins in 2000 using the Tycho mass driver. In 2005 the First Corporate War disrupts logistics, ending in 2006. In 2008 US builds orbital military power, and orbit fills with satellites, drones, habitats, and battle stations. Salvage raids escalate. USAF boards Neo Soviet station Mere 13 with EVA marines. ESA intervenes, war turns brutal. ESA loads a two ton rock into the lunar mass driver and strikes Colorado Springs, killing leadership. War ends after six hours, with massive destruction costs. Elizabeth Kress rises within the USAF."
+      },
+      {
+        "id": "seg_030_palace_takeover_attempt",
+        "timecode_start": "10:13",
+        "timecode_end": "11:36",
+        "title": "Failed Crystal Palace seizure and ESA warning",
+        "beat_summary": "US linked attempt fails, ESA threatens Washington DC warning strike, US backs off.",
+        "transcript_text": "In 2009 a US backed group attempts to take Crystal Palace. ESA discovers the American defense intelligence agency planned it. ESA threatens a five ton rock drop near Washington DC as a warning. US withdraws and stops further attempts."
+      },
+      {
+        "id": "seg_040_palace_completed_mars_first_try",
+        "timecode_start": "11:06",
+        "timecode_end": "12:17",
+        "title": "Crystal Palace opens and early Mars attempt abandoned",
+        "beat_summary": "Crystal Palace opens, early Mars venture abandoned for unclear reasons.",
+        "transcript_text": "By 2011 Crystal Palace completes and opens, drawing wealthy clients and securing ESA control in high orbit. ESA pursues Mars with USSR help, reaches Mars, then abandons the planet soon after for unexplained reasons, possibly due to insufficient equipment for colonization or terraforming."
+      },
+      {
+        "id": "seg_050_2010s_competition_and_orbital_corporate_assets",
+        "timecode_start": "12:17",
+        "timecode_end": "13:19",
+        "title": "ESA dominance, Japan rises, corporations gain stations",
+        "beat_summary": "ESA dominates, Japan maneuvers, corporations gain orbital stations via ESA ties.",
+        "transcript_text": "Through the 2010s ESA controls low and high orbits. Japan attempts to compete and ease tensions via Neo USSR links. ESA partners with major corporations for orbital manufacturing, granting them stations in exchange for loyalty and funding."
+      },
+      {
+        "id": "seg_060_angels_and_high_riders",
+        "timecode_start": "13:19",
+        "timecode_end": "16:47",
+        "title": "The Angels rumor and High Riders culture",
+        "beat_summary": "Angels rumor, High Riders as distinct orbital culture, The Word language blend.",
+        "transcript_text": "Rumors describe the Angels, a group of at least 12 elite martial artists and solos hired by Crystal Palace, said to drop from orbit to eliminate targets and return unseen. Their existence is debated. High Riders are humans born or raised in space: intelligent, level headed, fast reacting, multilingual, and culturally distinct. Their language, The Word, mixes African dialects with French, German, and Japanese. Their weakness is full gravity strength, but they have high stamina and determination."
+      },
+      {
+        "id": "seg_070_nasa_comeback_mars_colonization",
+        "timecode_start": "16:47",
+        "timecode_end": "18:16",
+        "title": "NASA comeback and Mars colonization",
+        "beat_summary": "NASA returns, partners with Japan, lands 63, establishes CryoSpace, ESA follows with IsidaSpace.",
+        "transcript_text": "US funding improves, NASA re emerges and develops explorer class manned vehicles. NASA partners with JAB and launches the Columbus Mars mission. They land 63 people and build a permanent base called CryoSpace, surpassing ESA. ESA and Sovs follow with IsidaSpace. The bases unify into a Martian colonial government. NASA uses Mars as a launch point for further solar system outreach."
+      },
+      {
+        "id": "seg_080_2022_orbital_incident_and_oneill2_revolt",
+        "timecode_start": "18:16",
+        "timecode_end": "23:08",
+        "title": "Fourth Corporate War spillover and High Rider independence",
+        "beat_summary": "Near destruction of Crystal Palace, O'Neill 2 revolt, independence, orbit fractures.",
+        "transcript_text": "During the Fourth Corporate War, a kill sat artillery strike heads toward Crystal Palace in September 2022, described as accidental. Three High Riders sacrifice to protect the station. ESA deploys delta jets and destroys suspicious nearby facilities. On O'Neill 2, High Riders face brutal working conditions and repression. Peaceful protests are met with violence. On September 29, 2022 they launch a coup, outnumbering security forces 40 to 1. They seize control, use station artillery to attack ESA and corporate orbital assets, and end the conflict after about seven hours. They declare independence, and other orbital colonies follow. US and Japan recognize the High Rider Confederation. ESA loses control of most orbital cities including Tycho and Copernicus on the Moon for a time."
+      },
+      {
+        "id": "seg_090_jupiter_pathfinders_and_2077_status",
+        "timecode_start": "23:08",
+        "timecode_end": "27:43",
+        "title": "Jupiter mission mystery and the 2077 map",
+        "beat_summary": "Pathfinders mission missing after 2023, Crystal Palace thrives, orbit independent, Jupiter unknown.",
+        "transcript_text": "NASA sends a pathfinder crew toward Jupiter, planned arrival by 2025. Signal is lost after Cape Canaveral is destroyed in 2023. By 2026 it is still missing, and even by 2077 Militech and the US government search for it. Crystal Palace remains famous and expansive, offering casinos, hotels, restaurants, and grand music acts. Arasaka maintains orbital stations for experiments and military purposes. Other stations house High Rider societies. The Moon bases focus on mining and tourism. Mars is used for mining, research, and growing colonies, plus communication outposts. Jupiter remains a mystery."
+      }
+    ],
+    "conflict_map": [
+      {
+        "name": "First Corporate War",
+        "timeframe": {
+          "start_year": 2005,
+          "end_year": 2006
+        },
+        "primary_effects": [
+          "crystal_palace_construction_delays",
+          "space_logistics_disruption"
+        ]
+      },
+      {
+        "name": "First Orbit War (Six Hour War)",
+        "timeframe": {
+          "year": 2008,
+          "duration_hours": 6
+        },
+        "primary_effects": [
+          "orbital_militarization_peak",
+          "mass_driver_kinetic_strike_on_earth",
+          "major_orbital_platform_losses"
+        ]
+      },
+      {
+        "name": "Fourth Corporate War spillover to orbit",
+        "timeframe": {
+          "year": 2022,
+          "month": 9
+        },
+        "primary_effects": [
+          "near_destruction_of_crystal_palace",
+          "esa_security_escalation",
+          "high_rider_revolt_trigger_context"
+        ]
+      },
+      {
+        "name": "O'Neill 2 Revolt War",
+        "timeframe": {
+          "year": 2022,
+          "month": 9,
+          "day": 29,
+          "duration_hours": 7
+        },
+        "primary_effects": [
+          "esa_orbital_collapse",
+          "independence_declarations",
+          "high_rider_confederation_rise"
+        ]
+      }
+    ],
+    "veilverse_adaptation": {
+      "purpose": "Mapping layer to reskin cyberpunk space lore into Veil Verse while preserving power structure logic.",
+      "faction_analogs": [
+        {
+          "source": "Eurospace Agency (ESA)",
+          "veilverse": "Ecliptic Sovereign Authority",
+          "notes": "Replace technocratic orbital control with ritualized sovereignty and doctrine control."
+        },
+        {
+          "source": "High Rider Confederation",
+          "veilverse": "Zeroborn Compact",
+          "notes": "Orbit born culture becomes a bonded caste with language as encryption and identity weapon."
+        },
+        {
+          "source": "Crystal Palace",
+          "veilverse": "Crystal Throne",
+          "notes": "Luxury hub becomes a power shrine, access as status, surveillance as liturgy."
+        },
+        {
+          "source": "The Angels",
+          "veilverse": "Seraph Array",
+          "notes": "Myth layer enforcement becomes ritual assassins or signal bound operatives."
+        }
+      ]
+    }
+  },
+  "story_output": {
+    "engine_state": {
+      "tension_current": 0.2,
+      "last_major_turn": "Integration complete, Bridge formed, terrestrial resistance collapsed",
+      "active_mystery_hooks": [
+        "Pathfinder signal",
+        "Mars tomb relay",
+        "Angels bio integration",
+        "The Word as transmission"
+      ]
+    },
+    "next_branch_options": [
+      {
+        "id": "branch_a_bridge_expedition",
+        "title": "First human expedition across the Bridge to Mars",
+        "promise": "Discovery, horror, bargaining with the Architects, survival rules rewrite"
+      },
+      {
+        "id": "branch_b_earth_rebuild",
+        "title": "Tuned society rebuilds in the ruins",
+        "promise": "Post collapse governance, identity shifts, cult mechanics, new economy of signal"
+      },
+      {
+        "id": "branch_c_crystal_palace_fallout",
+        "title": "Crystal Palace authority collapse and orbital panic",
+        "promise": "Elite scramble, coups, Seraph Array interventions, last old world leverage plays"
+      }
+    ]
+  }
+}

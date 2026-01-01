@@ -18,6 +18,8 @@ async def main():
     parser.add_argument("--wake-threshold", type=int, default=500)
     parser.add_argument("--thinking", type=str, default=None, help="Thinking level override")
     parser.add_argument("--mic", type=str, default="Chat Mix", help="Mic name filter")
+    parser.add_argument("--out", type=str, default="Stealth 500X", help="Speaker name filter")
+    parser.add_argument("--stt", type=str, default="base.en", help="STT Model size (base.en, distil-large-v3)")
     args = parser.parse_args()
 
     audio_config = AudioConfig(wake_threshold=args.wake_threshold)
@@ -32,7 +34,13 @@ async def main():
     try:
         # Core Services (Mandatory)
         mic = MicrophoneService(device_name_filter=args.mic)
-        tts = TTSService(model_variant=args.tts)
+        # Increase default threshold if no arg provided, or trust args.
+        # User config is audio_config passed to engine.
+        # Let's verify Engine's audio_config usage.
+        # Actually, let's just make the CLI default higher in listen_and_speak.py logic too.
+        # But for now, let's fix the ENGINE to be safer.
+        pass # Placeholder, will edit listen_and_speak.py directly.
+        tts = TTSService(model_variant=args.tts, device_name_filter=args.out)
         
         # LIFX is now a core tool, not optional
         if not LIFX_TOKEN:
@@ -53,7 +61,8 @@ async def main():
             audio_config=audio_config,
             session_config=session_config,
             lifx=lifx, # Passed as mandatory
-            model_name=model_name
+            model_name=model_name,
+            stt_model=args.stt
         )
 
         await engine.run()

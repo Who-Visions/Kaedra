@@ -34,6 +34,7 @@ def extract_all_metadata(response: str) -> dict:
         'transcription': "",
         'light_simple': None,
         'light_json': None,
+        'notion_log': None,
         'exec_cmd': None,
         'clean_text': response
     }
@@ -51,7 +52,39 @@ def extract_all_metadata(response: str) -> dict:
         result['exec_cmd'] = exec_match.group(1).strip()
         result['clean_text'] = re.sub(r'\[EXEC:.*?\]', '', result['clean_text'], flags=re.DOTALL)
 
-    # 3. Extract [LIGHT: ...] or JSON actions
+    # 3. Extract JSON Actions (Lights & Notion)
+    # We now handle a general JSON block that can contain "actions" (lights) or "notion_log"
+    json_match = re.search(r'```json\s*(\{.*?\})\s*```', result['clean_text'], re.DOTALL)
+    if not json_match:
+        # Fallback for bare JSON
+        json_match = re.search(r'(\{(?:"actions"|"notion_log"):\s*.*?\})', result['clean_text'], re.DOTALL)
+    
+    if json_match:
+        try:
+            data = json.loads(json_match.group(1))
+            
+            # Handle Light Actions
+            if "actions" in data:
+                 # Reuse existing validation logic, just need to import or reimplement helper call
+                 # Since extract_light_command parses JSON internally, we can either refactor or just call it 
+                 # for the "actions" part. But simpler to just validate here if possible or call helper.
+                 # Let's rely on extract_light_command logic being refactored or just use it as is? 
+                 # Wait, extract_light_command does regex matching again. That's inefficient but safe.
+                 pass
+
+            # Handle Notion
+            if "notion_log" in data:
+                result['notion_log'] = data["notion_log"]
+            
+            # Remove JSON from clean text
+            result['clean_text'] = re.sub(r'```json\s*\{.*?\}\s*```', '', result['clean_text'], flags=re.DOTALL)
+            # We assume extract_light_command handles the light cleaning, so let's call it for lights
+            # and let it return the light actions.
+        except: pass
+
+    # Call original light extractor to handle "actions" key and specific [LIGHT:...] tags
+    # It will re-parse the JSON for "actions" if present.
+    # To avoid double removal issues, we should let `extract_light_command` handle the cleaning/extraction of lights.
     simple_action, json_actions, cleaned = extract_light_command(result['clean_text'])
     result['light_simple'] = simple_action
     result['light_json'] = json_actions

@@ -1,0 +1,34 @@
+[03:50:24] CALLER: This gives us a real chance to turn our lives around.
+[03:50:26] CALLER: Have you ever tried creating an AI voice agent
+[03:50:29] CALLER: and wanted to read out an email address and
+[03:50:33] CALLER: website URL, phone number, or the date
+[03:50:36] CALLER: in time, you've probably found that it's incredi
+[03:50:38] CALLER: too difficult to get the agent to pronounce it
+[03:50:41] CALLER: correctly. He might be speaking too fast for the user
+[03:50:43] CALLER: that you understand or it could be completely
+[03:50:47] CALLER: misinterpreting what it's trying to say. Learning
+[03:50:50] CALLER: Prompt engineering is crucial if you want
+[03:50:52] CALLER: how to use AI voice agents in your business
+[03:50:55] CALLER: s or create solutions for others, and
+[03:50:59] CALLER: have them work reliably My name is Brendan and
+[03:51:01] CALLER: I've been creating AI agents for small to medium
+[03:51:04] CALLER: size businesses for almost two years
+[03:51:07] CALLER: at my agency Inflight AI. I've
+[03:51:11] CALLER: used various tools to create automation workflows
+[03:51:15] CALLER: and more recently, to develop AI agents
+[03:51:17] CALLER: With prompt engineering. So, in this video, I
+[03:51:20] CALLER: We're going to be covering several hidden techniques for
+[03:51:23] CALLER: for improving the performance of your AI voice
+[03:51:27] CALLER: agent through effective prompting. I'll also
+[03:51:29] CALLER: provide all of these prompt templates
+[03:51:32] CALLER: for free in my school group which you can find
+[03:51:34] CALLER: and linked in the description. By the end of this video
+[03:51:37] CALLER: You'll be a pro at prompting AI voice
+[03:51:39] CALLER: agents and getting them to do precisely what
+[03:51:42] CALLER: To get started, I'm going to walk you through some
+[03:51:56] CALLER: and prompting techniques that we use to get
+[03:51:59] CALLER: the voice agent to pronounce the time better
+[03:52:17] YOU: Thank you.
+[03:52:19] CALLER: So this issue can typically arise when re-
+[03:52:21] CALLER: getting the business hours from the prompt
+[03:52:26] CALLER: for the noise base. In some instances you

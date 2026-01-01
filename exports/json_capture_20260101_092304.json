@@ -1,0 +1,503 @@
+{
+  "setting_id": "ATL_CORE",
+  "setting_name": "Atlantis Myth Engine",
+  "core_loop": {
+    "pattern_id": "REC_LOOP_01",
+    "stages": [
+      "VIRTUE",
+      "DRIFT",
+      "MISUSE",
+      "RESET"
+    ],
+    "note": "Civil + Veil tech amplifies intent until ethics failure triggers systemic backlash."
+  },
+  "layers": [
+    {
+      "layer_id": "L_MATERIAL",
+      "name": "Classical Engineering",
+      "nodes": [
+        {
+          "node_id": "T_GREAT_CRYSTAL",
+          "name": "Great Crystal",
+          "tags": [
+            "energy",
+            "reactor",
+            "ships",
+            "temples"
+          ],
+          "functions": [
+            "power_generation",
+            "fleet_enablement",
+            "temple_runtime"
+          ]
+        },
+        {
+          "node_id": "T_ORICHALCUM",
+          "name": "Orichalcum",
+          "tags": [
+            "rare_metal",
+            "law",
+            "defense",
+            "conductor"
+          ],
+          "functions": [
+            "law_inscription",
+            "structural_plating",
+            "veil_conduction"
+          ]
+        },
+        {
+          "node_id": "T_CANAL_GRID",
+          "name": "Canal Grid",
+          "tags": [
+            "irrigation",
+            "transport",
+            "routing",
+            "military"
+          ],
+          "functions": [
+            "food_security",
+            "logistics",
+            "mobilization",
+            "chokepoint_control"
+          ]
+        },
+        {
+          "node_id": "T_CONCENTRIC_CITY",
+          "name": "Concentric City",
+          "tags": [
+            "fortress",
+            "layered_defense",
+            "harbor"
+          ],
+          "functions": [
+            "defense_in_depth",
+            "fleet_hub",
+            "ritual_geometry_anchor"
+          ]
+        }
+      ]
+    },
+    {
+      "layer_id": "L_VEIL",
+      "name": "Spiritual Engineering",
+      "nodes": [
+        {
+          "node_id": "V_CRYSTAL_VEIL",
+          "name": "Crystal Veil",
+          "tags": [
+            "dream_broadcast",
+            "weather_shaping"
+          ],
+          "functions": [
+            "mass_suggestion",
+            "stormcraft",
+            "signal_projection"
+          ]
+        },
+        {
+          "node_id": "V_ORICHALCUM_VEIL",
+          "name": "Orichalcum Veil",
+          "tags": [
+            "memory_storage",
+            "sigil_substrate"
+          ],
+          "functions": [
+            "memory_archiving",
+            "binding_protocols",
+            "glyph_routing"
+          ]
+        },
+        {
+          "node_id": "V_CITY_VEIL",
+          "name": "City Veil",
+          "tags": [
+            "ritual_amplifier",
+            "trauma_chamber",
+            "addiction_risk"
+          ],
+          "functions": [
+            "intent_amplification",
+            "crowd_state_control",
+            "trauma_harvesting"
+          ]
+        },
+        {
+          "node_id": "V_GRID_VEIL",
+          "name": "Grid Veil",
+          "tags": [
+            "psychic_infrastructure",
+            "emotion_weapon",
+            "checkpoint_tyranny"
+          ],
+          "functions": [
+            "surveillance_feel",
+            "emotion_taxation",
+            "coercive_calm"
+          ]
+        }
+      ]
+    },
+    {
+      "layer_id": "L_BRIDGE",
+      "name": "Veil Bridge",
+      "nodes": [
+        {
+          "node_id": "B_VEIL_TO_MATERIAL",
+          "name": "Veil to Material",
+          "tags": [
+            "dream_corruption",
+            "reality_softening"
+          ],
+          "functions": [
+            "perception_warp",
+            "consensus_thinning"
+          ]
+        },
+        {
+          "node_id": "B_MATERIAL_TO_VEIL",
+          "name": "Material to Veil",
+          "tags": [
+            "canal_weaponization",
+            "emotion_routing"
+          ],
+          "functions": [
+            "routing_as_spell",
+            "logistics_as_ritual"
+          ]
+        },
+        {
+          "node_id": "B_ETHICS_FAILURE",
+          "name": "Ethics Failure",
+          "tags": [
+            "rule_activation",
+            "riggers"
+          ],
+          "functions": [
+            "permission_to_harm",
+            "oversight_break"
+          ]
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "risk_id": "R_RESONANCE_CORRUPTION",
+      "name": "Resonance Corruption",
+      "type": "intent_amplification",
+      "triggers": [
+        "V_CITY_VEIL",
+        "V_GRID_VEIL",
+        "B_ETHICS_FAILURE"
+      ],
+      "symptoms": [
+        "feedback_loops",
+        "addiction_to_power",
+        "cultic_alignment"
+      ],
+      "outputs": [
+        "policy_extremes",
+        "ritual_overreach"
+      ]
+    },
+    {
+      "risk_id": "R_MORAL_DRIFT",
+      "name": "Moral Drift",
+      "type": "harm_amplification",
+      "triggers": [
+        "T_CANAL_GRID",
+        "V_GRID_VEIL",
+        "B_ETHICS_FAILURE"
+      ],
+      "symptoms": [
+        "checkpoint_tyranny",
+        "hoarding_corruption",
+        "normalized_coercion"
+      ],
+      "outputs": [
+        "empire_behavior",
+        "weaponized_infrastructure"
+      ]
+    },
+    {
+      "risk_id": "R_RESET_EVENT",
+      "name": "Reset Event",
+      "type": "geo_spiritual_backlash",
+      "triggers": [
+        "R_RESONANCE_CORRUPTION",
+        "R_MORAL_DRIFT"
+      ],
+      "symptoms": [
+        "earthquakes",
+        "floods_both_layers",
+        "collapse"
+      ],
+      "outputs": [
+        "diaspora_orders",
+        "myth_fragmentation",
+        "tech_lockout"
+      ]
+    }
+  ],
+  "factions": [
+    {
+      "faction_id": "F_VIRTUE_CLASS",
+      "name": "Virtue Class",
+      "alignment": "order_alignment",
+      "methods": [
+        "sacred_law",
+        "restraint",
+        "public_duty"
+      ],
+      "signature_assets": [
+        "T_ORICHALCUM",
+        "T_CANAL_GRID",
+        "T_CONCENTRIC_CITY"
+      ],
+      "failure_mode": "DRIFT"
+    },
+    {
+      "faction_id": "F_EMPIRE_CLASS",
+      "name": "Empire Class",
+      "alignment": "domination",
+      "methods": [
+        "expansion",
+        "spectacle",
+        "resource_hoarding"
+      ],
+      "signature_assets": [
+        "T_GREAT_CRYSTAL",
+        "T_CANAL_GRID",
+        "V_GRID_VEIL"
+      ],
+      "failure_mode": "MISUSE"
+    },
+    {
+      "faction_id": "F_LAW_OF_ONE",
+      "name": "Law of One",
+      "alignment": "harmonization",
+      "methods": [
+        "communal_telepathy",
+        "cosmic_law",
+        "containment"
+      ],
+      "signature_assets": [
+        "V_ORICHALCUM_VEIL",
+        "V_CRYSTAL_VEIL"
+      ],
+      "failure_mode": "purism_schism"
+    },
+    {
+      "faction_id": "F_SONS_OF_BELIAL",
+      "name": "Sons of Belial",
+      "alignment": "exploitation",
+      "methods": [
+        "biopower",
+        "occult_black_ops",
+        "knowledge_hoarding"
+      ],
+      "signature_assets": [
+        "V_CITY_VEIL",
+        "V_GRID_VEIL",
+        "T_GREAT_CRYSTAL"
+      ],
+      "failure_mode": "RESET_TRIGGER"
+    },
+    {
+      "faction_id": "F_SKEPTIC_LEAGUE",
+      "name": "Skeptic League",
+      "alignment": "control_through_doubt",
+      "methods": [
+        "record_silence",
+        "debunking",
+        "gatekeeping_sources"
+      ],
+      "signature_assets": [
+        "suppressed_texts",
+        "comparative_myth_ops"
+      ],
+      "failure_mode": "entrenchment"
+    },
+    {
+      "faction_id": "F_DIASPORA_ORDERS",
+      "name": "Diaspora Orders",
+      "alignment": "fractured_survival",
+      "methods": [
+        "seed_schools",
+        "mask_as_local_gods",
+        "encode_tech_in_ritual"
+      ],
+      "signature_assets": [
+        "partial_orichalcum",
+        "memory_shards",
+        "initiation_maps"
+      ],
+      "failure_mode": "corrupted_lineage"
+    }
+  ],
+  "eras": [
+    {
+      "era_id": "E_CLASSICAL",
+      "label": "Classical",
+      "time_hint": "circa_360_bc",
+      "active_factions": [
+        "F_VIRTUE_CLASS"
+      ],
+      "active_tech": [
+        "T_GREAT_CRYSTAL",
+        "T_ORICHALCUM",
+        "T_CANAL_GRID",
+        "T_CONCENTRIC_CITY"
+      ]
+    },
+    {
+      "era_id": "E_MEDIEVAL",
+      "label": "Medieval",
+      "time_hint": "500_to_1450",
+      "active_factions": [
+        "F_SKEPTIC_LEAGUE"
+      ],
+      "active_tech": [
+        "suppressed_texts"
+      ]
+    },
+    {
+      "era_id": "E_RENAISSANCE",
+      "label": "Renaissance",
+      "time_hint": "1450_to_1650",
+      "active_factions": [
+        "F_DIASPORA_ORDERS",
+        "F_SKEPTIC_LEAGUE"
+      ],
+      "active_tech": [
+        "recovered_texts",
+        "new_world_mapping"
+      ]
+    },
+    {
+      "era_id": "E_VICTORIAN",
+      "label": "Victorian",
+      "time_hint": "1850_to_1920",
+      "active_factions": [
+        "F_EMPIRE_CLASS",
+        "F_SKEPTIC_LEAGUE"
+      ],
+      "active_tech": [
+        "pseudo_history",
+        "comparative_myth"
+      ]
+    },
+    {
+      "era_id": "E_OCCULT",
+      "label": "Occult",
+      "time_hint": "1880_to_present",
+      "active_factions": [
+        "F_LAW_OF_ONE",
+        "F_SONS_OF_BELIAL",
+        "F_SKEPTIC_LEAGUE"
+      ],
+      "active_tech": [
+        "crystal_tech",
+        "telepathic_governance",
+        "dream_consciousness"
+      ]
+    },
+    {
+      "era_id": "E_MODERN_VEILVERSE",
+      "label": "Modern Veilverse",
+      "time_hint": "current",
+      "active_factions": [
+        "F_VIRTUE_CLASS",
+        "F_EMPIRE_CLASS",
+        "F_LAW_OF_ONE",
+        "F_SONS_OF_BELIAL",
+        "F_SKEPTIC_LEAGUE",
+        "F_DIASPORA_ORDERS"
+      ],
+      "active_tech": [
+        "all_tech_unlocked",
+        "all_metaphysical"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "T_ORICHALCUM",
+      "to": "V_ORICHALCUM_VEIL",
+      "rel": "conductor"
+    },
+    {
+      "from": "T_CONCENTRIC_CITY",
+      "to": "V_CITY_VEIL",
+      "rel": "recursive_circuit"
+    },
+    {
+      "from": "T_CANAL_GRID",
+      "to": "B_MATERIAL_TO_VEIL",
+      "rel": "weaponizes_into_emotion_routing"
+    },
+    {
+      "from": "V_CITY_VEIL",
+      "to": "B_VEIL_TO_MATERIAL",
+      "rel": "corrupts_consensus"
+    },
+    {
+      "from": "B_ETHICS_FAILURE",
+      "to": "R_RESONANCE_CORRUPTION",
+      "rel": "triggers"
+    },
+    {
+      "from": "B_ETHICS_FAILURE",
+      "to": "R_MORAL_DRIFT",
+      "rel": "triggers"
+    },
+    {
+      "from": "R_RESONANCE_CORRUPTION",
+      "to": "R_RESET_EVENT",
+      "rel": "escalates_to"
+    },
+    {
+      "from": "R_MORAL_DRIFT",
+      "to": "R_RESET_EVENT",
+      "rel": "escalates_to"
+    }
+  ],
+  "mission_hooks": [
+    {
+      "hook_id": "H_DEFECTOR_SABOTAGE",
+      "summary": "Defector sabotages a crystal reactor before a resonance cascade hits the city grid.",
+      "factions_involved": [
+        "F_SONS_OF_BELIAL",
+        "F_LAW_OF_ONE",
+        "F_DIASPORA_ORDERS"
+      ],
+      "risk_focus": [
+        "R_RESONANCE_CORRUPTION"
+      ]
+    },
+    {
+      "hook_id": "H_CANAL_CHECKPOINT_WAR",
+      "summary": "Canal gates become emotion toll booths, crews fight over routing rights and memory taxes.",
+      "factions_involved": [
+        "F_EMPIRE_CLASS",
+        "F_VIRTUE_CLASS",
+        "F_SKEPTIC_LEAGUE"
+      ],
+      "risk_focus": [
+        "R_MORAL_DRIFT"
+      ]
+    },
+    {
+      "hook_id": "H_SILENCE_ARCHIVE_HEIST",
+      "summary": "Recover suppressed texts that contain the real rule activation thresholds for the reset event.",
+      "factions_involved": [
+        "F_SKEPTIC_LEAGUE",
+        "F_DIASPORA_ORDERS"
+      ],
+      "risk_focus": [
+        "R_RESET_EVENT"
+      ]
+    }
+  ]
+}

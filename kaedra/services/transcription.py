@@ -23,7 +23,7 @@ class TranscriptionService:
         self.model = WhisperModel(model_size, device=self.device, compute_type=compute_type)
         print(f"[*] Faster-Whisper Loaded.")
 
-    def transcribe(self, audio_data: bytes, sample_rate: int = 16000) -> str:
+    def transcribe(self, audio_data: bytes, sample_rate: int = 16000, context_prompt: str = None) -> str:
         """
         Transcribes a raw PCM audio buffer.
         """
@@ -40,9 +40,26 @@ class TranscriptionService:
         
         wav_io.seek(0)
         
-        segments, info = self.model.transcribe(wav_io, beam_size=5)
+        # Initial prompt guidelines to help Whisper with context and specific names
+        base_prompt = "Kaedra is a sharp, intelligent AI voice assistant based in New York. Conversational, modern slang."
+        
+        # Inject dynamic context if provided (Wispr Flow: Context-Conditioned ASR)
+        full_prompt = f"{base_prompt} Context: {context_prompt}" if context_prompt else base_prompt
+
+        segments, info = self.model.transcribe(
+            wav_io, 
+            beam_size=5, 
+            initial_prompt=full_prompt
+        )
         
         text = " ".join([segment.text for segment in segments]).strip()
+        
+        # Hallucination Filter
+        # Faster-Whisper often outputs "Thank you." or "MBC" on silence/noise.
+        hallucinations = ["Thank you.", "Thank you", "Thanks.", "MBC", "You", "."]
+        if text in hallucinations or not text:
+            return ""
+            
         return text
 
 if __name__ == "__main__":

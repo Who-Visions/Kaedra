@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "The Lunar Gateway station is compromised by a Shadow Dweller entity, serving as 'Patient Zero' for the Veil infection.",
+    "confidence": 1.0,
+    "source_scene": "Visual confirmation from evidence packet tOqsgHun1ko analysis.",
+    "requires_review": true,
+    "timestamp": "2026-01-01T10:42:36.470551"
+  },
+  {
+    "claim": "The 'Pathogen' is actually the original Martian consciousness, mutated by Earth's atmosphere and encoded into human DNA as a survival mechanism.",
+    "confidence": 0.85,
+    "source_scene": "Elias's psionic interface with the Cydonia Archive.",
+    "requires_review": true,
+    "timestamp": "2026-01-01T10:58:00.485145"
+  },
+  {
+    "claim": "The 'AI Holographic Ring' (circa 2026) utilizes a proprietary 'Neural-Haptic Bridge' secretly reverse-engineered from data recovered during the 2008 Mataha Expedition (Hawara Labyrinth). This establishes that early 21st-century consumer tech is compatible with 'Sower' consoles found on Mars, explaining why the Resistance seeks out these specific 'ancient' artifacts.",
+    "confidence": 0.9,
+    "source_scene": "Ingest: LB_VXD6PyBg (Samsung AI Ring) + Lore: mars_robotics_and_risks.md (Hawara)",
+    "requires_review": true,
+    "timestamp": "2026-01-01T11:30:42.322743"
+  },
+  {
+    "claim": "The 'AI Holographic Ring' (circa 2026) utilizes a proprietary 'Neural-Haptic Bridge' secretly reverse-engineered from data recovered during the 2008 Mataha Expedition (Hawara Labyrinth). This establishes that early 21st-century consumer tech is compatible with 'Sower' consoles found on Mars, explaining why the Resistance seeks out these specific 'ancient' artifacts.",
+    "confidence": 0.9,
+    "source_scene": "Ingest: LB_VXD6PyBg (Samsung AI Ring) + Lore: mars_robotics_and_risks.md (Hawara)",
+    "requires_review": true,
+    "timestamp": "2026-01-01T11:30:52.507552"
+  },
+  {
+    "claim": "CES 2026 marked the 'Visual Cortex' breakthrough where robotics achieved Generative Physical Intelligence, allowing 1-to-1 skill replication from video data. This accelerated the Mars automated infrastructure timeline by 5-8 years.",
+    "confidence": 1,
+    "source_scene": "Evidence Packet O6qrzEqAP7A (CES 2026)",
+    "requires_review": true,
+    "timestamp": "2026-01-01T11:37:35.276316"
+  },
+  {
+    "claim": "CES 2026 marked the 'Visual Cortex' breakthrough where robotics achieved Generative Physical Intelligence, allowing 1-to-1 skill replication from video data. This accelerated the Mars automated infrastructure timeline by 5-8 years.",
+    "confidence": 1.0,
+    "source_scene": "Evidence Packet O6qrzEqAP7A (CES 2026)",
+    "requires_review": true,
+    "timestamp": "2026-01-01T11:37:41.162296"
+  }
+]
