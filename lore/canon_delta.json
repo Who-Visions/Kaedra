@@ -40,5 +40,33 @@
     "source_scene": "Evidence Packet O6qrzEqAP7A (CES 2026)",
     "requires_review": true,
     "timestamp": "2026-01-01T11:37:41.162296"
+  },
+  {
+    "claim": "A new, superior form of AI architecture has emerged, rendering traditional LLMs obsolete. It utilizes recursive reasoning chains, distinct from static weights.",
+    "confidence": 0.9,
+    "source_scene": "Evidence Packet: IpOiRmAEle8",
+    "requires_review": true,
+    "timestamp": "2026-01-01T11:47:08.503153"
+  },
+  {
+    "claim": "A new, superior form of AI architecture has emerged, rendering traditional LLMs obsolete. It utilizes recursive reasoning chains, distinct from static weights.",
+    "confidence": 0.9,
+    "source_scene": "Evidence Packet: IpOiRmAEle8",
+    "requires_review": true,
+    "timestamp": "2026-01-01T11:47:22.663602"
+  },
+  {
+    "claim": "The story takes place on the slopes of Olympus Mons, Mars, following the ingestion of topographical and atmospheric data from the 'Journey to Olympus Mons' records.",
+    "confidence": 1,
+    "source_scene": "YouTube Ingestion: WqAV8kqNmYY",
+    "requires_review": true,
+    "timestamp": "2026-01-01T12:55:16.001389"
+  },
+  {
+    "claim": "The 'Gold Haze' event on Olympus Mons was triggered by an Architect (Surveyor 4-Alpha) who overrode the 'Project Rebirth' protocols using a generative AI interface. This event transformed the Martian atmosphere into a breathable, nitrogen-rich medium and birthed a new species known as 'Neo-Humans' and their symbiotic flora, 'Glass-Weavers'.",
+    "confidence": 1,
+    "source_scene": "Scene 1-25: The Olympus Override Narrative Arc",
+    "requires_review": true,
+    "timestamp": "2026-01-01T13:09:16.116496"
   }
 ]

@@ -1,0 +1,8 @@
+{
+  "source_url": "https://www.youtube.com/watch?v=4_iTuvomj0Y",
+  "video_id": "4_iTuvomj0Y",
+  "ingested_at": "2026-01-01T14:01:39.925460",
+  "data": {
+    "error": "Command '['yt-dlp', '-J', '--no-warnings', '--skip-download', '--write-subs', '--write-auto-subs', '--sub-lang', 'en', 'https://www.youtube.com/watch?v=4_iTuvomj0Y']' returned non-zero exit status 3221225786."
+  }
+}

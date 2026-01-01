@@ -580,8 +580,12 @@ class ContextManager:
         """Add a raw history entry (Normalized)."""
         self.history.append(normalize_turn(entry))
         
-    def get_context(self) -> List[Dict]:
-        """Get optimized and sanitized context for LLM."""
+    def get_context(self) -> List:
+        """Get optimized and sanitized context for LLM.
+        
+        Returns a list of Content objects or dicts suitable for the API.
+        Raw Content objects are passed through to preserve thought_signatures.
+        """
         api_context = []
         
         # 1. Summaries
@@ -592,9 +596,15 @@ class ContextManager:
                 "parts": [{"text": f"[PRIOR CONTEXT SUMMARY]\n{summary_text}\n[END SUMMARY]"}]
             })
             
-        # 2. History (Sanitized)
+        # 2. History
         for entry in self.history:
-            # Normalize at read-time to handle raw Content objects
+            # v7.9 FIX: Pass through raw Content objects directly for SDK signature preservation
+            if hasattr(entry, "role") and hasattr(entry, "parts"):
+                # This is a raw types.Content object - pass through directly
+                api_context.append(entry)
+                continue
+                
+            # For dicts, normalize and clean
             turn = normalize_turn(entry) if not isinstance(entry, dict) else entry
             clean_parts = []
             for part in turn.get("parts", []):
@@ -644,28 +654,46 @@ class ContextManager:
         # Build summarization prompt
         turns_text_list = []
         for t in to_summarize:
-            # Handle Trace Events from ToolBus (No role)
-            if 'role' not in t:
-                if 'type' in t:
-                    turns_text_list.append(f"TRACE: [{t['type']} {t.get('name','')}]")
+            # v7.10 Fix B: Handle raw types.Content objects
+            if hasattr(t, "role") and hasattr(t, "parts"):
+                role = str(t.role).upper()
+                content = ""
+                for part in (t.parts or []):
+                    if getattr(part, "text", None):
+                        content += str(part.text)
+                    elif getattr(part, "function_call", None):
+                        content += f"[Tool Call: {part.function_call.name}]"
+                    elif getattr(part, "function_response", None):
+                        fn = part.function_response.name
+                        resp = part.function_response.response
+                        content += f"[Tool Response: {fn}] {str(resp)[:500]}"
+                turns_text_list.append(f"{role}: {content[:500]}")
                 continue
-
-            role = t['role'].upper()
-            content = ""
-            for part in t.get('parts', []):
-                if hasattr(part, 'text') and part.text:
-                    content += part.text
-                elif isinstance(part, dict) and part.get('text'):
-                    content += part['text']
-                elif hasattr(part, 'function_call') and part.function_call:
-                    content += f"[Tool Call: {part.function_call.name}]"
-                elif isinstance(part, dict) and part.get('function_call'):
-                    content += f"[Tool Call: {part['function_call'].get('name')}]"
-                elif isinstance(part, dict) and part.get('function_response'):
-                    fn = part["function_response"].get("name", "tool")
-                    resp = part["function_response"].get("response", {})
-                    content += f"[Tool Response: {fn}] {str(resp)[:500]}"
-            turns_text_list.append(f"{role}: {content[:500]}")
+                
+            # dict form
+            if isinstance(t, dict):
+                # Handle Trace Events from ToolBus (No role)
+                if 'role' not in t:
+                    if 'type' in t:
+                        turns_text_list.append(f"TRACE: [{t['type']} {t.get('name','')}]")
+                    continue
+                    
+                role = t['role'].upper()
+                content = ""
+                for part in t.get('parts', []):
+                    if hasattr(part, 'text') and part.text:
+                        content += part.text
+                    elif isinstance(part, dict) and part.get('text'):
+                        content += part['text']
+                    elif hasattr(part, 'function_call') and part.function_call:
+                        content += f"[Tool Call: {part.function_call.name}]"
+                    elif isinstance(part, dict) and part.get('function_call'):
+                        content += f"[Tool Call: {part['function_call'].get('name')}]"
+                    elif isinstance(part, dict) and part.get('function_response'):
+                        fn = part["function_response"].get("name", "tool")
+                        resp = part["function_response"].get("response", {})
+                        content += f"[Tool Response: {fn}] {str(resp)[:500]}"
+                turns_text_list.append(f"{role}: {content[:500]}")
         
         turns_text = "\n".join(turns_text_list)
         
@@ -1524,42 +1552,12 @@ class StoryEngine:
             return FLASH_MODEL, "low", 2048
 
     async def generate_response(self, user_input: str) -> str:
-        """Main Agent Loop with Stability Controls. (v7.6 Fixes)"""
-        steps = 0
-        MAX_STEPS = 12
-        MAX_STALL = 2
-        stall_count = 0
-        last_out_sig = ""
+        """Main Agent Loop - Single Turn. (v7.10 Simplified)
         
-        current_input = user_input
-        final_output = ""
-        
-        while steps < MAX_STEPS:
-            # Execute Turn (Order: User -> Model)
-            turn_output = await self._execute_turn(current_input, tick_physics=True)
-            final_output += turn_output.text
-            
-            # 6. Stall Detection (Fixed: Key off output text, not drift state)
-            out_sig = hashlib.sha256(turn_output.text.strip().encode()).hexdigest()[:12]
-            if out_sig == last_out_sig:
-                stall_count += 1
-            else:
-                stall_count = 0
-                last_out_sig = out_sig
-                
-            if stall_count >= MAX_STALL:
-                self.console.print(f"[red]>> [SYSTEM] STALL DETECTED (Repeated Text). HALTING.[/]")
-                break
-
-            # Check Stop Conditions
-            if "Awaiting" in turn_output.text or "Ready for" in turn_output.text:
-                break
-            
-            # Prepare next turn
-            current_input = None # Signal to continue
-            steps += 1
-            
-        return final_output
+        Tool followups are handled internally by _execute_turn.
+        """
+        out = await self._execute_turn(user_input, tick_physics=True)
+        return out.text
 
     async def _auto_ingest_scan(self, text: str) -> str:
         """Scan input for YouTube links and auto-ingest if found."""
@@ -1587,10 +1585,11 @@ class StoryEngine:
         
         # Tick Physics & Structure (only if requested)
         structural_directives = []
-        self.emotions.tick() # Emotions always tick
-        if tick_physics and self.mode != Mode.GOD and advance_scene:
-            self.tension.tick(self.scene)
-            structural_directives = self.structure.tick(self.scene)
+        if tick_physics:
+            self.emotions.tick() # (Fix C: Only tick emotions when tick_physics=True)
+            if self.mode != Mode.GOD and advance_scene:
+                self.tension.tick(self.scene)
+                structural_directives = self.structure.tick(self.scene)
         
         # Auto-Ingest Scan (Fix: Auto-save YT links)
         eff_input = user_input if user_input else "[SYSTEM] Continue processing."
@@ -1633,136 +1632,73 @@ class StoryEngine:
             thinking_config=types.ThinkingConfig(thinking_level=thinking_level, include_thoughts=False)
         )
         
-        # Build contents (PATCH 1: Clean request, never mutate last entry)
+        # Build contents (v7.10 Fix A: No duplicate user input)
         # Persist user turn to context first (if applicable)
         if advance_scene and self.mode != Mode.GOD and user_input:
             self.context.add("user", eff_input) # Save with auto-ingest notes
 
-        request_contents = []
-        request_contents.extend(self.context.get_context())
-        # Always append live user input for THIS request
-        request_contents.append({"role": "user", "parts": [{"text": eff_input}]})
+        # Get context (includes the user turn we just added)
+        request_contents = list(self.context.get_context())
+        # (Fix A: Do NOT append eff_input again - it's already in context)
 
-        # === STREAMING LOOP ===
-        final_text = ""
-        accumulated_text = ""
-        tool_calls = [] 
-        thoughts = []
-        model_parts = []
-        pending_text = ""
-        last_thought_signature = None
+        # === v7.11 NON-STREAMING TOOL LOOP ===
+        # Use non-streaming to preserve thought_signature on function calls.
+        # Stream only the final text response.
         
-        # Fallback Signature
-        TURN_SIG = hashlib.sha256(f"{start_time}:{self.scene}".encode()).hexdigest()[:16]
-
-        # Live display group for streaming
-        status_text = Text("Generating...", style="dim italic")
-        spinner = Spinner("dots", text=status_text)
-        content_placeholder = Text("")
-        display_group = Group(spinner, content_placeholder)
-
-        RENDER_CAP = 6000 # Performance fix (v7.5)
-
-        with Live(display_group, refresh_per_second=15, console=self.console) as live:
-            try:
-                response_stream = self.client.models.generate_content_stream(
-                    model=model,
-                    contents=request_contents,
-                    config=config
-                )
-                
-                # IMPORTANT: We need to capture the full chunks to preserve signatures
-                full_chunks = []
-                for chunk in response_stream:
-                    full_chunks.append(chunk)
-                    # Guard
-                    cands = getattr(chunk, "candidates", None) or []
-                    if not cands: continue
-                    content = getattr(cands[0], "content", None)
-                    parts = getattr(content, "parts", None) or []
-                    
-                    for part in parts:
-                        # Capture Signature
-                        curr_sig = to_text(getattr(part, 'thought_signature', None))
-                        if curr_sig: last_thought_signature = curr_sig
-
-                        # 1. Output Thoughts
-                        if hasattr(part, 'thought') and part.thought:
-                            thoughts.append(part.thought)
-                            continue 
-
-                        # 2. Tool Calls
-                        if part.function_call:
-                            if pending_text:
-                                t_part = {"text": pending_text}
-                                if last_thought_signature: t_part["thought_signature"] = last_thought_signature
-                                model_parts.append(t_part)
-                                pending_text = ""
-                            
-                            fc = part.function_call
-                            sig = to_text(getattr(part, 'thought_signature', None)) or last_thought_signature or TURN_SIG
-                            tool_calls.append({"name": fc.name, "args": dict(fc.args) if fc.args else {}, "sig": sig})
-                            
-                            display_group.renderables[1] = Text(f"🛠 Calling tool: {fc.name.replace('default_api:', '')}...", style="yellow")
-                            live.update(display_group)
-
-                        # 3. Text
-                        if part.text:
-                            accumulated_text += part.text
-                            pending_text += part.text
-                            final_text += part.text
-                            
-                            # Render CAP
-                            render_text = accumulated_text[-RENDER_CAP:]
-                            display_group.renderables[1] = Markdown(render_text)
-                            live.update(display_group)
-
-                # Final Flush
-                if pending_text:
-                    t_part = {"text": pending_text}
-                    if last_thought_signature: t_part["thought_signature"] = last_thought_signature
-                    model_parts.append(t_part)
-
-                # PATCH 4: Store model response as dict, not typed Content
-                self.context.add_raw({"role": "model", "parts": model_parts})
-
-            except Exception as e:
-                log.exception("Streaming failed")
-                return EngineResponse(text=f"[Error: {e}]")
-
-        # Step 3: Already handled at start of turn (Issue 2)
-
-        # Step 11: Execute Tools (1:1 Mapping)
-        if tool_calls:
-            results_parts = []
+        final_text = ""
+        MAX_TOOL_STEPS = 5
+        tool_step = 0
+        
+        while tool_step < MAX_TOOL_STEPS:
+            # NON-STREAMING call to preserve full Content objects with signatures
+            response = self.client.models.generate_content(
+                model=model,
+                contents=request_contents,
+                config=config
+            )
+            
+            # Append the model's content EXACTLY as returned (preserves thought_signature)
+            model_content = response.candidates[0].content
+            self.context.history.append(model_content)
+            request_contents.append(model_content)
+            
+            # Check for function calls
+            fcs = getattr(response, "function_calls", None) or []
+            if not fcs:
+                # No tool calls - we have our final text
+                final_text = response.text or ""
+                break
+            
+            # Execute ALL function calls, then send ALL responses (no interleaving)
+            self.console.print(f"[yellow]🛠 Executing {len(fcs)} tool(s)...[/]")
+            tool_parts = []
             executed_names = []
             
-            for tc in tool_calls:
-                name = tc["name"]
-                args = tc["args"]
+            for fc in fcs:
+                name = fc.name
+                args = dict(fc.args) if fc.args else {}
                 executed_names.append(name.replace("default_api:", ""))
                 
                 try:
                     result = self._execute_tool(name, args)
-                    results_parts.append(types.Part.from_function_response(
+                    tool_parts.append(types.Part.from_function_response(
                         name=name,
                         response={"result": result}
                     ))
                 except Exception as e:
-                    results_parts.append(types.Part.from_function_response(
+                    tool_parts.append(types.Part.from_function_response(
                         name=name,
                         response={"error": str(e)}
                     ))
             
-            # Commit results matching calls (MUST normalize)
-            self.context.add_raw(types.Content(role="user", parts=results_parts))
+            # Append ALL tool results in one Content (role="tool")
+            tool_content = types.Content(role="tool", parts=tool_parts)
+            self.context.history.append(tool_content)
+            request_contents.append(tool_content)
             
-            # Follow-up
-            if allow_followup:
-                breadcrumb = f"[SYSTEM] Tools {', '.join(executed_names)} completed. Continue."
-                followup = await self._execute_turn(breadcrumb, tick_physics=False, allow_followup=False, advance_scene=False)
-                final_text += "\n" + followup.text
-
+            tool_step += 1
+            self.console.print(f"[dim]   Tools {', '.join(executed_names)} completed. Continuing...[/]")
+        
         # Track timing
         elapsed = time.time() - start_time
         self._generation_times.append(elapsed)
