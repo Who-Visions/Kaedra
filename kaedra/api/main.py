@@ -66,7 +66,9 @@ A2A_CARD = {
     ],
     "endpoints": {
         "chat": "/v1/chat/completions",
-        "info": "/.well-known/agent.json"
+        "info": "/.well-known/agent.json",
+        "webhook": "/webhook/notion",
+        "sync": "/sync"
     },
     "input_schema": {
         "type": "object",
@@ -497,6 +499,105 @@ async def get_agent_card_standard():
             "reasoning_engine": AGENT_RESOURCE_NAME
         }
     }
+
+# -------------------------------------------------------------------------
+# NOTION WEBHOOK ENDPOINTS
+# -------------------------------------------------------------------------
+
+class NotionWebhookPayload(BaseModel):
+    """Payload from Notion webhook events."""
+    type: Optional[str] = None
+    data: Optional[Dict[str, Any]] = None
+
+class SyncRequest(BaseModel):
+    """Manual sync request."""
+    world_id: str = "world_bee9d6ac"
+
+@app.post("/webhook/notion")
+async def notion_webhook(payload: NotionWebhookPayload = Body(...)):
+    """
+    Receive Notion database change events.
+    Triggers sync when Ingestion Queue items are updated.
+    
+    POST https://kaedra-69017097813.us-central1.run.app/webhook/notion
+    """
+    import sys
+    sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    
+    try:
+        from tools.sync_notion import NotionBridge
+        
+        print(f"📥 Received Notion webhook: {payload.type}")
+        
+        # Default world ID
+        world_id = "world_bee9d6ac"
+        
+        bridge = NotionBridge(world_id)
+        if bridge.check_connection():
+            bridge.pull_ingestion_queue()
+            return {"status": "synced", "world_id": world_id}
+        else:
+            raise HTTPException(status_code=500, detail="Notion connection failed")
+            
+    except Exception as e:
+        print(f"❌ Webhook error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/sync")
+async def manual_sync(request: SyncRequest):
+    """
+    Manually trigger a full Notion sync for a world.
+    
+    POST https://kaedra-69017097813.us-central1.run.app/sync
+    Body: {"world_id": "world_bee9d6ac"}
+    """
+    import sys
+    sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    
+    try:
+        from tools.sync_notion import NotionBridge
+        
+        bridge = NotionBridge(request.world_id)
+        if bridge.check_connection():
+            bridge.sync_all()
+            return {"status": "synced", "world_id": request.world_id}
+        else:
+            raise HTTPException(status_code=500, detail="Notion connection failed")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/sync/{world_id}")
+async def sync_status(world_id: str):
+    """Check sync status for a world."""
+    from pathlib import Path
+    import json
+    
+    worlds_root = Path(__file__).parent.parent.parent / "lore" / "worlds"
+    world_path = worlds_root / world_id
+    
+    if not world_path.exists():
+        raise HTTPException(status_code=404, detail=f"World {world_id} not found")
+    
+    ingestion_path = world_path / "ingestion.json"
+    bible_path = world_path / "world_bible.json"
+    
+    status = {
+        "world_id": world_id,
+        "ingestion_items": 0,
+        "bible_entries": 0
+    }
+    
+    if ingestion_path.exists():
+        data = json.loads(ingestion_path.read_text())
+        status["ingestion_items"] = len(data.get("items", []))
+    
+    if bible_path.exists():
+        data = json.loads(bible_path.read_text())
+        sections = data.get("sections", {})
+        for entries in sections.values():
+            status["bible_entries"] += len(entries)
+    
+    return status
 
 # -------------------------------------------------------------------------
 # RUNNER

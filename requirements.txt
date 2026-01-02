@@ -23,4 +23,7 @@ pydantic>=2.0.0
 # Additional dependencies for Reasoning Engine
 cloudpickle>=3.0.0
 typing-extensions>=4.0.0
+
+# Notion Integration
 notion-client>=2.0.0
+toml>=0.10.2

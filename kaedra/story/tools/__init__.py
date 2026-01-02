@@ -5,6 +5,7 @@ from .youtube import ingest_youtube_content
 from .director import consult_director
 from .engine_mode import set_engine_mode, adjust_emotion
 from .timeline import clean_timeline_data
+from .world import worldforge_from_youtube
 
 ENGINE_TOOLS = [
     read_page_content, 
@@ -16,7 +17,8 @@ ENGINE_TOOLS = [
     adjust_emotion, 
     clean_timeline_data, 
     propose_canon_update,
-    ingest_youtube_content
+    ingest_youtube_content,
+    worldforge_from_youtube
 ]
 
 __all__ = [
@@ -31,4 +33,5 @@ __all__ = [
     "set_engine_mode",
     "adjust_emotion",
     "clean_timeline_data",
+    "worldforge_from_youtube",
 ]

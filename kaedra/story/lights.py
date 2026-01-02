@@ -6,6 +6,7 @@ import time
 import random
 import queue
 import threading
+from datetime import datetime
 from typing import Callable, Optional
 
 from kaedra.core.config import LIFX_TOKEN
@@ -69,6 +70,7 @@ class LightsController:
         self._running = False
         self.pulse_count = 0
         
+
     def init(self) -> bool:
         """Initialize LIFX with connection status."""
         if not LIFX_TOKEN:
@@ -82,7 +84,8 @@ class LightsController:
                 log.warning("LIFX: No lights found")
                 return False
                 
-            # Save initial state for restore (LightState is a dataclass, not dict)
+            # Capture initial state of the target group if possible
+            # For now, we just grab the first light's state as a baseline reference
             first_light = lights[0]
             self._initial_state = {
                 "color": first_light.color,
@@ -94,6 +97,10 @@ class LightsController:
             self._running = True
             self._lifx_thread = threading.Thread(target=self._worker, daemon=True)
             self._lifx_thread.start()
+            
+            # Startup Mood: Purple 35%
+            # hue=280 (Purple), sat=1.0, bri=0.35
+            self.set_color(hue=280, saturation=1.0, brightness=0.35)
             
             log.info(f"LIFX connected: {len(lights)} light(s)")
             return True
@@ -132,48 +139,76 @@ class LightsController:
         except queue.Full:
             pass
     
+    @property
+    def is_night_mode(self) -> bool:
+        """Check if currently in Night Mode (11PM - 6AM)."""
+        now = datetime.now()
+        return now.hour >= 23 or now.hour < 6
+
     def set_color(self, hue: float, saturation: float, brightness: float, kelvin: int = 3500):
-        """Set light color (non-blocking)."""
+        """Set light color (non-blocking). Targets Living Room (No Eve)."""
         if not self.lifx:
             return
+
+        # Night Mode Safety Cap (Max 60%)
+        if self.is_night_mode:
+            if brightness > 0.60:
+                log.info(f"[Night Mode] Capping brightness {brightness:.2f} -> 0.60")
+                brightness = 0.60
             
-        sig = f"color:{hue:.0f}:{saturation:.2f}:{brightness:.2f}"
+        # Construct color string for LIFX API
+        # hue:0-360 saturation:0.0-1.0
+        color_str = f"hue:{hue} saturation:{saturation} kelvin:{kelvin}"
+        sig = f"{color_str}:{brightness:.2f}"
+        
+        # Selector that avoids Eve (Bedroom)
+        selector = "group:Living Room"
         
         def do_set():
             self.gate.call(
-                lambda: self.lifx.set_color(hue, saturation, brightness, kelvin),
+                lambda: self.lifx.set_color(selector, color=color_str, brightness=brightness, duration=1.0),
                 sig=sig
             )
         
         self.request_update(do_set)
     
     def breathe(self, color: str = "red", cycles: int = 1, period: float = 2.0):
-        """Trigger breathe effect (non-blocking)."""
+        """Trigger breathe effect (non-blocking). Targets Living Room."""
         if not self.lifx:
             return
             
+        selector = "group:Living Room"
+            
         def do_breathe():
             self.gate.call(
-                lambda: self.lifx.breathe(color=color, cycles=cycles, period=period),
+                lambda: self.lifx.breathe(selector, color=color, cycles=cycles, period=period),
                 sig=f"breathe:{color}"
             )
         
         self.request_update(do_breathe)
     
     def restore(self):
-        """Restore lights to initial state."""
-        if not self.lifx or not self._initial_state:
+        """Restore lights to baseline. Night Mode (11pm-6am) = Red 35%, else Day = 4500k 60%."""
+        if not self.lifx:
             return
             
+        selector = "group:Living Room"
+        
         try:
-            color = self._initial_state.get("color", {})
-            if color:
-                self.lifx.set_color(
-                    hue=color.get("hue", 0),
-                    saturation=color.get("saturation", 0),
-                    brightness=self._initial_state.get("brightness", 1.0),
-                    kelvin=color.get("kelvin", 3500)
+            # Night Mode: 11 PM (23) to 6 AM (6)
+            if self.is_night_mode:
+                # Night: Red @ 35%
+                self.request_update(
+                    lambda: self.lifx.set_color(selector, color="red", brightness=0.35, duration=2.0)
                 )
+                log.info("LIFX Restore: Night Mode (Red 35%)")
+            else:
+                # Day/Eve: Neutral daylight (4500k) @ 60%
+                self.request_update(
+                    lambda: self.lifx.set_color(selector, color="kelvin:4500", brightness=0.6, duration=2.0)
+                )
+                log.info("LIFX Restore: Standard Mode (4500k 60%)")
+                
         except Exception as e:
             log.debug(f"LIFX restore failed: {e}")
     
