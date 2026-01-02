@@ -1,0 +1,27 @@
+[notion]
+token = "ntn_u30316993017RaOd8iWGISlHViGvluX3BtJiGWqgoCQ0JY"  # From Kaedra-notes integration
+
+[databases]
+# Core VeilVerse Databases
+timeline_nodes = "62b38160871049b78571bb4e8a931d07"
+ingestion_queue = "ab2dd1c9319e40429973452fa7419e04"
+lore_laws = "4d3e3e7eb9404098b6b62059c94748d2"
+scenes = "915ba5da169b46bea20b417adb060839"
+canon_registry = "db9e623e8afa47d1b5e119e61328aaf9"
+
+[pages]
+# Key Content Pages
+world_bible = "5357a3702f6e43b0a06a99a35232648a"
+cosmic_wounds = "3df4e0e0195a4736b2a5c87fb2888bf5"
+shadow_dweller_v1 = "ec3cfddaf25b4aaf88d2c84f1d4466de"
+build_ops = "708179377e3a42229beeb30e9518891e"
+automation_roadmap = "ce906bbcacc24c92afeaae7622d25915"
+
+[mappings]
+# Local File → Notion Data Source ID
+world_bible_json = "5357a3702f6e43b0a06a99a35232648a"
+timeline_json = "62b38160871049b78571bb4e8a931d07"
+ingestion_json = "44fb8dcf5fc64ea1b6187488a3007a58"
+canon_json = "4d3e3e7eb9404098b6b62059c94748d2"
+scenes_dir = "915ba5da169b46bea20b417adb060839"
+notifications_md = "708179377e3a42229beeb30e9518891e"

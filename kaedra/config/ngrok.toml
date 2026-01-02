@@ -1,0 +1,17 @@
+# ngrok Configuration for Kaedra
+# Used for exposing local services and webhooks
+
+[ngrok]
+# API Key for programmatic access
+api_key = "37gqW4mH4T7Ea2jENjtbcDM1Ci2_4ydDXq8Q87FwQDrFMBY3e"
+
+# Credential ID (for whoentertainz@gmail.com)
+credential_id = "cr_35rytoUEXzQsgjGtf6lOetHUHy1"
+
+# Authtoken is stored in C:\Users\super\AppData\Local\ngrok\ngrok.yml
+# 35rytoUEXzQsgjGtf6lOetHUHy1_4dY7Tza31teBZTtXsFKQJ
+
+[tunnels]
+# Define tunnels here when needed
+# Example:
+# kaedra_webhook = { proto = "http", addr = "5000" }
