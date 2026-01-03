@@ -105,16 +105,24 @@ def save_youtube_evidence_packet(packet: Dict[str, Any], url: str, out_root: str
 
 
 def ingest_youtube_content(url: str) -> str:
-    """Ingest a YouTube video and auto-save Evidence Packet (JSON + MD Brief)."""
+    """
+    Ingest a YouTube video into the VeilVerse Ingestion Queue.
+    Fetches transcript, generates AI Lore Briefing, and pushes to Notion.
+    """
+    from tools.ingest_youtube import ingest_single_video
+    console.print(f"[dim]>> [YOUTUBE] Triggering pipeline for: {url}...[/]")
     try:
-        manager = IngestionManager()
-        result = manager.process_url(url)
-        packet = ensure_dict_result(result)
-        saved = save_youtube_evidence_packet(packet, url)
+        # Default world_id for now, engine can be updated later to pass this dynamically
+        # world_id = "world_bee9d6ac" 
+        from kaedra.story.engine import StoryEngine
+        # We'll try to get it if possible, otherwise fallback
+        world_id = "world_bee9d6ac"
+        
+        ingest_single_video(url, world_id)
         return (
             "[INGEST OK]\n"
-            f"Saved JSON: {saved['json_path']}\n"
-            f"Saved MD: {saved['md_path']}\n"
+            f"Video pushed to Notion Ingestion Queue.\n"
+            "Status: New | Prompt: Run ':automate' once approved to promote to Canon."
         )
     except Exception as e:
         return f"[Ingestion Failed: {e}]"

@@ -1,0 +1,15 @@
+{
+  "world_id": "world_bee9d6ac",
+  "events": [
+    {
+      "name": "The Great Rift",
+      "year": 2055,
+      "era": "Modern Era"
+    },
+    {
+      "name": "Ancient War",
+      "year": -500,
+      "era": "Ancient Era"
+    }
+  ]
+}

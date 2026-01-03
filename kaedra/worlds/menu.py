@@ -8,7 +8,8 @@ from rich.panel import Panel
 
 from kaedra.worlds.store import list_worlds
 
-console = Console()
+# Force terminal width to avoid "1 word per line" issue in constrained environments
+console = Console(force_terminal=True, width=100, soft_wrap=True)
 
 def select_world_interactive() -> str | None:
     worlds = list_worlds()
