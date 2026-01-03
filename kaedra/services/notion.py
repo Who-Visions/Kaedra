@@ -1,7 +1,45 @@
 import os
-from notion_client import Client
-from typing import Optional, List, Any
+import json
+import re
+import time
+import random
+import functools
+from notion_client import Client, APIResponseError
+from typing import Optional, List, Any, Dict
 from kaedra.core.config import NOTION_TOKEN
+
+def retry_with_backoff(initial_delay: float = 15.0, max_retries: int = 5):
+    """
+    Decorator for exponential backoff on 429 (Rate Limit) errors.
+    Starts at 15 seconds per user requirement.
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            delay = initial_delay
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except APIResponseError as e:
+                    if e.status == 429:
+                        wait = delay + random.uniform(0, 1)
+                        print(f"[!] Notion Rate Limit (429). Retrying in {wait:.1f}s... (Attempt {attempt+1}/{max_retries})")
+                        time.sleep(wait)
+                        delay *= 2
+                    else:
+                        raise e
+                except Exception as e:
+                    err_str = str(e).lower()
+                    if "429" in err_str or "resource_exhausted" in err_str or "rate limit" in err_str:
+                        wait = delay + random.uniform(0, 1)
+                        print(f"[!] Rate Limit detected. Retrying in {wait:.1f}s... (Attempt {attempt+1}/{max_retries})")
+                        time.sleep(wait)
+                        delay *= 2
+                    else:
+                        raise e
+            return func(*args, **kwargs) # Last attempt
+        return wrapper
+    return decorator
 
 class NotionService:
     def __init__(self):
@@ -19,6 +57,7 @@ class NotionService:
             print(f"[!] Failed to initialize Notion Service: {e}")
             self.client = None
 
+    @retry_with_backoff()
     def search_page(self, query: str) -> Optional[str]:
         """Search for a page ID by title."""
         if not self.client: return None
@@ -30,6 +69,7 @@ class NotionService:
             print(f"[!] Notion Search Error: {e}")
         return None
 
+    @retry_with_backoff()
     def append_children(self, block_id: str, children: List[Any]):
         """Append blocks to a page or block."""
         if not self.client: return
@@ -39,6 +79,7 @@ class NotionService:
         except Exception as e:
             print(f"[!] Notion Append Error: {e}")
 
+    @retry_with_backoff()
     def create_page(self, title: str, parent_page_id: str = None) -> Optional[str]:
         """Create a new page. If parent_page_id not provided, checks for 'Cinematic Universe' page as parent."""
         if not self.client: return None
@@ -201,13 +242,18 @@ class NotionService:
         
         try:
             blocks = self.client.blocks.children.list(block_id=page_id).get("results", [])
-            subpages = []
+            sub_items = []
             for block in blocks:
-                if block.get("type") == "child_page":
-                    subpages.append(block.get("child_page", {}).get("title", "Untitled"))
-            return subpages
+                b_type = block.get("type")
+                if b_type == "child_page":
+                    title = block.get("child_page", {}).get("title", "Untitled")
+                    sub_items.append(f"[PAGE] {title}")
+                elif b_type == "child_database":
+                    title = block.get("child_database", {}).get("title", "Untitled")
+                    sub_items.append(f"[DB] {title}")
+            return sub_items
         except Exception as e:
-            print(f"[!] Error listing subpages: {e}")
+            print(f"[!] Error listing sub_items: {e}")
             return []
 
     def get_universe_summary(self) -> str:
@@ -246,4 +292,92 @@ class NotionService:
             return f"[Updated '{page_identifier}' with new lore]"
         except Exception as e:
             return f"[Error updating page: {e}]"
+
+    @retry_with_backoff()
+    def ensure_script_index_database(self, parent_page_id: Optional[str] = None) -> Optional[str]:
+        """Find or create the 'Master Script Index' database."""
+        if not self.client: return None
+        
+        # 1. Search for existing database
+        try:
+            results = self.client.search(
+                query="Master Script Index",
+                filter={"property": "object", "value": "database"}
+            ).get("results", [])
+            
+            for res in results:
+                if res.get("title", [{}])[0].get("plain_text") == "Master Script Index":
+                    return res["id"]
+        except Exception as e:
+            print(f"[!] Notion DB Search Error: {e}")
+
+        # 2. Create if not found
+        if not parent_page_id:
+            parent_page_id = self.search_page("Ai with Dav3 Cinematic Universe") or self.search_page("VeilVerse")
+            
+        if not parent_page_id:
+            print("[!] Cannot create Script Index: No parent page found.")
+            return None
+
+        try:
+            new_db = self.client.databases.create(
+                parent={"type": "page_id", "page_id": parent_page_id},
+                title=[{"type": "text", "text": {"content": "Master Script Index"}}],
+                properties={
+                    "Project Title": {"title": {}},
+                    "Status": {"select": {"options": [
+                        {"name": "Concept", "color": "gray"},
+                        {"name": "Outline", "color": "blue"},
+                        {"name": "Drafting", "color": "yellow"},
+                        {"name": "Polish", "color": "green"},
+                        {"name": "Complete", "color": "purple"}
+                    ]}},
+                    "Drive URL": {"url": {}},
+                    "Last Sync": {"date": {}},
+                    "Milestones": {"rich_text": {}}
+                }
+            )
+            db_id = new_db["id"]
+            print(f"[✅] Created Notion Database: 'Master Script Index' (ID: {db_id})")
+            return db_id
+        except Exception as e:
+            print(f"[!] Notion DB Create Error: {e}")
+            return None
+
+    @retry_with_backoff()
+    def sync_roadmap_item(self, title: str, drive_url: str, status: str = "Outline", milestones: str = "") -> str:
+        """Create or update a script entry in the Master Script Index."""
+        if not self.client: return "[Notion not connected]"
+        
+        db_id = self.ensure_script_index_database()
+        if not db_id: return "[Could not find/create Master Script Index]"
+
+        from datetime import datetime
+        now_iso = datetime.now().isoformat()
+
+        try:
+            # Check if entry already exists
+            query = self.client.databases.query(
+                database_id=db_id,
+                filter={"property": "Project Title", "title": {"equals": title}}
+            ).get("results", [])
+
+            properties = {
+                "Project Title": {"title": [{"text": {"content": title}}]},
+                "Status": {"select": {"name": status}},
+                "Drive URL": {"url": drive_url},
+                "Last Sync": {"date": {"start": now_iso}},
+                "Milestones": {"rich_text": [{"text": {"content": milestones}}]}
+            }
+
+            if query:
+                page_id = query[0]["id"]
+                self.client.pages.update(page_id=page_id, properties=properties)
+                return f"[Updated Notion Index: '{title}']"
+            else:
+                self.client.pages.create(parent={"database_id": db_id}, properties=properties)
+                return f"[Created Notion Entry: '{title}']"
+
+        except Exception as e:
+            return f"[Error syncing to Notion: {e}]"
 

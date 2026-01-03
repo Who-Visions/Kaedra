@@ -278,12 +278,11 @@ class KaedraVoiceEngine:
 
         try:
             t0, first_token_time, response_buffer, tts_stream, tts_started, in_metadata = time.time(), 0, "", None, False, False
-            think_level = self.session_config.thinking_level or "Low"
-            gen_config = types.GenerateContentConfig(thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_level=think_level)) if "gemini-3" in self.model_name else None
             
             # DUAL-BRAIN ROUTING: Flash (fast) or Pro (deep thinking)
             active_chat = self.conversation.get_active_chat(transcription)
-            stream = await active_chat.send_message_stream(message=parts, config=gen_config)
+            # Use the chat's built-in config (defined in ConversationManager) to respect model-specific limits
+            stream = await active_chat.send_message_stream(message=parts)
             async for chunk in stream:
                 if not chunk.candidates: continue
                 if first_token_time == 0:
@@ -295,9 +294,9 @@ class KaedraVoiceEngine:
                     
                     # CHATGPT-STYLE THINKING DISPLAY
                     if hasattr(part, 'thought') and part.thought:
-                        thought_text = part.thought
-                        # Ensure it's a string (not bool) before processing
-                        if isinstance(thought_text, str) and len(thought_text) > 0:
+                        # part.thought is a boolean flag, content is in part.text
+                        thought_text = part.text
+                        if thought_text:
                             # Truncate long thoughts for display
                             if len(thought_text) > 200:
                                 thought_preview = thought_text[:200] + "..."
