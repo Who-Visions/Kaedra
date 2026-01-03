@@ -179,16 +179,23 @@ class TTSService:
         
         # Resolve Output Device
         self.device_index = None
-        if HAS_AUDIO and device_name_filter:
+        if HAS_AUDIO:
+            # User Request: "Output goes to Elgato out only"
+            # If no filter provided, prefer "Elgato Out Only" or "Wave" defaults
+            target = device_name_filter or "Elgato Out Only"
+            
             try:
                 devices = sd.query_devices()
+                found = False
                 for i, device in enumerate(devices):
-                    if device['max_output_channels'] > 0 and device_name_filter.lower() in device['name'].lower():
-                        print(f"[*] Found Output Device: {device['name']} (Index {i})")
+                    if device['max_output_channels'] > 0 and target.lower() in device['name'].lower():
+                        print(f"[*] TTSService: Found Output Device: {device['name']} (Index {i})")
                         self.device_index = i
+                        found = True
                         break
-                if self.device_index is None:
-                    print(f"[!] Output device '{device_name_filter}' not found. Using default.")
+                
+                if not found and device_name_filter:
+                     print(f"[!] Output device '{device_name_filter}' not found. Using default.")
             except Exception as e:
                 print(f"[!] Error querying output devices: {e}")
 

@@ -43,9 +43,9 @@ SQUARE_ENVIRONMENT = os.getenv("SQUARE_ENVIRONMENT", "sandbox")  # or "productio
 # ══════════════════════════════════════════════════════════════════════════════
 
 MODELS = {
-    "flash": "gemini-3-flash-preview",         # Latest Flash V3 (Preview)
-    "pro": "gemini-3-pro-preview",             # Latest Pro V3 (Preview)
-    "ultra": "gemini-3-pro-preview",           # Using Pro V3 for Ultra slot
+    "flash": "gemini-2.0-flash-exp",           # Latest Flash V2 (Fast & Cheap)
+    "pro": "gemini-3.0-pro-preview",             # Latest Pro V3 (Deep Reasoning) - $0.30+/1M
+    "ultra": "gemini-3.0-pro-preview",           # Using Pro V3 for Ultra slot
     "tts-flash": "gemini-2.5-flash-preview-tts:Kore", # Gemini 2.5 Flash TTS (Updated)
     "tts-flash-lite": "gemini-2.5-flash-preview-tts:Kore", # Fallback to Flash for now
     "tts-pro": "gemini-2.5-pro-preview-tts:Aoede",     # Gemini 2.5 Pro TTS (Updated)

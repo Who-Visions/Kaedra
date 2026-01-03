@@ -274,24 +274,33 @@ class LIFXService:
     # EFFECTS
     # ═══════════════════════════════════════════════════════════════════════════
     
-    def breathe(self, selector: str = "all", color: str = "red", period: float = 2.0, cycles: float = 3, persist: bool = False) -> dict:
-        """Pulsing breathe effect."""
+    def breathe(self, selector: str = "all", color: str = "red", period: float = 2.0, cycles: float = 3, persist: bool = False, peak: float = 0.5) -> dict:
+        """
+        Pulsing breathe effect.
+        peak: 0.0 to 1.0 (0.5 = smooth sine, <0.5 = fast fade in/slow fade out, >0.5 = slow fade in/fast fade out)
+        """
         return self._request("POST", f"/lights/{selector}/effects/breathe", json={
             "color": color,
             "period": period,
             "cycles": cycles,
             "persist": persist,
-            "power_on": True
+            "power_on": True,
+            "peak": peak
         })
     
-    def pulse(self, selector: str = "all", color: str = "white", period: float = 1.0, cycles: float = 3) -> dict:
+    def pulse(self, selector: str = "all", color: str = "white", from_color: Optional[str] = None, period: float = 1.0, cycles: float = 3, persist: bool = False, power_on: bool = True) -> dict:
         """Flash pulse effect."""
-        return self._request("POST", f"/lights/{selector}/effects/pulse", json={
+        payload = {
             "color": color,
             "period": period,
             "cycles": cycles,
-            "power_on": True
-        })
+            "persist": persist,
+            "power_on": power_on
+        }
+        if from_color:
+            payload["from_color"] = from_color
+            
+        return self._request("POST", f"/lights/{selector}/effects/pulse", json=payload)
     
     def effects_off(self, selector: str = "all") -> dict:
         """Stop all effects."""
@@ -370,12 +379,12 @@ class LIFXService:
             payload["palette"] = palette
         return self._request("POST", f"/lights/{selector}/effects/morph", json=payload)
     
-    def flame(self, selector: str = "all", period: float = 5.0) -> dict:
+    def flame(self, selector: str = "all", period: float = 5.0, duration: Optional[float] = None) -> dict:
         """Flame effect for tiles."""
-        return self._request("POST", f"/lights/{selector}/effects/flame", json={
-            "period": period,
-            "power_on": True
-        })
+        payload = {"period": period, "power_on": True}
+        if duration is not None:
+            payload["duration"] = duration
+        return self._request("POST", f"/lights/{selector}/effects/flame", json=payload)
     
     def clouds(self, selector: str = "all", duration: float = 0.0, palette: Optional[list[str]] = None) -> dict:
         """Clouds effect - soft color transitions."""

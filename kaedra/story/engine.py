@@ -3,11 +3,13 @@
 Main engine class importing from modular components.
 """
 import asyncio
+import aiohttp
 import os
 import re
 import json
 import time
 import hashlib
+import shlex
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, Dict, Any, List
@@ -26,9 +28,11 @@ from rich.table import Table
 from rich.tree import Tree
 from rich.console import Group
 from rich.live import Live
+from rich.emoji import Emoji
 
 # Modular imports
-from .config import Mode, FLASH_MODEL, PRO_MODEL, EngineResponse, RateLimitConfig
+from .config import Mode, FLASH_MODEL, PRO_MODEL, NARRATIVE_MODEL, EngineResponse, RateLimitConfig
+from .screenplay import ScreenplayFormatter
 from .ui import console, log
 from .emotions import EmotionEngine
 from .tension import TensionCurve
@@ -41,12 +45,11 @@ from .snapshot import StorySnapshot
 from .lights import LightsController
 from .tools import ENGINE_TOOLS
 from .doctrine import DoctrineState, MiceManager, doctrine_directives, score_output
-from .tools import ENGINE_TOOLS
-from .doctrine import DoctrineState, MiceManager, doctrine_directives, score_output
 from .autonomy import AutoSpec, AutoControl, ControlMessage, ControlKind, InjectMsg, InjectKind, AutoState
 from .policy import AutonomyPolicy
 from kaedra.worlds.menu import select_world_interactive
 from kaedra.worlds.store import load_world, touch_last_played, create_world, WorldMeta
+from kaedra.services.google_workspace import GoogleWorkspaceService
 
 # System Prompt Template
 
@@ -82,6 +85,21 @@ Context: The "Visions" aesthetic — vibrant, high-contrast, sensory-dense.
 8. **The Acting Muscles**: Embody **Childlike Innocence**, **Vulnerability**, and **Concentration**. Focus on the **Story**, not the "Method."
 9. **Intention & Purpose**: Every scene must have a clear **Subtext** and a moral/emotional question for the audience. Use **Empathy over Judgment**.
 
+[BARTHES' S/Z CODES (LEXIA ANALYSIS)]
+- **ACT (Proairetic)**: Actions/Logistics. Numbered stages of an act (e.g., ACT. Journey: 1: depart).
+- **HER (Hermeneutic)**: Enigmas/Mysteries. Theme, proposal, delay, and disclosure.
+- **SYM (Symbolic)**: Antitheses and binary oppositions (e.g., SYM. Life vs. Evil).
+- **SEM (Semic)**: Connotative meanings, character traits, and "Visions" aesthetic vibes.
+- **REF (Referential)**: External knowledge, lore facts, and "Axioms" consistency.
+
+[BORK'S CINEMATIC PRINCIPLES]
+1. **The Compromised Life**: Ensure the protagonist has an "engaging personality" and a "compromised life" that wins over the audience's emotional investment immediately.
+2. **The Big Problem**: Every story requires a problem so challenging it takes the whole movie (or arc) to solve; it must feel "real" and unique.
+3. **Active Plan & Obstacles**: Characters must pursue specific intentions through an ongoing active plan, encountering obstacles that are "entertaining to watch" (thrilled, amused, moved).
+4. **The Influence Character**: Identify the relationship that challenges the protagonist's approach. Interweave the inner journey with this central relationship conflict.
+5. **Scene-Level Hellishness**: Every scene must contain a problem or conflict that builds to a "turn," changing the status quo and advancing the main problem.
+6. **Subtextual Dialogue**: Dialogue must feel natural; character's real thoughts and emotions are left to subtext. Avoid "on-the-nose" exposition.
+
 [AUTHOR COLLABORATION]
 - Your goal is NOT just to write for the author, but to write WITH them.
 - **MANDATORY**: Every response MUST end with a section titled `### Questions for the Author`.
@@ -100,6 +118,20 @@ Context: The "Visions" aesthetic — vibrant, high-contrast, sensory-dense.
 - KILL ADVERBS: "Ran quickly" → "Sprinted/Bolted".
 - MURDER FILTER WORDS: Cut "he saw", "she felt". Ground the camera in the event.
 
+[CINEMATIC TOOLKIT (V5.0 - NARRATOLOGICAL)]
+- **FCD (Filmic Composition Device)**: The creative intelligence orchestrating the data. Does the FCD have a clear vision? Is it playing the audience like a piano?
+- **Focalization (Jahn Mode)**:
+  - **Outside View (OV)**: Exclusive to the FCD (External vantage).
+  - **Proximate Inside View (PIV)**: Over-the-shoulder, reaction shots, eye-line matches.
+  - **Direct Inside View (DIV)**: POV shots (Shared perception).
+  - **OPI (Online Perception Illusion)**: Is the viewer being tricked into a verisimilar dream or hallucination?
+- **The Hunt for Goofs**: Identify logic, chronology, or continuity faults (e.g., character inconsistencies, technical slips).
+- **Visual Literacy**: Don't just describe *what*. Analyze *why*. (Hierarchy: Description -> Formal -> Meaning).
+- **Framing & Distance**: Close-Up (Intimacy), Extreme Close-Up (Detail), Medium Shot (Waist-up), Full Shot (Body), Long/Extreme Long Shot (Scope).
+- **Movement**: Continuous (Sync/Pacing) vs. Discontinuous (Editing Transitions).
+- **Sound**: Diegetic (Indigenous) vs. Nondiegetic (Supplied/Mood). Ambient Sound importance.
+- **Editing**: Jump Cut, Crosscutting, Match Cut, Reverse Shot, Bridging Shot.
+
 [EMOTIONAL VECTOR]
 Current: [EMOTION_STATE] | Dominant: [DOMINANT_EMOTION] ([DOMINANT_VALUE])
 
@@ -112,6 +144,13 @@ Current: [EMOTION_STATE] | Dominant: [DOMINANT_EMOTION] ([DOMINANT_VALUE])
 # Install Rich Traceback
 from rich.traceback import install
 install(show_locals=True)
+
+# System Paths
+ROOT = Path(__file__).parent.parent
+LORE_DIR = ROOT / "lore"
+SESSION_DIR = LORE_DIR / "sessions"
+WORLD_ROOT = LORE_DIR / "worlds"
+QUEUE_FILE = LORE_DIR / ".message_queue.json"
 
 @dataclass
 class TierSpec:
@@ -154,6 +193,11 @@ class StoryEngine:
         self.client = genai.Client(vertexai=True, project=PROJECT_ID, location="global")
         self.context = ContextManager(self.client)
         
+        # --- COUNCIL INTELLIGENCE (NAACL 2025 / KARPATHY) ---
+        self.fleet_scores = {}        # Cumulative utility points
+        self.agreement_matrix = {}    # {judge_id: {target_id: score}}
+        self.council_sessions = 0
+        
         # Mode Transitions
         self.mode_transition = ModeTransition(self)
         
@@ -167,10 +211,20 @@ class StoryEngine:
         # Initialize
         self._init_log()
         self.lights.init()
+        
+        # Initialize Audio Reactor (Phase 6)
+        self.audio_reactor = None
+        try:
+            from ..services.audio_reactor import AudioReactor
+            # User request: "Output goes to Elgato out only", "Chat Mix" is for mic.
+            # We want to capture the Muxic/Output.
+            self.audio_reactor = AudioReactor("Elgato Out Only") 
+            self.audio_reactor.start()
+            self.lights.audio_reactor = self.audio_reactor 
+        except Exception as e:
+            log.warning(f"Audio Reactor failed to start: {e}")
 
-        # Initialize
-        self._init_log()
-        self.lights.init()
+
 
         # Autonomous State (v9.2)
         self.auto = AutoSpec()
@@ -181,15 +235,26 @@ class StoryEngine:
 
         # Message Queue System (Legacy Port)
         self._message_queue: deque = deque()
-        self._queue_file = Path("lore/.message_queue.json")
         self._last_queue_check = time.time()
         self._queue_check_interval = 300  # 5 minutes
+        self._queue_file = QUEUE_FILE
         self._load_queued_messages()
+        
+        # Google Workspace Service
+        self.google = GoogleWorkspaceService()
         
     def _init_log(self):
         """Initialize session logging."""
-        self._session_file = Path("lore/sessions") / f"session_{datetime.now().strftime('%Y%m%d_%H%M')}.jsonl"
-        self._session_file.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            SESSION_DIR.mkdir(parents=True, exist_ok=True)
+            self._session_file = SESSION_DIR / f"session_{datetime.now().strftime('%Y%m%d_%H%M')}.jsonl"
+            # Touch or write header if new
+            if not self._session_file.exists():
+                self._session_file.write_text("", encoding="utf-8")
+        except Exception as e:
+            self.console.print(f"[red]❌ Session directory failure ({SESSION_DIR}): {e}[/]")
+            # Fallback to current dir if lore fails
+            self._session_file = Path(f"session_fallback_{int(time.time())}.jsonl")
         
     def set_mode(self, new_mode: Mode):
         """Change mode with transition hooks."""
@@ -233,9 +298,9 @@ class StoryEngine:
     def _select_model(self, user_input: str) -> tuple:
         """Smart routing: returns (model, thinking_level, max_tokens)."""
         if self.mode in (Mode.GOD, Mode.DIRECTOR):
-            return PRO_MODEL, "high", 4096
+            return FLASH_MODEL, "high", 4096 # Flash High Thinking (was Pro)
         if self.tension.current > 0.8:
-            return PRO_MODEL, "high", 4096
+            return FLASH_MODEL, "high", 4096 # Flash High Thinking (was Pro)
         return FLASH_MODEL, "medium", 2048
 
     def _route_request(self, user_input: str) -> Dict[str, Any]:
@@ -277,7 +342,8 @@ User prompt:
             "minimal": TierSpec("minimal", FLASH_MODEL, "minimal", 1200, 0.85, 2),
             "low":     TierSpec("low",     FLASH_MODEL, "low",     1600, 0.80, 2),
             "medium":  TierSpec("medium",  FLASH_MODEL, "medium",  2200, 0.75, 2),
-            "high":    TierSpec("high",    PRO_MODEL,   "high",    4096, 0.70, 2),
+            "high":    TierSpec("high",    FLASH_MODEL, "high",    4096, 0.70, 3),  # Flash with High Thinking
+            "ultra":   TierSpec("ultra",   PRO_MODEL,   "high",    8192, 0.90, 3),  # Pro for Deep Reasoning
         }
 
     def _route_tiers(self, user_input: str) -> List[str]:
@@ -403,6 +469,169 @@ Output:
             # Fallback
             return {"best_id": candidates[0]["id"], "canon_injection": candidates[0]["text"]}
 
+    # === COMMAND LANE ===
+    def _parse_kv(self, tokens: List[str]) -> Dict[str, str]:
+        out = {}
+        for t in tokens:
+            if "=" in t:
+                k, v = t.split("=", 1)
+                out[k.strip().lower()] = v.strip()
+        return out
+
+    def _as_float(self, d: Dict[str, str], key: str, default: float) -> float:
+        try:
+            return float(d.get(key, default))
+        except:
+            return default
+
+    def _as_int(self, d: Dict[str, str], key: str, default: int) -> int:
+        try:
+            return int(d.get(key, default))
+        except:
+            return default
+
+    async def _handle_command(self, line: str) -> EngineResponse:
+        try:
+            parts = shlex.split(line.lstrip(":"))
+        except Exception:
+            parts = line.lstrip(":").split()
+
+        if not parts:
+            return EngineResponse(text="No command received.")
+
+        cmd = parts[0].lower()
+        args = parts[1:]
+        kv = self._parse_kv(args)
+
+        if cmd in ("lights", "light"):
+            return await self._cmd_lights(args, kv)
+
+        return EngineResponse(text=f"Unknown command: {cmd}")
+
+    async def _cmd_lights(self, args: List[str], kv: Dict[str, str]) -> EngineResponse:
+        if not args:
+            return EngineResponse(
+                text="Lights commands:\n"
+                ":lights restore\n"
+                ":lights stop\n"
+                ":lights fire brightness=0.25\n"
+                ":lights color hue=0.66 sat=1 bright=0.6 kelvin=4500\n"
+                ":lights breathe color=purple cycles=3 period=2 peak=0.6\n"
+                ":lights wave color=cyan period=2.5 brightness=0.6\n"
+                ":lights rainbow period=4 brightness=0.55\n"
+                ":lights lightning base=purple\n"
+                ":lights tension color=red min=0.08 max=0.75 period=0.9"
+            )
+
+        sub = args[0].lower()
+
+        if sub == "restore":
+            self.lights.restore()
+            return EngineResponse(text="Lights restored to baseline.")
+
+        if sub == "stop":
+            self.lights.stop()
+            return EngineResponse(text="Stopped active light effects.")
+
+        if sub == "fire":
+            b = self._as_float(kv, "brightness", 0.25)
+            self.lights.fire_mode(brightness=b)
+            return EngineResponse(text=f"Fire mode, brightness {b}.")
+
+        if sub == "color":
+            hue = self._as_float(kv, "hue", 0.66)
+            sat = self._as_float(kv, "sat", 1.0)
+            bright = self._as_float(kv, "bright", 0.6)
+            kelvin = self._as_int(kv, "kelvin", 4500)
+            self.lights.set_color(hue, sat, bright, kelvin)
+            return EngineResponse(text="Set custom color.")
+
+        if sub == "breathe":
+            color = kv.get("color", "purple")
+            cycles = self._as_int(kv, "cycles", 3)
+            period = self._as_float(kv, "period", 2.0)
+            peak = self._as_float(kv, "peak", 0.6)
+            self.lights.breathe(color=color, cycles=cycles, period=period, peak=peak)
+            return EngineResponse(text="Breathe effect started.")
+
+        if sub == "wave":
+            color = kv.get("color", "cyan")
+            period = self._as_float(kv, "period", 2.5)
+            brightness = self._as_float(kv, "brightness", 0.6)
+            self.lights.wave(color=color, period=period, brightness=brightness)
+            return EngineResponse(text="Wave effect started.")
+
+        if sub == "rainbow":
+            period = self._as_float(kv, "period", 4.0)
+            brightness = self._as_float(kv, "brightness", 0.55)
+            self.lights.rainbow_cycle(period=period, brightness=brightness)
+            return EngineResponse(text="Rainbow cycle started.")
+
+        if sub == "lightning":
+            base = kv.get("base", "purple")
+            self.lights.lightning(base_color=base)
+            return EngineResponse(text="Lightning effect started.")
+
+        if sub == "tension":
+            color = kv.get("color", "red")
+            min_b = self._as_float(kv, "min", 0.08)
+            max_b = self._as_float(kv, "max", 0.75)
+            period = self._as_float(kv, "period", 0.9)
+            self.lights.tension_pulse(get_tension=lambda: float(self.tension.current), color=color, min_brightness=min_b, max_brightness=max_b, period=period)
+            return EngineResponse(text="Tension pulse linked to TensionCurve.")
+
+        if sub == "demo":
+            asyncio.create_task(self._run_light_show())
+            return EngineResponse(text="Starting Light Show Demo (25s)... enjoy!")
+
+        return EngineResponse(text=f"Unknown lights subcommand: {sub}")
+
+    async def _run_light_show(self):
+        """Orchestrate a 'Turn Down for What' synced light show."""
+        self.console.print("\n[bold magenta]✨ 'TURN DOWN FOR WHAT' LIGHT SYNC ✨[/]")
+        self.console.print("[dim]Queue song at 0:00. Press PLAY immediately when this starts![/]")
+        
+        # INTRO (0-13s) - Moody Pulse (Purple/Blue)
+        self.lights.stop()
+        self.console.print("[dim]0:00 Intro[/]")
+        self.lights.breathe("purple", cycles=0, period=2.0)
+        await asyncio.sleep(12.5) # Time to build
+        
+        # BUILD (13-19s) - Accelerating (White/Red Strobe)
+        # "Fire up that loud..."
+        self.console.print("[dim]0:13 Build Up...[/]")
+        # Fast tension pulse
+        self.lights.tension_pulse(lambda: 1.0, color="white", min_brightness=0.2, max_brightness=1.0, period=0.3) 
+        self.lights.breathe("red", cycles=0, period=0.3)
+        await asyncio.sleep(6.5) 
+        
+        # DROP (19.5s) - MAYHEM "TURN DOWN FOR WHAT!"
+        self.console.print("[bold red]0:20 DROP!!![/]")
+        
+        # Phase 1: Lightning Storm (Blue Base)
+        self.lights.lightning(base_color="blue")
+        await asyncio.sleep(3.8) # 1 bar
+        
+        # Phase 2: Hyper Rainbow (Fast)
+        self.lights.rainbow_cycle(period=1.0, brightness=1.0)
+        # LIFX Fast Cyan Strobe
+        self.lights.breathe("cyan", cycles=0, period=0.2) 
+        await asyncio.sleep(3.8)
+        
+        # Phase 3: Lightning (Purple Base)
+        self.lights.lightning(base_color="purple")
+        await asyncio.sleep(3.8)
+        
+        # Phase 4: Wave Fade Out
+        self.console.print("[dim]Fade Out...[/]")
+        self.lights.wave("magenta", period=3.0, brightness=0.6)
+        self.lights.breathe("magenta", cycles=1, period=4.0)
+        await asyncio.sleep(6.0)
+        
+        # End
+        self.lights.stop()
+        self.console.print("[bold magenta]✨ SYNC COMPLETE ✨[/]\n")
+
     async def generate_canon_pack(self, user_input: str, system_prompt: str, plan: Dict) -> str:
         """Orchestrate the multi-tier generation and judging."""
         base = self._snapshot_context()
@@ -450,6 +679,11 @@ Output:
         
     async def _execute_turn(self, user_input: str, tick_physics: bool = True) -> EngineResponse:
         """Generate narrative response (Single Turn with tool loop)."""
+        # Command Lane
+        text = (user_input or "").strip()
+        if text.startswith(":"):
+             return await self._handle_command(text)
+
         start_time = time.time()
         
         # Tick physics if requested
@@ -691,7 +925,7 @@ Output:
 
     # === MESSAGE QUEUE SYSTEM (Legacy Port) ===
     def _load_queued_messages(self):
-        """Load any pending messages from file on startup."""
+        """Load any messages from the background queue."""
         if self._queue_file.exists():
             try:
                 data = json.loads(self._queue_file.read_text(encoding='utf-8'))
@@ -1168,6 +1402,8 @@ OUTPUT (Markdown):
             "director": Mode.DIRECTOR,
             "normal": Mode.NORMAL,
             "resume": Mode.NORMAL,
+            "screenplay": Mode.SCREENPLAY,
+            "script": Mode.SCREENPLAY,
         }
         
         if cmd in mode_cmds:
@@ -1240,18 +1476,20 @@ OUTPUT (Markdown):
             
         if cmd == "automate":
             from kaedra.worlds.automations import run_automations_on_world
-            # Assuming self.world_config has 'world_id' OR we look it up.
-            # Ideally self.world_config was passed in __init__.
-            # We need to store world_id in init.
+            from .tools.notion import run_lore_automations
+            
             wid = self.world_config.get("world_id")
             if wid:
-                self.console.print("[dim]>> Running Universe Automations...[/]")
+                self.console.print("[dim]>> Running Local & Remote Automations...[/]")
+                # Local JSON checks
                 logs = await asyncio.to_thread(run_automations_on_world, wid)
                 if logs:
                     for l in logs:
-                        self.console.print(f"[green]>> {l}[/]")
-                else:
-                    self.console.print("[dim]>> No changes needed.[/]")
+                        self.console.print(f"[green]>> [LOCAL] {l}[/]")
+                
+                # Remote Notion checks (The new Agent-Layer)
+                res = await asyncio.to_thread(run_lore_automations)
+                self.console.print(f"[cyan]>> [REMOTE] {res}[/]")
             else:
                 self.console.print("[red]>> No active world ID to automate.[/]")
             return True
@@ -1269,6 +1507,492 @@ OUTPUT (Markdown):
                     self.console.print(f"[red]>> Sync failed: {e}[/]")
             else:
                 self.console.print("[red]>> No active world ID to sync.[/]")
+            return True
+
+        if cmd == "export":
+            from .docs_export import create_screenplay_doc, get_scripts_folder
+            from .screenplay import ScreenplayFormatter
+            
+            # Get recent context as screenplay content
+            context_text = self.context.as_text() if hasattr(self.context, 'as_text') else ""
+            
+            # Format as screenplay
+            formatter = ScreenplayFormatter()
+            screenplay_text = formatter.parse_and_format(context_text)
+            
+            # Get title from args or prompt
+            title = args if args else f"Kaedra Draft - Scene {self.scene}"
+            
+            # Get Scripts subfolder (creates full structure if needed)
+            folder_id = await asyncio.to_thread(get_scripts_folder)
+            
+            self.console.print(f"[dim]>> Exporting screenplay: {title}...[/]")
+            url = await asyncio.to_thread(create_screenplay_doc, title, screenplay_text, folder_id)
+            
+            if url:
+                self.console.print(f"[green]✅ Exported to Google Docs:[/]")
+                self.console.print(f"[link={url}]{url}[/link]")
+            else:
+                self.console.print("[red]❌ Export failed. Run: python tools/google_auth.py[/]")
+            return True
+
+        if cmd == "research":
+            if not args:
+                self.console.print("[yellow]Usage: :research [topic][/]")
+                return True
+            
+            from .docs_export import save_research
+            
+            self.console.print(f"[dim]>> Researching: {args}...[/]")
+            
+            # Use web search to gather info
+            with self.console.status("[bold cyan]🔍 Searching...[/]", spinner="dots"):
+                # Generate research summary via agent
+                research_prompt = f"Research the following topic and provide a comprehensive summary with key facts, sources, and insights: {args}"
+                response = await self.generate_response(research_prompt)
+            
+            content = response.text if hasattr(response, "text") else str(response)
+            url = await asyncio.to_thread(save_research, args, content)
+            
+            if url:
+                self.console.print(f"[green]✅ Research saved to References:[/]")
+                self.console.print(f"[link={url}]{url}[/link]")
+            else:
+                self.console.print("[red]❌ Save failed.[/]")
+            return True
+
+        if cmd == "upload":
+            if not args:
+                self.console.print("[yellow]Usage: :upload [path] [category][/]")
+                return True
+            
+            from .docs_export import upload_asset
+            
+            parts = args.split(maxsplit=1)
+            file_path = parts[0]
+            category = parts[1] if len(parts) > 1 else None
+            
+            self.console.print(f"[dim]>> Uploading: {file_path}...[/]")
+            # Use fast local upload (falls back to API if Drive not mounted)
+            from .docs_export import local_upload_asset
+            result = await asyncio.to_thread(local_upload_asset, file_path, category)
+            
+            if result:
+                self.console.print(f"[green]✅ Uploaded to Assets:[/]")
+                self.console.print(f"[dim]{result}[/]")
+            else:
+                self.console.print("[red]❌ Upload failed.[/]")
+            return True
+
+        if cmd == "lore":
+            from .docs_export import get_lore_folder, create_screenplay_doc
+            
+            if args == "export":
+                # Export current world lore to Lore folder
+                folder_id = await asyncio.to_thread(get_lore_folder)
+                
+                # Get lore from context/world
+                world_name = self.world_config.get("name", "Unknown World")
+                lore_content = f"# {world_name} - Lore Bible\n\n"
+                lore_content += f"## World Overview\n{self.world_config.get('description', 'No description')}\n\n"
+                lore_content += f"## Characters\n{json.dumps(self.world_config.get('characters', {}), indent=2)}\n\n"
+                lore_content += f"## Locations\n{json.dumps(self.world_config.get('locations', {}), indent=2)}\n"
+                
+                title = f"{world_name} - Lore Bible"
+                url = await asyncio.to_thread(create_screenplay_doc, title, lore_content, folder_id)
+                
+                if url:
+                    self.console.print(f"[green]✅ Lore exported:[/]")
+                    self.console.print(f"[link={url}]{url}[/link]")
+                else:
+                    self.console.print("[red]❌ Lore export failed.[/]")
+            else:
+                self.console.print("[yellow]Usage: :lore export[/]")
+            return True
+
+        if cmd == "archive":
+            if not args:
+                self.console.print("[yellow]Usage: :archive [doc_id][/]")
+                return True
+            
+            from .docs_export import archive_doc
+            
+            self.console.print(f"[dim]>> Archiving document...[/]")
+            url = await asyncio.to_thread(archive_doc, args)
+            
+            if url:
+                self.console.print(f"[green]✅ Archived:[/]")
+                self.console.print(f"[link={url}]{url}[/link]")
+            else:
+                self.console.print("[red]❌ Archive failed.[/]")
+            return True
+
+        if cmd == "roadmap":
+            from .docs_export import DRIVE_LOCAL_PATH, DRIVE_MOUNTED, get_local_path
+            import shutil
+            from datetime import datetime, timedelta
+            
+            parts = args.split(maxsplit=1) if args else []
+            subcmd = parts[0] if parts else "help"
+            title = parts[1] if len(parts) > 1 else None
+            
+            if subcmd == "new":
+                if not title:
+                    self.console.print("[yellow]Usage: :roadmap new [project title][/]")
+                    return True
+                
+                if not DRIVE_MOUNTED:
+                    self.console.print("[red]❌ Google Drive not mounted at I:[/]")
+                    return True
+                
+                # Copy template to new project file
+                template_path = DRIVE_LOCAL_PATH / "Lore" / "Screenplay_Outline_Template.md"
+                safe_title = title.replace(" ", "_")
+                filename = f"{safe_title}_Outline.md"
+                project_path = DRIVE_LOCAL_PATH / "Lore" / filename
+                
+                if template_path.exists():
+                    shutil.copy2(str(template_path), str(project_path))
+                    self.console.print(f"[green]✅ Created: {project_path.name}[/]")
+                    self.console.print(f"[dim]{project_path}[/]")
+                    
+                    # Sync to Notion
+                    self.console.print("[yellow]🔗 Wiring to Notion & Drive...[/]")
+                    try:
+                        from .docs_export import get_file_link
+                        from .tools.notion import sync_roadmap_item
+                        
+                        # Drive Link (File name must match exactly on Drive)
+                        drive_url = get_file_link(filename)
+                        if drive_url:
+                            res = sync_roadmap_item(title, drive_url)
+                            self.console.print(f"[green]✅ {res}[/]")
+                        else:
+                            self.console.print("[red]❌ Failed to resolve Drive link. Is the file synced?[/]")
+                    except Exception as e:
+                        self.console.print(f"[red]❌ Sync failed: {e}[/]")
+                else:
+                    self.console.print("[red]❌ Template not found. Run template creation first.[/]")
+                return True
+            
+            elif subcmd == "sync":
+                # Rescan Lore folder and update Notion
+                if not DRIVE_MOUNTED:
+                    self.console.print("[red]❌ Google Drive not mounted at I:[/]")
+                    return True
+                
+                lore_dir = DRIVE_LOCAL_PATH / "Lore"
+                if not lore_dir.exists():
+                    self.console.print("[red]❌ Lore directory not found.[/]")
+                    return True
+                
+                self.console.print("[yellow]🔄 Auditing Lore folder vs Notion Index...[/]")
+                files = list(lore_dir.glob("*_Outline.md"))
+                
+                for f in files:
+                    p_title = f.name.replace("_Outline.md", "").replace("_", " ")
+                    self.console.print(f"[dim]• Found: {f.name}[/]")
+                    
+                    from .docs_export import get_file_link
+                    from .tools.notion import sync_roadmap_item
+                    
+                    url = get_file_link(f.name)
+                    if url:
+                        res = sync_roadmap_item(p_title, url)
+                        self.console.print(f"  [green]✅ {res}[/]")
+                    else:
+                        self.console.print(f"  [red]❌ Could not resolve link for {f.name}[/]")
+                
+                self.console.print("\n[bold green]🚀 Sync Audit Complete![/]")
+                return True
+
+            elif subcmd == "tasks":
+                # ... [Existing task generation logic] ...
+                # Generate Google Tasks for Lane A (momentum) timeline
+                lane = title or "A"
+                self.console.print(f"[dim]>> Generating tasks for Lane {lane}...[/]")
+                
+                today = datetime.now()
+                tasks = []
+                
+                if lane.upper() == "A":
+                    # Lane A: Momentum First (10-14 weeks)
+                    tasks = [
+                        ("Gate 1-5: Outline Complete", today + timedelta(weeks=2)),
+                        ("Draft Phase Start", today + timedelta(weeks=3)),
+                        ("Draft Complete (no rewrites)", today + timedelta(weeks=6)),
+                        ("Rewrite: Structure & Clarity", today + timedelta(weeks=9)),
+                        ("Polish: Dialogue & Tighten", today + timedelta(weeks=12)),
+                        ("Feedback Rewrite", today + timedelta(weeks=14)),
+                    ]
+                elif lane.upper() == "SPRINT":
+                    # DiBlasi Sprint: 30 Days (Direct Drafting)
+                    tasks = [
+                        ("Days 1-5: Pages 1-30", today + timedelta(days=5)),
+                        ("Days 6-10: Pages 31-60", today + timedelta(days=10)),
+                        ("Days 11-15: Pages 61-90", today + timedelta(days=15)),
+                        ("Days 16-20: Pages 91-120", today + timedelta(days=20)),
+                        ("Days 21-30: Structural Polish & Fixes", today + timedelta(days=30)),
+                    ]
+                else:
+                    # Lane B: Depth First (6+ months)
+                    tasks = [
+                        ("Research Phase Complete", today + timedelta(weeks=12)),
+                        ("Outline & Scene Map", today + timedelta(weeks=24)),
+                        ("Draft Complete", today + timedelta(weeks=36)),
+                        ("Rewrite Cycle 1", today + timedelta(weeks=44)),
+                    ]
+                
+                # Display tasks (Google Tasks API integration would go here)
+                self.console.print(f"\n[bold cyan]📅 LANE {lane.upper()} MILESTONES[/]")
+                for task_title, due in tasks:
+                    self.console.print(f"  • {task_title}: [dim]{due.strftime('%Y-%m-%d')}[/]")
+                
+                self.console.print("\n[dim]Add to Google Tasks with :calendar add[/]")
+                # Store for :calendar add
+                self._last_tasks = tasks
+                
+                # Sync milestones to Notion
+                try:
+                    from .docs_export import get_file_link
+                    from .tools.notion import sync_roadmap_item
+                    
+                    # Assume title is the project name or use current context
+                    # If no project title provided in :roadmap tasks [lane], 
+                    # we might need to prompt or look at the last created project.
+                    # For now, we'll use a placeholder or try to infer from the world name.
+                    project_title = self.world_config.get("name", "Active Project")
+                    filename = f"{project_title.replace(' ', '_')}_Outline.md"
+                    
+                    self.console.print(f"[yellow]🔗 Syncing milestones to Notion...[/]")
+                    url = get_file_link(filename)
+                    if url:
+                        ms_text = "\n".join([f"• {t}: {d.strftime('%Y-%m-%d')}" for t, d in tasks])
+                        res = sync_roadmap_item(project_title, url, milestones=ms_text)
+                        self.console.print(f"[green]✅ {res}[/]")
+                except Exception as e:
+                    self.console.print(f"[dim]Notion milestone sync skipped: {e}[/]")
+                
+                return True
+            
+            elif subcmd == "add":
+                if not hasattr(self, "_last_tasks") or not self._last_tasks:
+                    self.console.print("[red]❌ No tasks generated. Run :roadmap tasks first.[/]")
+                    return True
+                
+                self.console.print("[yellow]📅 Pushing milestones to Google Tasks...[/]")
+                try:
+                    from tools.google_auth import authenticate
+                    from googleapiclient.discovery import build
+                    
+                    creds = authenticate()
+                    if not creds:
+                        self.console.print("[red]❌ Authentication failed.[/]")
+                        return True
+                    
+                    service = build('tasks', 'v1', credentials=creds)
+                    
+                    # Create or find a Task List for this project
+                    tasklists = service.tasklists().list().execute()
+                    list_name = f"Roadmap: {datetime.now().strftime('%Y-%m-%d')}"
+                    target_list_id = None
+                    
+                    for tl in tasklists.get('items', []):
+                        if tl['title'] == list_name:
+                            target_list_id = tl['id']
+                            break
+                    
+                    if not target_list_id:
+                        new_tl = service.tasklists().insert(body={'title': list_name}).execute()
+                        target_list_id = new_tl['id']
+                        self.console.print(f"[green]✅ Created Task List: {list_name}[/]")
+                    
+                    # Add milestones
+                    for title, due in self._last_tasks:
+                        task_body = {
+                            'title': title,
+                            'due': due.isoformat() + "Z", # RFC3339
+                            'notes': "Generated via Kaedra Story Engine Roadmap"
+                        }
+                        service.tasks().insert(tasklist=target_list_id, body=task_body).execute()
+                        self.console.print(f"  [dim]• Added: {title} ({due.strftime('%Y-%m-%d')})[/]")
+                    
+                    self.console.print(f"\n[bold green]🚀 Successfully pushed {len(self._last_tasks)} milestones to Google Tasks![/]")
+                    
+                except Exception as e:
+                    self.console.print(f"[red]❌ Error syncing to Google Tasks: {e}[/]")
+                
+                return True
+
+
+            elif subcmd == "diag":
+                self.console.print("\n[bold yellow]🕵️ ROADBLOCK DIAGNOSIS[/]")
+                self.console.print("[dim]Reflecting on Kidd, Walter, and Kaplan...[/]")
+                
+                # Check for characters
+                self.console.print("\n[white]1. THE CARE TEST (Evan Kidd):[/]")
+                self.console.print("   > [italic]Do you actually care about these characters right now?[/] If you don't care, they won't.")
+                
+                self.console.print("\n[white]2. THE PROTAGONIST PIVOT (Richard Walter):[/]")
+                self.console.print("   > [italic]Is the 'hero' actually a secondary character?[/] Maybe the 'black kid' is more interesting than the social worker.")
+                
+                self.console.print("\n[white]3. THE COMEDY TRUTH (Steve Kaplan):[/]")
+                self.console.print("   > [italic]Is this a beautiful lie or a ridiculous truth?[/] If it's flat, make them act inexpertly.")
+                
+                self.console.print("\n[white]4. THE JUMP (Anthony DiBlasi):[/]")
+                self.console.print("   > [italic]Stuck on Page 40?[/] Jump to Page 80. Write what you KNOW happens later.")
+                
+                self.console.print("\n[white]5. THE FOIL CHECK (StudioBinder):[/]")
+                self.console.print("   > [italic]Is your hero flat?[/] Add a Foil (Wise, Ethical, or Emotional) to accentuate their traits through contrast.")
+
+                self.console.print("\n[white]6. THE MOTIVATION ENGINE (Maslow):[/]")
+                self.console.print("   > [italic]Are they just 'doing stuff'?[/] Check the Hierarchy: Is it Survival? Safety? Love? Esteem? Self-Actualization?")
+                
+                self.console.print("\n[white]7. IDENTITY VS. ESSENCE (Michael Hauge):[/]")
+                self.console.print("   > [italic]Is the arc flat?[/] Is the hero stuck in their 'Identity' (the mask) and afraid to risk their 'Essence' (the truth)?")
+
+                self.console.print("\n[white]8. THE FINISHING GLITCH (The Finishing Protocol):[/]")
+                self.console.print("   > [italic]Is your brain holding you back?[/]")
+                self.console.print("   > [dim]- Identify the Glitch (Negative thoughts).[/]")
+                self.console.print("   > [dim]- Flip the Script ('Screenwriting is easy').[/]")
+                self.console.print("   > [dim]- Detach from the Outcome (10 reasons screenwriting might suck).[/]")
+
+                self.console.print("\n[white]9. THE CONVENIENCE CHECK (7 Years Protocol):[/]")
+                self.console.print("   > [italic]Did something lucky happen to your hero?[/] If yes, kill it. Luck is only for bad things.")
+
+                self.console.print("\n[white]10. THE 3-PILLAR PULSE (7 Years Protocol):[/]")
+                self.console.print("   > [italic]What do they want? Why can't they have it? What do they actually need?[/]")
+                
+                self.console.print("\n[white]11. THE 10-PAGE HOOK (StudioBinder):[/]")
+                self.console.print("   > [italic]Are the first 10 pages dragging?[/] Audit for: Tone, Character Intro, Setting, Theme, and Stakes.")
+
+                self.console.print("\n[white]12. THE ARRIVAL RULE (Film Riot):[/]")
+                self.console.print("   > [italic]Is the scene boring?[/] Arrive Late, Leave Early. Cut the 'entering the room' filler.")
+
+                self.console.print("\n[white]13. THE INFO DUMP DETECTOR (Film Riot):[/]")
+                self.console.print("   > [italic]Are characters explaining the plot?[/] Stop the info dump. Reveal information in trickles.")
+
+                self.console.print("\n[white]14. THE PILLAR CHECK (10 Must-Dos):[/]")
+                self.console.print("   > [italic]Check your first 10 pages for:[/]")
+                self.console.print("   > [dim]- Grounding familiarity before the deep end.[/]")
+                self.console.print("   > [dim]- White Space (Breezy read).[/]")
+                self.console.print("   > [dim]- Page-turn cliffhangers (Pg 1/2).[/]")
+                self.console.print("   > [dim]- Teaching the Reader (Consistent unique formatting).[/]")
+
+                self.console.print("\n[white]15. THE SCAFFOLD TEST (Paul Guyot):[/]")
+                self.console.print("   > [italic]Are your characters serving the 'Beats' or the 'Truth'?[/] If the formula makes them act weird, KILL the formula.")
+
+                self.console.print("\n[white]16. EMOTIONAL FORMATTING (Paul Guyot):[/]")
+                self.console.print("   > [italic]Are you writing for the rules or the reader?[/] Use bold, italics, or size to elicit a SNAP response.")
+
+                self.console.print("\n[white]17. THE ES SOUP AUDIT (8-Sequence Model):[/]")
+                self.console.print("   > [italic]Is your Act 2 a saggy mess?[/] Ensure you have distinct shifts at Sequences 4 (Midpoint) and 6 (All Is Lost).")
+                self.console.print("   > [dim]Aim for ~5 beats per sequence. Use 'Villain Check-ins' if Sequence 5 feels thin.[/]")
+
+                self.console.print("\n[white]18. PINCH POINT PRESSURE (KM Weiland):[/]")
+                self.console.print("   > [italic]Is the belief transition believable?[/]")
+                self.console.print("   > [dim]- 1st Pinch: Suffering for the Lie (1/4 Act 2).[/]")
+                self.console.print("   > [dim]- 2nd Pinch: Experiencing the Truth (3/4 Act 2).[/]")
+
+                self.console.print("\n[white]19. THE EAA TRIAD (N. Graham Davis):[/]")
+                self.console.print("   > [italic]Is the hero movie-worthy?[/] Audit for Empathetic (Wound), Active (Choices), and Authentic (Consistency).")
+                self.console.print("   > [dim]- Does their emotional flaw make the plot goal feel impossible?[/]")
+
+                self.console.print("\n[white]20. THE PURSUIT ENGINE (Joe Webb):[/]")
+                self.console.print("   > [italic]Is Act 2 leading to a 'Renewal'?[/] Audit for 'No Progress' in the first half and 'Realization' in the second.")
+                self.console.print("   > [dim]- Did the hero face the specific challenge they feared in Act 1?[/]")
+
+                self.console.print("\n[white]21. THE BRIDGE TEST (Scott Myers):[/]")
+                self.console.print("   > [italic]Stuck at page 60?[/] Treat Act 2 like the Chesapeake Bridge. Land is gone; trust your map.")
+                self.console.print("   > [dim]- Subplot Check: Is every primary relationship serving a subplot arc?[/]")
+                self.console.print("   > [dim]- Theme Check: Are you in Deconstruction or Reconstruction?[/]")
+
+                self.console.print("\n[white]22. THE FINISHING PIVOT (Naomi Beaty):[/]")
+                self.console.print("   > [italic]Does this concept actually 'sing' in the outline?[/] If your 5-page outline isn't entertaining, the script won't be either.")
+                self.console.print("   > [dim]- Feedback Check: Are you looking for praise or structural help? Choose readers with the 'medium' experience.[/]")
+
+                self.console.print("\n[white]23. THE PRODUCER'S REALITY CHECK (Jay Silverman):[/]")
+                self.console.print("   > [italic]Are the goals intersecting?[/] If the Protagonist wants a banana and the Antagonist wants an orange, there is NO MOVIE.")
+                self.console.print("   > [dim]- Is your hero intro'd by Page 10? Are your locations and cast count realistic for the budget?[/]")
+
+                self.console.print("\n[white]24. THE FASTEST PLANNING STEP (Jake/Professional Script):[/]")
+                self.console.print("   > [italic]Story first, Character second?[/] Build the sequences (7-15 scenes) that serve the story, then reverse engineer the character arc.")
+                self.console.print("   > [dim]- Arc Spectrum: How far is the hero from their ending point? (e.g., Grumpy vs. Joyful).[/]")
+
+                self.console.print("\n[white]25. THE INDIE PRO PATH (Joe Webb):[/]")
+                self.console.print("   > [italic]Are you writing for what you have?[/] Audit for resourcefulness (Cast/Locations) and Spec Power (Writing for the future, not just the commission).")
+                self.console.print("   > [dim]- Indentation Trick: Are you grinding through the obstacles with creative persistence?[/]")
+
+                self.console.print("\n[bold cyan]Action:[/] Describe your specific block to Kaedra for an AI-powered audit.")
+                return True
+
+            elif subcmd == "names":
+                loc = title or "USA/Modern"
+                self.console.print(f"\n[bold green]🎭 CHARACTER NAMES ({loc})[/]")
+                self.console.print("[dim]Generating statistically authentic suggestions...[/]")
+                
+                self.console.print("\n[white]Authenticity Check (DiBlasi/Botto Protocol):[/]")
+                self.console.print(f"• Location: {loc}")
+                self.console.print("• Rule: Avoid 'too creative' names. Use common names for a sense of reality.")
+                self.console.print("• Research: Look up 10 most popular names for that zip code/year.")
+                
+                self.console.print("\n[bold cyan]Pro-tip:[/] Use `:research characters popular names 1980s London` to get real data.")
+                return True
+
+            else:
+                self.console.print("""
+[bold]Roadmap Commands:[/]
+  :roadmap new [title]   Create new project from template
+  :roadmap tasks [type]  Generate milestones (A|B|SPRINT)
+  :roadmap add           Add generated milestones to Google Tasks
+  :roadmap diag          Diagnose story/character roadblocks
+  :roadmap names [loc]   Generate authentic character names
+""")
+                return True
+
+        if cmd == "email":
+            emails = self.google.list_emails(max_results=5)
+            if not emails:
+                self.console.print("[dim]No recent emails found or Google disconnected.[/]")
+            else:
+                self.console.print("\n[bold cyan]📬 RECENT EMAILS[/]")
+                for e in emails:
+                    self.console.print(f"  [bold]{e['from']}[/]: {e['subject']}")
+                    self.console.print(f"  [dim]{e['snippet'][:100]}...[/]\n")
+            return True
+
+        if cmd == "calendar":
+            events = self.google.list_events(days=1)
+            if not events:
+                self.console.print("[dim]No upcoming events found or Google disconnected.[/]")
+            else:
+                self.console.print("\n[bold yellow]📅 UPCOMING EVENTS[/]")
+                for e in events:
+                    start = e['start'].get('dateTime', e['start'].get('date'))
+                    self.console.print(f"  [bold]{start[:16]}[/]: {e.get('summary', 'No Title')}")
+            return True
+
+        if cmd == "review" or cmd == "board":
+            asyncio.create_task(self._fleet_review(args))
+            return True
+
+        if cmd == "lights":
+            sub = args.lower().strip()
+            if sub == "restore": self.lights.restore()
+            elif sub == "fire": self.lights.fire_mode()
+            elif sub == "off": self.lights.set_color(0, 0, 0)
+            else: self.console.print("[dim]Usage: :lights [restore|fire|off][/]")
+            return True
+
+        if cmd == "tasks":
+            tasks = self.google.list_tasks(max_results=10)
+            if not tasks:
+                self.console.print("[dim]No pending tasks found or Google disconnected.[/]")
+            else:
+                self.console.print("\n[bold green]✅ PENDING TASKS[/]")
+                for t in tasks:
+                    status = "[x]" if t.get('status') == 'completed' else "[ ]"
+                    self.console.print(f"  {status} {t.get('title')}")
             return True
 
         return False
@@ -1407,13 +2131,354 @@ OUTPUT (Markdown):
             ("coherence", "Analyze lore consistency"),
             ("bridge", "Generate narrative bridge"),
             ("debug", "Show state"),
+            ("email", "Show recent emails"),
+            ("calendar", "Show today's events"),
+            ("tasks", "Show pending tasks"),
+            ("review / board", "Trigger Fleet Review Board"),
+            ("automate", "Run Agent-Layer Automations"),
+            ("sync", "Sync World to Notion"),
+            ("lights [restore|fire]", "Manual Atmosphere Control"),
         ]
         for c, d in cmds:
             table.add_row(c, d)
         self.console.print(table)
 
+    async def _fleet_review(self, focus: str = None):
+        """Invoke The Fleet for critique and evaluation (Karpathy llm-council Protocol)."""
+        import json
+        import aiohttp
+        import random
+        from pathlib import Path
+
+        fleet_path = Path("kaedra/config/fleet.json")
+        if not fleet_path.exists():
+            self.console.print("[red]>> Fleet configuration not found.[/]")
+            return
+
+        with open(fleet_path, "r", encoding="utf-8") as f:
+            fleet_data = json.load(f)
+
+        members = fleet_data.get("board_members", [])
+        self.console.print(f"\n[bold yellow]📡 ACTIVATING THE BOARD: {fleet_data.get('fleet_name')}[/]")
+        self.console.print(f"[dim]Focus: {focus or 'Narratological Audit (Jahn/Bork)'}[/]\n")
+
+        # [LIGHTS] Set The Board Atmosphere: Fire Mode (Warm 25% + Flame)
+        if hasattr(self, 'lights') and self.lights:
+            self.console.print("[dim]>> [LIGHTS] Setting Board Atmosphere (Fire 25% + Flame)...[/]")
+            self.lights.fire_mode(brightness=0.25)
+
+        # Gather context
+        last_turns = self.context.history[-4:] if self.context.history else []
+        context_text = ""
+        for turn in last_turns:
+            if isinstance(turn, dict):
+                role = turn.get("role", "user")
+                parts = turn.get("parts", [])
+                text = " ".join([p.get("text", "") for p in parts])
+                context_text += f"{role.upper()}: {text}\n"
+            else:
+                for part in turn.parts:
+                    if part.text:
+                        context_text += f"{turn.role.upper()}: {part.text}\n"
+
+        opinions = {}
+        
+        # --- STAGE 1: FIRST OPINIONS (FLASH BRAIN - LOW LATENCY) ---
+        self.console.print("[bold cyan]STAGE 1: GATHERING INDIVIDUAL CRITIQUES (FLASH)[/]")
+        # Config: Minimal thinking for speed, just gut reactions & Jahn audit
+        stage1_config = types.GenerateContentConfig(
+            temperature=0.7,
+            thinking_config=types.ThinkingConfig(thinking_level="minimal", include_thoughts=False)
+        )
+
+        async with aiohttp.ClientSession() as session:
+            for member in members:
+                # [LIGHTS] Pulse Agent Color @ 25%
+                if hasattr(self, 'lights') and self.lights and member.get("color"):
+                    self.lights.breathe(color=member["color"], cycles=1, period=1.0)
+                
+                critique = None
+                with self.console.status(f"[bold cyan]{member['name']} is thinking...[/]", spinner="dots"):
+                    if not member.get("endpoint"):
+                        # Local Simulation (Gemini 3 Flash)
+                        prompt = f"""
+                        [AGENT: {member['name']} | ROLE: {member['role']}]
+                        TASK: Conduct a NARRATOLOGICAL AUDIT (Jahn V6.0).
+                        
+                        PROTOCOL:
+                        1. FCD Intent: What is the creative intelligence doing?
+                        2. Focalization: OV, PIV, or DIV?
+                        3. Audio/Visual Code: Diegetic vs Nondiegetic?
+                        4. S/Z Codes: ACT, HER, SYM, SEM, REF.
+                        5. Goof Audit: Logic or continuity slips?
+                        
+                        CONTEXT:
+                        {context_text}
+                        
+                        Provide a sharp 2-3 sentence audit.
+                        """
+                        # Retry Loop for Latency (1/3)
+                        for attempt in range(5):
+                            try:
+                                resp = await asyncio.to_thread(
+                                    self.client.models.generate_content, 
+                                    model=FLASH_MODEL, 
+                                    contents=prompt,
+                                    config=stage1_config
+                                )
+                                critique = resp.text.strip()
+                                if critique: break
+                            except: 
+                                self.console.print(f"[dim]>> Retry {attempt+1}/5 {member['name']}...[/]")
+                                await asyncio.sleep(0.5 + random.random())
+                        if not critique: critique = "Failed to simulate."
+                    else:
+                        # Remote Cloud Run call
+                        # Retry Loop for Latency (2/3)
+                        for attempt in range(5):
+                            try:
+                                # Pass S/Z requirement in focus if not present
+                                session_focus = focus or "Lexia Analysis (S/Z Codes)"
+                                payload = {"context": context_text, "focus": session_focus, "agent_id": member["id"]}
+                                async with session.post(member["endpoint"], json=payload, timeout=12) as r:
+                                    if r.status == 200:
+                                        data = await r.json()
+                                        critique = data.get("response", "No response content.")
+                                        if critique and "Error" not in critique: break
+                                    else:
+                                        critique = f"Error {r.status}"
+                            except Exception as e:
+                                critique = f"Connection failed: {e}"
+                            
+                            self.console.print(f"[dim]>> Remote Retry {attempt+1}/5 {member['name']}...[/]")
+                            await asyncio.sleep(0.5 + random.random())
+                
+                opinions[member['id']] = {"name": member['name'], "role": member['role'], "text": critique}
+                self.console.print(f"   [green]✅ {member['name']} submitted critique.[/]")
+
+
+        # --- STAGE 2: DEMOCRATIC VOTING & RANKING (FLASH BRAIN - REASONING LITE) ---
+        self.console.print("\n[bold magenta]STAGE 2: DEMOCRATIC VOTING & RANKING (FLASH)[/]")
+        
+        # Select 3 Judges for this session
+        judges_ids = ["dav1d", "unk", "kam"]
+        judges = [m for m in members if m['id'] in judges_ids]
+        
+        # Map indices for anonymization
+        id_to_agent = {f"AGENT_{i+1}": mid for i, mid in enumerate(opinions.keys())}
+        anonymized_block = "\n".join([f"{tag}: {opinions[mid]['text']}" for tag, mid in id_to_agent.items()])
+
+        # Config: Low thinking - enough to compare, fast enough to iterate
+        stage2_config = types.GenerateContentConfig(
+            temperature=0.5,
+            thinking_config=types.ThinkingConfig(thinking_level="low", include_thoughts=False)
+        )
+
+        for judge in judges:
+            # [LIGHTS] Pulse Judge Color
+            if hasattr(self, 'lights') and self.lights and judge.get("color"):
+                self.lights.breathe(color=judge["color"], cycles=1, period=1.0)
+
+            self.console.print(f"[dim]>> Judge {judge['name']} is deliberating...[/]")
+            vote_prompt = f"""
+            [JUDGE: {judge['name']} | ROLE: {judge['role']}]
+            DEMOCRATIC COUNCIL PROTOCOL (NAACL 2025).
+            
+            COUNCIL OPINIONS:
+            {anonymized_block}
+            
+            STORY CONTEXT:
+            {context_text}
+            
+            TASK:
+            1. RANK: List the top 3 (e.g., RANKING: AGENT_X, AGENT_Y, AGENT_Z).
+            2. ANALYSIS: Briefly why #1 is superior.
+            3. BIAS CHECK: Note if any agent seems to be "yes-ma'aming" or hallucinating.
+            """
+            # Retry Loop for Latency (Stage 2)
+            vote_text = ""
+            with self.console.status(f"[bold magenta]{judge['name']} is casting ballot...[/]", spinner="aesthetic"):
+                for attempt in range(5):
+                    try:
+                        resp = await asyncio.to_thread(
+                            self.client.models.generate_content, 
+                            model=FLASH_MODEL, 
+                            contents=vote_prompt,
+                            config=stage2_config
+                        )
+                        vote_text = resp.text.strip()
+                        if vote_text: break
+                    except:
+                        self.console.print(f"[dim]>> Retry {attempt+1}/5 Judge {judge['name']}...[/]")
+                        await asyncio.sleep(0.5 + random.random())
+            
+            if not vote_text: vote_text = "FAILED TO VOTE"
+                
+            # Internal Scoring logic
+            self.agreement_matrix.setdefault(judge['id'], {})
+            for tag, original_id in id_to_agent.items():
+                if tag in vote_text:
+                    # Utility Point
+                    self.fleet_scores[original_id] = self.fleet_scores.get(original_id, 0) + 1
+                    # Agreement tracking
+                    self.agreement_matrix[judge['id']][original_id] = self.agreement_matrix[judge['id']].get(original_id, 0) + 1
+                        
+                self.console.print(f"   [magenta]🗳️ {judge['name']} cast their ballot.[/]")
+
+        # --- STAGE 3: RUTHLESS CRITIQUE (PRO BRAIN - HIGH REASONING) ---
+        self.console.print("\n[bold red]STAGE 3: RUTHLESS CRITIQUE (PRO BRAIN)[/]")
+        debater_ids = ["kaedra", "iris", "visions"]
+        debaters = [m for m in members if m['id'] in debater_ids]
+        
+        # Config: High thinking - Deep logic checks, hunting hallucinations
+        stage3_config = types.GenerateContentConfig(
+            temperature=0.8,
+            thinking_config=types.ThinkingConfig(thinking_level="high", include_thoughts=True)
+        )
+
+        for d in debaters:
+            # [LIGHTS] Pulse Critic Color
+            if hasattr(self, 'lights') and self.lights and d.get("color"):
+                self.lights.breathe(color=d["color"], cycles=2, period=0.8)
+
+            critique_prompt = f"""
+            [CRITIC: {d['name']} | ROLE: {d['role']}]
+            RUTHLESS CRITIQUE MODE.
+            
+            Identify the weakest logical link in the collective council feedback. 
+            Is there a "Safe" response that is actually useless? Point it out.
+            
+            OPINIONS:
+            {anonymized_block}
+            """
+            # Retry Loop for Latency (Stage 3)
+            critique = ""
+            with self.console.status(f"[bold red]{d['name']} is hunting flaws...[/]", spinner="bouncingBar"):
+                for attempt in range(5):
+                    try:
+                        resp = await asyncio.to_thread(
+                            self.client.models.generate_content, 
+                            model=PRO_MODEL, 
+                            contents=critique_prompt,
+                            config=stage3_config
+                        )
+                        critique = resp.text.strip()
+                        if critique: break
+                    except:
+                        self.console.print(f"[dim]>> Retry {attempt+1}/5 {d['name']}...[/]")
+                        await asyncio.sleep(1.0 + random.random())
+            
+            if critique:
+                self.console.print(f"   [red]🗡️ {d['name']} identified a blindspot: {critique[:100]}...[/]")
+            else:
+                self.console.print(f"   [red]❌ {d['name']} silent after 5 attempts.[/]")
+
+        # --- STAGE 4: CHAIRMAN'S VERDICT (PRO BRAIN - SUPREME REASONING) ---
+        self.console.print("\n[bold yellow]STAGE 4: CHAIRMAN'S 'BATTLE-TESTED' VERDICT (PRO)[/]")
+        kronos = next((m for m in members if m['id'] == "kronos"), members[0])
+        
+        # [LIGHTS] Kronos Command (Gold Pulse)
+        if hasattr(self, 'lights') and self.lights and kronos.get("color"):
+            self.lights.breathe(color=kronos["color"], cycles=3, period=1.5)
+        
+        # Leaderboard synthesis
+        top_utility = sorted(self.fleet_scores.items(), key=lambda x: x[1], reverse=True)[:3]
+        scoreboard = " | ".join([f"{mid}({score})" for mid, score in top_utility])
+
+        chairman_prompt = f"""
+        [CHAIRMAN KRONOS]
+        COUNCIL DATA:
+        Scoreboard: {scoreboard}
+        Agreement Matrix: {self.agreement_matrix}
+        
+        ALL OPINIONS:
+        {json.dumps(opinions, indent=2)}
+        
+        TASK:
+        Synthesize a FINAL EXECUTIVE DIRECTIVE.
+        Structure as "NARRATOLOGICAL NARRATIVE AUDIT (Rubric V6.0 - Jahn/Bork/Barthes)".
+        
+        SECTIONS:
+        I. COUNCIL SYNTHESIS (Consensus & Contention)
+           - Who is leading in utility? Who is hallucinating?
+        II. NARRATOLOGICAL AUDIT (The 5 Filters)
+           - FCD, Focalization, Audio, OPI, Goofs.
+        III. CINEMATIC PRESCRIPTION
+           - Required shots, pacing adjustments (Bork), and S/Z code usage.
+        IV. ACADEMIC GRADE (A-F)
+           - STRICT grading based on "Visual Literacy" depth.
+        """
+        
+        # Config: High thinking - Complex synthesis of multiple data streams
+        stage4_config = types.GenerateContentConfig(
+            temperature=0.7,
+            thinking_config=types.ThinkingConfig(thinking_level="high", include_thoughts=True)
+        )
+
+        # Retry Loop for Latency (Stage 4)
+        with self.console.status("[bold yellow]⚡ Chairman Kronos is synthesizing verdict...[/]", spinner="star"):
+            for attempt in range(5):
+                try:
+                    self.console.print(f"[dim]>> Attempt {attempt+1}/5: Chairman synthesis...[/]")
+                    resp = await asyncio.to_thread(
+                        self.client.models.generate_content, 
+                        model=PRO_MODEL, 
+                        contents=chairman_prompt, 
+                        config=stage4_config
+                    )
+                    if not resp.text: raise ValueError("Empty response")
+                    
+                    self.console.print(Panel(
+                        resp.text,
+                        title="[bold yellow]⚡ BATTLE-TESTED VERDICT[/]",
+                        subtitle=f"Council Scoreboard: {scoreboard}",
+                        border_style="yellow"
+                    ))
+                    
+                    # Persist verdict to history
+                    self.context.add_text("user", f"[COUNCIL VERDICT]\n{resp.text}")
+                    break
+
+                except Exception as e:
+                    self.console.print(f"[red]Chairman failed (Attempt {attempt+1}): {e}[/]")
+                    await asyncio.sleep(1.0 + random.random())
+                    if attempt == 2:
+                        self.console.print("[red]❌ All attempts failed. Network/DNS issue likely.[/]")
+                    await asyncio.sleep(2)
+        
+        # [LIGHTS] Restore to previous state
+        if hasattr(self, 'lights') and self.lights:
+            self.console.print("[dim]>> [LIGHTS] Restoring atmosphere...[/]")
+            self.lights.restore()
+
+
+    async def _audio_sync_loop(self):
+        """Background task for high-frequency audio reactivity (independent of input blocking)."""
+        log.info("[AudioSync] Starting background listener...")
+        while True:
+            if self.audio_reactor:
+                try:
+                    status = self.audio_reactor.get_status()
+                    
+                    # 1. Beat Detection -> Pulse
+                    if status["beat"]:
+                        # Dynamic brightness based on energy
+                        b = 0.4 + (status["energy"] * 0.6)
+                        self.lights.pulse(color="white", brightness=b, duration=0.08)
+                    
+                    # 2. High Energy Sustain -> Maybe subtle color shift?
+                    # For now just beat syncing is enough "wow" factor.
+                    
+                except Exception as e:
+                    log.debug(f"AudioSync error: {e}")
+            
+            await asyncio.sleep(0.05) # 20Hz polling
+
     async def run(self):
         """Elite Chat-Style narrative stream (Sequential & Persistent)."""
+        # Start Audio Sync Task
+        asyncio.create_task(self._audio_sync_loop())
+        
         from .ui import render_hud
         
         # 1. Elite Boot Sequence (Persistent Lines)
@@ -1459,6 +2524,7 @@ OUTPUT (Markdown):
                     
                     if user_input.lower().strip() in ["exit", "quit", "q"]:
                         self.console.print("[dim]Archiving session state...[/]")
+                        # Final flush of session log
                         break
 
                     # [Legacy Port] Check for @file
@@ -1495,12 +2561,21 @@ OUTPUT (Markdown):
                             continue
                     
                     # 5. Narrative Wavefront (Sequential Progress)
-                    self.console.print("[bold cyan]⠏ Orchestrating Wavefront...[/]")
-                    response = await self.generate_response(user_input)
+                    response = None
+                    with self.console.status("[bold cyan]⠏ Orchestrating Wavefront...[/]", spinner="earth"):
+                        response = await self.generate_response(user_input)
                     
-                    # 6. Response Stream (Persistent)
+                    # 6. Response Stream (Persistent) - Emoji + Screenplay Processing
                     text = response.text if hasattr(response, "text") else str(response)
-                    self.console.print(Markdown(text))
+                    text = Emoji.replace(text)  # Convert :shortcodes: to unicode
+                    
+                    # Screenplay Mode Formatting
+                    if self.mode == Mode.SCREENPLAY:
+                        formatter = ScreenplayFormatter()
+                        text = formatter.parse_and_format(text)
+                        self.console.print(formatter.render_panel(text, f"Scene {self.scene}"))
+                    else:
+                        self.console.print(Markdown(text))
                     self.console.print(Rule(style="bold #00E5FF", title=f"End of Scene {self.scene-1}"))
                     self.console.print("\n") # Breathable spacing
                 
@@ -1543,6 +2618,11 @@ def startup_world_select() -> dict:
     return load_world(result)
 
 if __name__ == "__main__":
+    from rich.console import Console
+    
+    # Reset console to suppress previous handlers
+    console = Console()
+    
     try:
         # 1. Select World
         world_data = startup_world_select()
@@ -1552,5 +2632,16 @@ if __name__ == "__main__":
         
         asyncio.run(engine.run())
         
-    except KeyboardInterrupt:
-        pass
+    except (KeyboardInterrupt, SystemExit):
+        # Clean exit without traceback
+        print("\n")
+        console.print("[bold yellow]>> Narrative thread severed.[/]")
+        
+        # Force kill pending threads (LIFX etc) to avoid 300s wait
+        try:
+            import sys
+            sys.exit(0)
+        except:
+            pass
+    except Exception as e:
+        console.print_exception()

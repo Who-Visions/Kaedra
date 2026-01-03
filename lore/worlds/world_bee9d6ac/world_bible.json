@@ -1,0 +1,74 @@
+{
+  "world_id": "world_bee9d6ac",
+  "sections": {
+    "Characters": [
+      {
+        "name": "Sireva",
+        "properties": {
+          "Canon Status": "Semi-Canon",
+          "Type": "Genesis Clone",
+          "Base": "Mars",
+          "Abilities": "Veil-Touched / High-Sync",
+          "Status": "Active"
+        }
+      },
+      {
+        "name": "Test Hero",
+        "properties": {
+          "Canon Status": "Canon",
+          "Production Status": "In Development",
+          "Power Level": "God-Tier",
+          "Last Updated": "2026-01-02",
+          "Importance Score": 95,
+          "Importance": "Major"
+        }
+      }
+    ],
+    "Media": [
+      {
+        "name": "The Void Movie",
+        "properties": {
+          "Media Type": [
+            "Film"
+          ],
+          "Production Status": "Released",
+          "Canon Status": "Canon",
+          "Status": "Completed",
+          "Last Updated": "2026-01-02",
+          "Appears In": [
+            "Phase 1"
+          ],
+          "_meta_release_notified": true
+        }
+      }
+    ],
+    "Lore": [
+      {
+        "name": "Magnetic Consciousness Interface",
+        "properties": {
+          "Canon Status": "Semi-Canon",
+          "Mechanism": "Electromagnetic Pulse",
+          "Cycle": "47 Minutes",
+          "Source": "Core Chamber / Olympus Mons",
+          "Effect": "Neural Synchronization",
+          "The Pause": "3-5 second neural alignment for all Mars citizens"
+        }
+      },
+      {
+        "name": "The Veil Awakening",
+        "properties": {
+          "Canon Status": "Canon",
+          "Description": "The moment when the barrier thinned."
+        }
+      }
+    ],
+    "Artifacts": [
+      {
+        "name": "Imported Artifact",
+        "properties": {
+          "Origin": "Mars"
+        }
+      }
+    ]
+  }
+}

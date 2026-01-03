@@ -3,8 +3,10 @@ token = "ntn_u30316993017RaOd8iWGISlHViGvluX3BtJiGWqgoCQ0JY"  # From Kaedra-note
 
 [databases]
 # Core VeilVerse Databases
-timeline_nodes = "62b38160871049b78571bb4e8a931d07"
-ingestion_queue = "ab2dd1c9319e40429973452fa7419e04"
+universe_db = "2d90b4b40f65800198fecbf8a4a2146a"
+universe_ds = "2d90b4b4-0f65-8018-9caa-000b653cd487"
+ingestion_queue = "44fb8dcf-5fc6-4ea1-b618-7488a3007a58"
+ingestion_ds = "44fb8dcf-5fc6-4ea1-b618-7488a3007a58"
 lore_laws = "4d3e3e7eb9404098b6b62059c94748d2"
 scenes = "915ba5da169b46bea20b417adb060839"
 canon_registry = "db9e623e8afa47d1b5e119e61328aaf9"

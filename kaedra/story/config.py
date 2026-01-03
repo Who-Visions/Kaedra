@@ -23,10 +23,12 @@ class Mode(Enum):
     SHIFT_POV = "shift_pov"
     REWIND = "rewind"
     DIRECTOR = "director"
+    SCREENPLAY = "screenplay"
 
 # === MODEL CONSTANTS ===
 FLASH_MODEL = "gemini-3-flash-preview"
 PRO_MODEL = "gemini-3-pro-preview"
+NARRATIVE_MODEL = FLASH_MODEL # Default to Flash for standard narrative turns
 
 # === EMOTION PHYSICS ===
 @dataclass

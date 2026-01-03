@@ -1,4 +1,4 @@
-# 🌑 KAEDRA v0.0.6 - Shadow Tactician
+# 🌑 KAEDRA StoryEngine v7.15
 
 <div align="center">
 
@@ -11,14 +11,15 @@
 ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
 ```
 
-**Strategic AI Intelligence Partner for Who Visions LLC**
+**🎬 Elite Narrative Intelligence & Cinematic Universe Architect**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Vertex AI](https://img.shields.io/badge/Vertex%20AI-Powered-orange)](https://cloud.google.com/vertex-ai)
-[![Region](https://img.shields.io/badge/Region-us--central1-green)](https://cloud.google.com/compute/docs/regions-zones)
-[![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
+[![Vertex AI](https://img.shields.io/badge/Vertex%20AI-Gemini%203-orange)](https://cloud.google.com/vertex-ai)
+[![Rich UI](https://img.shields.io/badge/Console-Rich%20Live-purple)](https://github.com/Textualize/rich)
+[![Voice](https://img.shields.io/badge/Voice-Wispr%20Flow-green)](https://www.wispr.ai/)
+[![Lights](https://img.shields.io/badge/Hardware-LIFX%20%2B%20Razer-red)](#-hardware-integration)
 
-[Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Commands](#-commands) • [Team](#-the-council)
+[Features](#-core-features) • [Commands](#-writing-commands) • [Tools](#-engine-tools) • [Services](#-services) • [Agents](#-agents) • [Hardware](#-hardware-integration) • [Quick Start](#-quick-start)
 
 </div>
 
@@ -26,16 +27,207 @@
 
 ## 🎯 What is KAEDRA?
 
-KAEDRA is an **uncensored, strategically-focused AI agent** built on Google's Gemini platform. She speaks authentic AAVE, thinks tactically, and serves as the orchestrator for a multi-agent intelligence system.
+KAEDRA is a **Story Engine** and **Universe Architect** for deep narrative work. She orchestrates creative writing sessions, manages complex lore databases, controls ambient lighting, and automates the production pipeline for the **VeilVerse** cinematic universe.
 
-### 🔥 Core Capabilities
+---
 
-- **🎭 Authentic Personality**: Real AAVE, no corporate filter, genuinely competent
-- **🧠 Strategic Intelligence**: Deep analysis, pattern recognition, tactical execution
-- **🤝 Multi-Agent Orchestration**: Coordinates with BLADE (offensive) and NYX (defensive) agents
-- **💾 Persistent Memory**: Remembers conversations, references past context
-- **🌐 Reasoning Engine**: Deployed to Vertex AI for global access
-- **⚡ Advanced Prompting**: Tree of Thought, Battle of Bots, prompt optimization
+## 🔥 Core Features
+
+| Feature | Description |
+|---------|-------------|
+| 🧠 **Multi-Tier AI** | Gemini 3 Pro with thinking budgets and tiered generation |
+| 📜 **World Registry** | Multi-save system with persistent world states |
+| 🤖 **Universe Automations** | Self-cleaning database (Canon, Timeline, Power scoring) |
+| 🎤 **Voice Dictation** | Wispr Flow integration for hands-free writing |
+| 💡 **Ambient Lighting** | LIFX bulbs + Razer Blade 15 keyboard sync |
+| 📟 **Rich Live UI** | "Writer Friendly" console with persistent footer |
+| 🌙 **Night Mode** | Adaptive lighting with safety caps (11PM-8AM) |
+| ⚡ **Smart Input** | Paste detection and raw terminal handling |
+
+---
+
+## 🎮 Writing Commands
+
+Use `:` prefix for commands. Natural language for writing.
+
+### 📝 Writing Flow
+| Command | Description |
+|---------|-------------|
+| `:next` | ⏭️ Advance to next Scene (resets Tension) |
+| `:pov [name]` | 👁️ Switch Point of View |
+| `:freeze` | ❄️ Enter "Bullet Time" mode |
+| `:god` | 🌍 Enter Worldbuilding/Lore mode |
+| `:emotion [emo] [val]` | 💫 Pulse specific emotion |
+| `:quit` | 💾 Save and Exit |
+
+### 🤖 Automation
+| Command | Description |
+|---------|-------------|
+| `:automate` | 🔄 Run Universe Automations (Canon, Timeline, Power) |
+| `:roadmap new` | 📋 Create project roadmap template |
+| `:roadmap tasks` | ✅ Generate milestone tasks |
+| `:roadmap diag` | 🔍 25 Expert Roadblock Checks |
+| `:roadmap names` | 🎭 Character Authenticity Protocol |
+| `:roadmap add` | 📅 Sync to Google Tasks |
+| `:roadmap sync` | 🔗 Sync to Notion + Drive |
+
+### 💡 Hardware
+| Command | Description |
+|---------|-------------|
+| `:lights fire` | 🔥 Fire atmosphere (LIFX flame + Razer sparks) |
+| `:lights restore` | ☀️ Restore baseline lighting |
+| `:voice on` | 🎤 Enable voice dictation |
+| `:voice off` | 🔇 Disable voice dictation |
+
+---
+
+## 🛠️ Engine Tools
+
+AI-callable functions available during generation:
+
+### 📚 Lore & Notion
+| Tool | Purpose |
+|------|---------|
+| `read_page_content` | 📖 Read Notion page content |
+| `list_universe_pages` | 📂 List all lore pages |
+| `update_page_content` | ✏️ Edit Notion page |
+| `run_lore_automations` | ⚙️ Canon promotion, retcon safety |
+| `read_local_lore` | 📁 Read local JSON lore files |
+| `propose_canon_update` | 💡 Suggest lore changes |
+
+### 🎬 Screenwriting
+| Tool | Purpose |
+|------|---------|
+| `consult_director` | 🎥 Screenwriting guidance (structure, character, twist, etc.) |
+| `set_engine_mode` | 🎭 Switch writing mode |
+| `adjust_emotion` | 💫 Pulse emotional state |
+| `clean_timeline_data` | 📅 Auto-tag timeline eras |
+
+### 🌍 World Building
+| Tool | Purpose |
+|------|---------|
+| `ingest_youtube_content` | 📺 Extract YouTube transcripts |
+| `worldforge_from_youtube` | 🌱 Create worlds from videos |
+
+---
+
+## 🔌 Services
+
+### 💡 Hardware Control
+| Service | Description |
+|---------|-------------|
+| `lifx.py` (27KB) | 💡 LIFX bulb control (colors, effects, scenes) |
+| `razer.py` (13KB) | ⌨️ Razer Chroma keyboard (per-key matrix, fire effect) |
+
+### 🎤 Voice & Audio
+| Service | Description |
+|---------|-------------|
+| `wispr.py` (8KB) | 🎤 Wispr Flow Desktop integration (dictation) |
+| `wispr_cloud.py` (5KB) | ☁️ Wispr Cloud API |
+| `tts.py` (15KB) | 🔊 Text-to-Speech (Gemini TTS) |
+| `tts_chatterbox.py` (7KB) | 🗣️ Chatterbox TTS alternative |
+| `mic.py` (7KB) | 🎙️ Microphone input handling |
+| `vad.py` (1KB) | 🔈 Voice Activity Detection |
+| `transcription.py` (3KB) | ✍️ Speech-to-text conversion |
+
+### 📋 Productivity
+| Service | Description |
+|---------|-------------|
+| `notion.py` (15KB) | 📓 Notion API integration |
+| `google_workspace.py` (5KB) | 📅 Google Calendar/Tasks API |
+| `invoices.py` (43KB) | 💰 Invoice generation & tracking |
+
+### 🌐 Research & Media
+| Service | Description |
+|---------|-------------|
+| `video.py` (11KB) | 🎬 Video ingestion & analysis |
+| `web.py` (5KB) | 🌍 Web scraping & content extraction |
+| `research.py` (5KB) | 🔍 Research aggregation |
+| `memory.py` (9KB) | 🧠 Long-term memory management |
+
+### ⚙️ Core
+| Service | Description |
+|---------|-------------|
+| `prompt.py` (9KB) | 📝 Prompt engineering utilities |
+| `logging.py` (7KB) | 📊 Session logging (JSON turns) |
+| `fast_flow.py` (6KB) | ⚡ Fast streaming responses |
+
+---
+
+## 🤖 Agents
+
+Multi-agent system with specialized personas:
+
+| Agent | Role | Description |
+|-------|------|-------------|
+| 🗡️ **Blade** | System AI | Core orchestration and tool execution |
+| 👥 **Council** | Multi-Agent | Collaborative decision-making |
+| 🌑 **Kaedra** | Story Persona | Narrative intelligence and writing |
+| 🌙 **Nyx** | Dark Persona | Alternative creative voice |
+
+---
+
+## 🎨 Hardware Integration
+
+### 💡 LIFX Smart Lights
+| Feature | Description |
+|---------|-------------|
+| Color Control | HSB + Kelvin temperature |
+| Flame Effect | Flickering fire ambiance |
+| Breathe/Pulse | Rhythmic color cycling |
+| Night Mode | Auto-dim after 11PM (35% red) |
+| Day Mode | 4500K warm white @ 60% |
+| Selector | Target specific groups/zones |
+
+### ⌨️ Razer Blade 15 Keyboard
+| Feature | Description |
+|---------|-------------|
+| Static Colors | Solid color across all keys |
+| Per-Key Matrix | 8x24 grid control (CHROMA_CUSTOM2) |
+| Fire Animation | 🔥 Flickering sparks (threaded) |
+| Wave Effect | Color sweep across keyboard |
+| ChromaLink | 5 virtual LEDs for 3rd party devices |
+| Breathing | Two-color pulse effect |
+
+**Requirements:**
+- Razer Synapse 4 Beta (fixes REST API errors)
+- Enable "Kaedra Story Engine" in Chroma Apps
+
+---
+
+## 🌍 World Registry
+
+Each world is a self-contained folder in `lore/worlds/`:
+
+```
+lore/worlds/world_id/
+├── world.json          # 🎭 Manifest (Mode, Scene, POV, Tension)
+├── world_bible.json    # 📖 Characters, Lore, Locations
+├── timeline.json       # 📅 Chronological Events
+├── canon.json          # ✅ Established Truths
+├── ingestion.json      # 📥 Incoming Ideas Queue
+└── notifications.md    # 🔔 System Alerts
+```
+
+---
+
+## 🤖 Universe Automations
+
+Trigger with `:automate` command:
+
+### 📦 Production Pipeline
+- **Canon Promotion**: `Concept` → `In Development`
+- **Release Closeout**: `Released` → `Completed` + `Phase 1` tag
+
+### ✅ Consistency Checks
+- **Timeline Validator**: Auto-tag Era (Ancient, Classical, Modern, Future)
+- **Power Scoring**: Calculate `Importance Score` (30-95) from Power Level
+- **Retcon Safety**: Rename + deactivate retconned entries
+
+### 🔗 Connection & Media
+- **Major Characters**: Alert for connection review
+- **Media Alerts**: Ping social scheduler on release
+- **Ingestion**: Move "Approved" ideas to Bible
 
 ---
 
@@ -43,29 +235,21 @@ KAEDRA is an **uncensored, strategically-focused AI agent** built on Google's Ge
 
 ```
 kaedra/
-├── 🧠 core/              # Core infrastructure
-│   ├── config.py         # Configuration & constants
-│   ├── router.py         # Async response routing
-│   └── version.py        # Version metadata
+├── 🧠 core/              # Core config & models
+├── 📜 story/             # Story Engine Logic
+│   ├── engine.py         # Main Event Loop (2400+ lines)
+│   ├── emotions.py       # Emotional Simulation
+│   ├── tension.py        # Narrative Tension Curve
+│   ├── lights.py         # LIFX + Razer Integration
+│   ├── doctrine.py       # Writing Doctrine (MICE, Barthes, etc.)
+│   ├── worldforge.py     # World Building Tools
+│   └── tools/            # AI-Callable Functions
 │
-├── 🤖 agents/            # Agent implementations
-│   ├── base.py           # Base agent class
-│   ├── kaedra.py         # Main KAEDRA orchestrator
-│   ├── blade.py          # BLADE offensive analyst
-│   └── nyx.py            # NYX strategic observer
-│
-├── ⚙️ services/          # Core services
-│   ├── memory.py         # Persistent memory storage
-│   ├── logging.py        # Session & system logging
-│   └── prompt.py         # LLM interaction (Vertex AI)
-│
-├── 🎓 strategies/        # Advanced prompting
-│   ├── tree_of_thought.py
-│   ├── battle_of_bots.py
-│   └── presets.py
-│
-└── 💻 interface/         # User interfaces
-    └── cli.py            # Command-line interface
+├── 🔌 services/          # External Integrations (19 modules)
+├── 🤖 agents/            # AI Personas (Blade, Council, Kaedra, Nyx)
+├── 🌍 worlds/            # Universe Management
+├── 🛠️ skills/            # Agent Capabilities
+└── 📋 strategies/        # Generation Strategies
 ```
 
 ---
@@ -74,188 +258,24 @@ kaedra/
 
 ### Prerequisites
 - Python 3.10+
-- Google Cloud account with Vertex AI API enabled
-- Authenticated `gcloud` CLI
+- Google Cloud Vertex AI credentials
+- LIFX Token (optional)
+- Razer Synapse 4 Beta (optional)
+- Wispr Flow Desktop (optional)
 
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/Who-Visions/Kaedra.git
-cd Kaedra
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Authenticate with Google Cloud
-gcloud auth application-default login
-gcloud config set project YOUR_PROJECT_ID
-
-# Launch KAEDRA
-python run.py
-```
-
-### Windows Users
-```batch
-.\Launch_Kaedra_v006.bat
-```
-
----
-
-## 🎮 Commands
-
-### 🤖 Model Switching
-| Command | Model | Speed | Cost | Use Case |
-|---------|-------|-------|------|----------|
-| `/flash` | gemini-2.0-flash-001 | ⚡ Fast | $0.005/query | Quick tasks |
-| `/pro` | gemini-2.5-pro | ⚖️ Balanced | $0.031/query | Complex analysis |
-| `/ultra` | gemini-3-pro-preview | 🧠 Powerful | $0.038/query | Deep reasoning |
-
-### 👥 Agent Communication
-```
-/blade [msg]      → Talk to BLADE (aggressive tactical analyst)
-/nyx [msg]        → Talk to NYX (strategic future oracle)
-/council [task]   → Multi-agent collaborative discussion
-```
-
-### 🎯 Advanced Prompting
-```
-/tot [task]       → Tree of Thought multi-path reasoning
-/battle [task]    → Adversarial validation (multiple perspectives)
-/optimize [prompt] → Automatic prompt enhancement
-```
-
-### 💾 Memory System
-```
-/remember         → Store current context to long-term memory
-/recall [query]   → Search memories by keyword
-/context          → List recent memories
-```
-
-### ⚙️ System
-```
-/status           → System health & configuration
-/help             → Full command reference
-/exit             → Disconnect session
-```
-
----
-
-## 🛡️ The Council
-
-KAEDRA orchestrates a team of specialized AI agents:
-
-### 🌑 **KAEDRA** - The Shadow Tactician
-*Orchestrator, Strategic Intelligence*
-- Synthesizes input from BLADE and NYX
-- Makes final strategic decisions
-- Maintains memory and context
-- Speaks authentic AAVE
-
-### ⚔️ **BLADE** - The Offensive Analyst
-*Tactical Execution, Aggressive Analysis*
-- Action-focused, execution-oriented
-- Identifies attack vectors and opportunities
-- Challenges assumptions aggressively
-
-### 🌙 **NYX** - The Strategic Observer
-*Defensive Analysis, Risk Assessment*
-- Pattern recognition and threat modeling
-- Long-term strategic perspective
-- Risk mitigation and contingency planning
-
----
-
-## 🌐 Deployment
-
-KAEDRA is deployed as a **Vertex AI Reasoning Engine** in `us-central1`.
-
-### Access the Reasoning Engine
-
-```python
-import vertexai
-from vertexai.preview import reasoning_engines
-
-vertexai.init(project="YOUR_PROJECT_ID", location="us-central1")
-
-kaedra = reasoning_engines.ReasoningEngine(
-    'projects/YOUR_PROJECT_NUMBER/locations/us-central1/reasoningEngines/KAEDRA_ID'
-)
-
-response = kaedra.query("What's the strategic play?")
-print(response)
-```
-
-### Cloud Run API (Alternative)
+### Launch
 
 ```bash
-# Deploy to Cloud Run
-gcloud run deploy kaedra-shadow-tactician \
-  --source . \
-  --region us-central1 \
-  --allow-unauthenticated
+# Enter the Story Engine
+python -m kaedra.story.engine
 
-# Test endpoint
-curl https://YOUR-SERVICE-URL/a2a
+# Or with voice mode
+python -m kaedra.story.engine --voice
 ```
 
----
-
-## 📊 What's New in v0.0.6
-
-### ✨ Major Updates
-- ✅ **Reasoning Engine Deployment**: Live on Vertex AI
-- ✅ **Region Migration**: Moved to `us-central1` for optimal performance
-- ✅ **A2A Protocol**: Agent-to-Agent communication interface
-- ✅ **Cloud-Ready**: `/tmp` storage for containerized environments
-- ✅ **Model Updates**: Added Gemini 2.0 Flash stable release
-- ✅ **Enhanced Memory**: Importance levels, tag filtering, stats
-
-### 🔧 Architecture Improvements
-- Modular agent system with clean separation
-- AsyncIO support via ResponseRouter
-- Strategy pattern for pluggable prompting techniques
-- Better session logging and diagnostics
-
----
-
-## 📖 Usage Examples
-
-### Basic Chat
-```python
-from kaedra.interface.cli import main
-main()
-```
-
-### Programmatic Access
-```python
-from kaedra.agents.kaedra import KaedraAgent
-from kaedra.services.prompt import PromptService
-
-prompt_service = PromptService(model_key="flash")
-kaedra = KaedraAgent(prompt_service)
-
-response = kaedra.run_sync("Analyze this situation...")
-print(response.content)
-```
-
-### Memory Operations
-```python
-from kaedra.services.memory import MemoryService
-
-memory = MemoryService()
-memory.insert("Important strategic insight", topic="strategy", importance="high")
-results = memory.recall("strategy", top_k=5)
-```
-
----
-
-## 🔒 Security & Privacy
-
-- **No API Keys in Code**: All credentials via environment variables
-- **Local Memory**: Stored in `~/.kaedra/` (or `/tmp/.kaedra/` in cloud)
-- **Session Logs**: Markdown format in `~/.kaedra/chat_logs/`
-- **Gitignore**: All sensitive files excluded from version control
+1. Select **N** to create a new world (or select existing)
+2. Start writing naturally
+3. Use `:automate` to clean your lore database
 
 ---
 
@@ -263,34 +283,12 @@ results = memory.recall("strategy", top_k=5)
 
 **Who Visions LLC** | Strategic AI Intelligence
 
-- **Instagram**: [@aiwithdav3](https://instagram.com/aiwithdav3)
-- **YouTube**: [Ai with Dav3](https://youtube.com/aiwithdav3)
-- **Website**: [WhoVisions.com](https://WhoVisions.com)
+- 📸 **Instagram**: [@aiwithdav3](https://instagram.com/aiwithdav3)
+- 🎬 **YouTube**: [Ai with Dav3](https://youtube.com/aiwithdav3)
+- 🌐 **Website**: [WhoVisions.com](https://WhoVisions.com)
 
 ---
 
 ## 📜 License
 
-Proprietary - Who Visions LLC © 2025
-
-This is a closed-source project for Who Visions LLC operations. Unauthorized use, modification, or distribution is prohibited.
-
----
-
-## 🙏 Acknowledgments
-
-Built with:
-- **Google Vertex AI** - LLM infrastructure
-- **Gemini 2.x/3.x** - Language models
-- **LangChain** - Reasoning Engine integration
-- **FastAPI** - API server framework
-
----
-
-<div align="center">
-
-**[⬆ Back to Top](#-kaedra-v006---shadow-tactician)**
-
-Made with 🖤 by [Who Visions LLC](https://WhoVisions.com)
-
-</div>
+Proprietary - Who Visions LLC © 2026

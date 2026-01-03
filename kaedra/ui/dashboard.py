@@ -9,7 +9,8 @@ import time
 
 class KaedraDashboard:
     def __init__(self):
-        self.console = Console()
+        # Force terminal width to prevent layout collapse
+        self.console = Console(force_terminal=True, width=100, soft_wrap=True)
         self.status = "INITIALIZING"
         self.mic_status = "OFF"
         self.mic_level = 0.0
@@ -43,8 +44,11 @@ class KaedraDashboard:
         self.stream_buffer = [f"[{color}]{role}: [/{color}]"]
 
     def print_stream(self, text: str, color: str = "magenta", style: str = None):
-        # Print immediately for live streaming effect
-        self.console.print(text, end="", style=style or color)
+        # Print immediately for live streaming effect using raw stdout to avoid Rich buffering issues
+        import sys
+        # Clean basic ANSI colors if style provider not active (simplified)
+        sys.stdout.write(text)
+        sys.stdout.flush()
 
     def end_stream(self):
         self.console.print()  # Newline after stream ends

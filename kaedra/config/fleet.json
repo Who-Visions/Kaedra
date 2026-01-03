@@ -1,0 +1,45 @@
+{
+    "fleet_name": "👑 The Fleet",
+    "board_members": [
+        {
+            "id": "kronos",
+            "name": "⚡ KRONOS",
+            "role": "Lead Orchestrator",
+            "specialty": "Council coordination, peer review, synthesis",
+            "endpoint": "https://who-tester-agent-10579507338.us-central1.run.app",
+            "color": "#FFD700"
+        },
+        {
+            "id": "dav1d",
+            "name": "🎭 DAV1D",
+            "role": "Public Digital Twin",
+            "specialty": "Multi-agent council, autonomous ops",
+            "endpoint": "https://dav1d-322812104986.us-central1.run.app",
+            "color": "#00BFFF"
+        },
+        {
+            "id": "kaedra",
+            "name": "🌑 KAEDRA",
+            "role": "Shadow Tactician",
+            "specialty": "Strategic intelligence (BLADE/NYX)",
+            "endpoint": "https://kaedra-69017097813.us-central1.run.app",
+            "color": "#800080"
+        },
+        {
+            "id": "visions",
+            "name": "🎨 VISIONS",
+            "role": "Photography Mentor",
+            "specialty": "Visual arts, Gemini 3 Pro",
+            "endpoint": "https://visions-assistant-service-620633534056.us-central1.run.app",
+            "color": "#FF4500"
+        },
+        {
+            "id": "rhea",
+            "name": "🌙 RHEA NOIR",
+            "role": "VTuber Mentor",
+            "specialty": "5 modes, Caribbean vibes",
+            "endpoint": "https://rhea-noir-145241643240.us-central1.run.app",
+            "color": "#9370DB"
+        }
+    ]
+}
