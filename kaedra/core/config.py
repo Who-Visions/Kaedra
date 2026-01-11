@@ -11,6 +11,11 @@ try:
 except ImportError:
     pass
 
+try:
+    import google.genai as genai
+except ImportError:
+    genai = None
+
 # ══════════════════════════════════════════════════════════════════════════════
 # GCP CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
