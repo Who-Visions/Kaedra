@@ -124,6 +124,30 @@ To generate an image based on a description, output:
 Use this when the user wants to see something or requests an image/visualization.
 """
     
+    def query(self, message: str) -> dict:
+        """
+        Sync query method required by Vertex AI Reasoning Engine.
+        Wraps the async run method for compatibility.
+        """
+        import asyncio
+        
+        # Run the async method synchronously
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        # Execute async run
+        response = loop.run_until_complete(self.run(message))
+        
+        return {
+            "response": response.content,
+            "agent": self.name,
+            "model": getattr(self.prompt, '_default_model_key', 'unknown'),
+            "latency_ms": response.latency_ms
+        }
+    
     async def run(self, query: str, context: str = None) -> AgentResponse:
         """
         Process a query with full KAEDRA personality.
