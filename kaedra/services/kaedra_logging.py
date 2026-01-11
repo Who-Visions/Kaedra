@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Optional
 from dataclasses import dataclass
 
-from ..core.config import CHAT_LOGS_DIR, KAEDRA_HOME
+from kaedra.core.config import CHAT_LOGS_DIR, KAEDRA_HOME
 
 
 @dataclass

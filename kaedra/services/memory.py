@@ -21,7 +21,7 @@ class MemoryEntry:
     timestamp: str = ""
     metadata: Dict = field(default_factory=dict)
 
-from ..core.config import PROJECT_ID, LOCATION, MEMORY_DIR, AGENT_RESOURCE_NAME
+from kaedra.core.config import PROJECT_ID, LOCATION, MEMORY_DIR, AGENT_RESOURCE_NAME
 from ..core.memory_topics import get_customization_config
 
 class MemoryService:

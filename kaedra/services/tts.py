@@ -13,7 +13,7 @@ from google.genai import types
 from datetime import datetime
 from pathlib import Path
 
-from ..core.config import MODELS, PROJECT_ID, LOCATION
+from kaedra.core.config import MODELS, PROJECT_ID, LOCATION
 
 # Audio playback (only works on machines with audio output)
 try:

@@ -27,6 +27,9 @@ class RazerService:
         self.uri: Optional[str] = None
         self.session_id: Optional[int] = None
         self._heartbeat_thread: Optional[threading.Thread] = None
+        self._link_thread: Optional[threading.Thread] = None
+        self._link_target_color = [0x0000FF] * 5  # Red (BGR) - visible on startup
+        self._link_running = False
         self._running = False
         self.session = requests.Session()
         
@@ -50,7 +53,7 @@ class RazerService:
         payload = {
             "title": "Kaedra Story Engine",
             "description": "AI Narrative Lighting Control",
-            "author": {"name": "Who Visions", "contact": "dave@whovisions.com"},
+            "author": {"name": "Meralus", "contact": "meralus@watchtower.local"},
             "device_supported": ["keyboard", "mouse", "headset", "mousepad", "keypad", "chromalink"],
             "category": "application"
         }
@@ -64,11 +67,15 @@ class RazerService:
                 
                 if self.uri:
                     log.info(f"Razer Chroma connected: {self.uri}")
+                    
+                    # Wait for session port to be ready (SDK quirk)
+                    time.sleep(2.0)
+                    
                     self._start_heartbeat()
                     
-                    # Visual Confirmation: Flash Green
-                    self.set_static("green")
-                    threading.Timer(1.0, self.restore).start()
+                    # Visual Confirmation: REMOVED to prevent interference with Active Drive
+                    # self.set_static("green")
+                    # threading.Timer(1.0, self.restore).start()
                     
                     return True
             else:
@@ -82,19 +89,50 @@ class RazerService:
         return False
 
     def _start_heartbeat(self):
-        """Keep connection alive (required every 15s, we do 5s)."""
+        """Start the unified maintenance loop (heartbeat + active drive)."""
         self._running = True
-        self._heartbeat_thread = threading.Thread(target=self._heartbeat_loop, daemon=True)
+        self._heartbeat_thread = threading.Thread(target=self._maintain_connection_loop, daemon=True)
         self._heartbeat_thread.start()
 
-    def _heartbeat_loop(self):
+    def _maintain_connection_loop(self):
+        """
+        Unified loop for Heartbeat (1s) and Active Driving (10Hz).
+        Mimics the proven sequential logic of 'chroma_active_drive_test.py'
+        to avoid concurrency issues on the local REST server.
+        """
+        log.info("[Razer] Starting Unified Connection/Drive Loop")
+        
+        last_heartbeat = 0
+        
         while self._running and self.uri:
+            t_now = time.time()
+            
+            # 1. Heartbeat (Every 1.0s)
+            if t_now - last_heartbeat >= 1.0:
+                try:
+                    self.session.put(f"{self.uri}/heartbeat", timeout=1)
+                except: pass
+                last_heartbeat = t_now
+
+            # 2. Active Drive (Every tick ~ 100ms)
+            # Universal Drive: Feed all accessory endpoints to ensure all hardware responds
             try:
-                self.session.put(f"{self.uri}/heartbeat", timeout=2)
-                time.sleep(1.0) # 1s tick per manufacturer guidance
-            except:
-                # Connection likely lost
-                pass
+                # endpoint 'chromalink' (5 LEDs)
+                requests.put(f"{self.uri}/chromalink", json={"effect": "CHROMA_CUSTOM", "param": self._link_target_color}, timeout=0.2)
+                
+                # endpoint 'mousepad' (15 LEDs) - The Laptop Stand PID 3853 often maps here
+                # Tile the 5-zone color list to fulfill the 15-element requirement
+                requests.put(f"{self.uri}/mousepad", json={"effect": "CHROMA_CUSTOM", "param": self._link_target_color * 3}, timeout=0.2)
+                
+                # endpoint 'headset' (5 LEDs)
+                requests.put(f"{self.uri}/headset", json={"effect": "CHROMA_CUSTOM", "param": self._link_target_color}, timeout=0.2)
+                
+            except Exception as e:
+                log.warning(f"[Razer] Drive Loop Error: {e}")
+
+            time.sleep(0.1) # 10Hz Tick
+
+        log.info("[Razer] Unified Loop Stopped")
 
     def close(self):
         """Clean disconnect."""
@@ -128,7 +166,10 @@ class RazerService:
         """Set all devices to a static color."""
         color = self.COLORS.get(color_name.lower(), 0xFFFFFF)
         
-        # 'CHROMA_STATIC' effect
+        # Update target for the active drive loop (Stand)
+        self._link_target_color = [color] * 5
+        
+        # 'CHROMA_STATIC' effect for peripherals
         payload = {"effect": "CHROMA_STATIC", "param": {"color": color}}
         
         # Broadcast to main devices
@@ -172,8 +213,8 @@ class RazerService:
     def set_chromalink_static(self, color_name: str):
         """Set all 5 ChromaLink LEDs to a static color."""
         color = self.COLORS.get(color_name.lower(), 0xFFFFFF)
-        payload = {"effect": "CHROMA_STATIC", "param": {"color": color}}
-        self._send("chromalink", json_data=payload)
+        # Update target state for the active drive loop
+        self._link_target_color = [color] * 5
 
     def set_chromalink_zones(self, zone_colors: list):
         """
@@ -185,13 +226,8 @@ class RazerService:
             log.warning(f"ChromaLink requires exactly {self.CHROMALINK_LEDS} colors, got {len(zone_colors)}")
             return
         
-        # CHROMA_CUSTOM for chromalink expects a 1D array of 5 colors
-        payload = {"effect": "CHROMA_CUSTOM", "param": zone_colors}
-        resp = self._send("chromalink", json_data=payload)
-        if resp.get("result") == 0:
-            pass 
-        else:
-            log.warning(f"ChromaLink update failed: {resp}")
+        # Update target for active loop
+        self._link_target_color = list(zone_colors)
 
     def set_chromalink_fire(self):
         """Set ChromaLink to fire-like colors (useful for room ambiance)."""
@@ -298,8 +334,12 @@ class RazerService:
         self._broadcast_static(color_int)
 
     def _broadcast_static(self, color_int: int):
-        """Send static color to non-keyboard devices."""
-        payload = {"effect": "CHROMA_STATIC", "param": {"color": int(color_int)}}
+        """Send static color to non-keyboard devices and update Stand target."""
+        color_int = int(color_int)
+        # Update loop target for the stand
+        self._link_target_color = [color_int] * 5
+        
+        payload = {"effect": "CHROMA_STATIC", "param": {"color": color_int}}
         # Skip keyboard as it uses CHROMA_CUSTOM
         for device in ["mouse", "headset", "mousepad", "keypad", "chromalink", "headsetstand"]:
             self._send(device, json_data=payload)
@@ -362,11 +402,24 @@ class RazerService:
                     grid.append(row)
                 self.set_custom(grid)
                 
-                # Peripherals: Just keep them static base color (already set), 
-                # or maybe pulse them gently? Static is safer for wave.
-                # Re-broadcast occasionally in case of packet loss
-                if frame_count % 30 == 0:
-                     self._broadcast_static(base_color_int)
+                # SPATIAL WAVE FOR STAND (5 LEDs)
+                # Map 5 LEDs across the width
+                stand_colors = []
+                
+                for idx in [0, 5, 11, 16, 21]:
+                    # Calculate wave
+                    eff_x = min(idx, width-1)
+                    local_wave = (1.0 + math.sin(phase - (eff_x / width) * 2.0 * math.pi)) * 0.5
+                    
+                    # BOOSTED BRIGHTNESS: Min 0.2, Max 1.0 
+                    # Previously was too dim (0.05)
+                    local_v = self._clamp(0.2 + 0.8 * local_wave)
+                    stand_colors.append(self._bgr_int_from_hsv(hue, 1.0, local_v))
+
+                # Update peripherals EVERY frame for smoothness
+                self.set_chromalink_zones(stand_colors)
+                # Sync other devices to center color
+                self._broadcast_static(stand_colors[2])
                 
                 frame_count += 1
                 time.sleep(dt)

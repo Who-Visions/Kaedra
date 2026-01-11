@@ -16,7 +16,7 @@ except ImportError:
     genai = None
     types = None
 
-from ..core.config import VIDEO_DIR, VEO_MODELS, DEFAULT_VEO_MODEL, PROJECT_ID, LOCATION
+from kaedra.core.config import VIDEO_DIR, VEO_MODELS, DEFAULT_VEO_MODEL, PROJECT_ID, LOCATION
 
 
 @dataclass
@@ -67,7 +67,7 @@ class VisualService:
         
         # 1. Prefer Vertex AI (ADC) - Using Shared Singleton
         if PROJECT_ID and not api_key:
-             from ..core.config import get_gemini_client
+             from kaedra.core.config import get_gemini_client
              self.client = get_gemini_client()
         
         # 2. Fallback to API Keys (Legacy/Override)

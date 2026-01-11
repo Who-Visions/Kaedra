@@ -26,8 +26,15 @@ from tools.sync_notion import NotionBridge
 from kaedra.core.config import PROJECT_ID
 from kaedra.services.notion import retry_with_backoff
 
-# Initialize Gemini
-client = genai.Client(vertexai=True, project=PROJECT_ID, location="global")
+# Initialize Gemini via shared factory
+from kaedra.core.config import get_gemini_client, MODELS
+client = get_gemini_client()
+
+# STT & Storage
+from kaedra.services.storage_utils import upload_to_gcs, delete_from_gcs, blob_exists
+
+STT_BUCKET = f"kaedra-ingestion-temp-{PROJECT_ID}"
+NODE_PATH = r"C:\Program Files\nodejs\node.exe"
 
 # Paths
 CACHE_DIR = ROOT / "cache" / "youtube"
@@ -65,7 +72,7 @@ def summarize_lore(transcript: str, title: str) -> str:
     
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp", # Fast and capable
+            model=MODELS.get("flash", "gemini-3-flash-preview"), # Fast and capable
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.3
@@ -77,10 +84,17 @@ def summarize_lore(transcript: str, title: str) -> str:
         return "Lore summary unavailable."
 
 
-def run_ytdlp(args: List[str], timeout: int = 120) -> Optional[str]:
-    """Run yt-dlp with failsafe timeout."""
+def run_ytdlp(args: list, timeout: int = 120) -> str:
+    """Run yt-dlp with common arguments and error handling."""
+    base_args = [
+        "yt-dlp",
+        "--no-warn",
+        "--js-runtime", NODE_PATH, # Fix JS runtime missing
+        "--quiet"
+    ]
+    full_command = base_args + args
     try:
-        cmd = ["yt-dlp"] + args
+        cmd = full_command
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -162,7 +176,13 @@ def get_transcript(video_id: str, video_title: str) -> Optional[str]:
     # Find downloaded subtitle file
     vtt_files = list(temp_dir.glob(f"{video_id}*.vtt"))
     if not vtt_files:
-        print(f"   ⚠️ No subtitles found for {video_id}")
+        print(f"    🧠 No subtitles found for {video_id}. Switching to Gemini 3 Multimodal...")
+        transcript = transcribe_audio_multimodal(video_id, video_title)
+        if transcript:
+             # Cache STT result
+             cache_file.write_text(transcript, encoding="utf-8")
+             print(f"    ✅ Gemini 3 Transcript cached ({len(transcript)} chars)")
+             return transcript
         return None
     
     # Parse VTT to plain text
@@ -179,6 +199,78 @@ def get_transcript(video_id: str, video_title: str) -> Optional[str]:
         f.unlink()
     
     return transcript
+
+
+def transcribe_audio_multimodal(video_id: str, video_title: str) -> Optional[str]:
+    """Extract audio, upload to GCS (if needed), and transcribe via Gemini 3."""
+    temp_audio = CACHE_DIR / f"{video_id}.wav"
+    blob_name = f"ingestion/{video_id}.wav"
+    gcs_uri = f"gs://{STT_BUCKET}/{blob_name}"
+
+    # 1. Bucket Cooling: Check if file already exists in GCS
+    if blob_exists(STT_BUCKET, blob_name):
+        print(f"    ❄️ Found existing audio in bucket: {gcs_uri}. Skipping extraction/upload.")
+    else:
+        # 2. Extract audio using yt-dlp
+        print(f"    🎙️ Extracting audio for Gemini 3...")
+        run_ytdlp([
+            "--extract-audio",
+            "--audio-format", "wav",
+            "--audio-quality", "0",
+            "-o", str(CACHE_DIR / video_id),
+            f"https://www.youtube.com/watch?v={video_id}"
+        ], timeout=300)
+        
+        if not temp_audio.exists():
+            print(f"    ❌ Audio extraction failed for {video_id}")
+            return None
+
+        # 3. Upload to GCS
+        try:
+            print(f"    ☁️ Uploading audio to GCS: {blob_name}")
+            upload_to_gcs(str(temp_audio), STT_BUCKET, blob_name)
+        except Exception as e:
+            print(f"    ❌ GCS Upload failed: {e}")
+            return None
+        finally:
+            if temp_audio.exists():
+                temp_audio.unlink()
+
+    # 4. Gemini 3 Multimodal Transcription
+    try:
+        print(f"    🧠 Sending audio to Gemini 3 Flash for transcription...")
+        
+        prompt = f"""
+        TRANSCRIPTION AND LORE EXTRACTION TASK
+        Video: {video_title}
+        
+        1. Please transcribe the audio precisely into clean text.
+        2. Format the output with clear speaker markers if possible.
+        3. Do not omit any narrative or world-building details.
+        
+        Keep the transcription as the primary output.
+        """
+        
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview",
+            contents=[
+                types.Part.from_uri(file_uri=gcs_uri, mime_type="audio/wav"),
+                prompt
+            ],
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_level="low")
+            )
+        )
+        
+        if not response.text:
+            print(f"    ❌ Gemini 3 returned no text.")
+            return None
+            
+        return response.text
+
+    except Exception as e:
+        print(f"    ❌ Gemini 3 Transcription failed: {e}")
+        return None
 
 
 def parse_vtt_to_text(vtt_content: str) -> str:
@@ -214,7 +306,7 @@ def push_to_notion(video: Dict, transcript: str, world_id: str, ai_summary: Opti
     print(f"   📤 Pushing to Notion: {video['title'][:40]}...")
     
     try:
-        import requests
+        import httpx
         import toml
         
         # Load Notion config
@@ -306,11 +398,12 @@ def push_to_notion(video: Dict, transcript: str, world_id: str, ai_summary: Opti
             "children": initial_blocks + first_batch
         }
         
-        resp = requests.post(
-            "https://api.notion.com/v1/pages",
-            headers=headers,
-            json=payload
-        )
+        with httpx.Client(timeout=30.0) as client_http:
+            resp = client_http.post(
+                "https://api.notion.com/v1/pages",
+                headers=headers,
+                json=payload
+            )
         
         if resp.status_code != 200:
             print(f"   ❌ Notion error ({resp.status_code}): {resp.text}")
@@ -322,13 +415,14 @@ def push_to_notion(video: Dict, transcript: str, world_id: str, ai_summary: Opti
         # Append remaining blocks in batches of 100
         if remaining_blocks and page_id:
             print(f"   ➕ Appending {len(remaining_blocks)} remaining blocks...")
-            for i in range(0, len(remaining_blocks), 100):
-                batch = remaining_blocks[i:i + 100]
-                append_resp = requests.patch(
-                    f"https://api.notion.com/v1/blocks/{page_id}/children",
-                    headers=headers,
-                    json={"children": batch}
-                )
+            with httpx.Client(timeout=30.0) as client_http:
+                for i in range(0, len(remaining_blocks), 100):
+                    batch = remaining_blocks[i:i + 100]
+                    append_resp = client_http.patch(
+                        f"https://api.notion.com/v1/blocks/{page_id}/children",
+                        headers=headers,
+                        json={"children": batch}
+                    )
                 if append_resp.status_code != 200:
                     print(f"   ⚠️ Append error ({append_resp.status_code}): {append_resp.text}")
         

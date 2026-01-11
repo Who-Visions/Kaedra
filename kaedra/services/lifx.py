@@ -40,17 +40,20 @@ class LIFXService:
     
     def __init__(self, token: Optional[str] = None):
         self.token = token or os.environ.get("LIFX_TOKEN")
-        if not self.token:
-            raise ValueError("LIFX_TOKEN environment variable not set")
+        self.enabled = bool(self.token)
         
+        if not self.enabled:
+            self.headers = {}
+            return
+
         self.headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json"
         }
-        print(f"[*] LIFXService initialized")
     
     def _request(self, method: str, endpoint: str, **kwargs) -> dict:
         """Make API request."""
+        if not self.enabled: return {}
         url = f"{self.BASE_URL}{endpoint}"
         try:
             response = requests.request(method, url, headers=self.headers, **kwargs)

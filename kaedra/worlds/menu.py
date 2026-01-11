@@ -31,13 +31,48 @@ def select_world_interactive() -> str | None:
 
     for universe in sorted(by_universe.keys()):
         u_node = root.add(f"[bold white]{universe}[/]")
-        for w in by_universe[universe]:
-            label = f"[yellow]{i})[/] [cyan]{w.name}[/]"
-            if w.last_played:
-                label += f" [dim]({w.last_played.split('T')[0]})[/]"
-            u_node.add(label)
-            index_map[str(i)] = w.world_id
-            i += 1
+        
+        # Special handling for Veil Verse 3-level hierarchy
+        if universe == "Veil Verse":
+            earth_node = u_node.add("[bold green]Earth[/]")
+            mars_node = u_node.add("[bold red]Mars[/]")
+            others = []
+            
+            earth_worlds = []
+            mars_worlds = []
+            
+            for w in by_universe[universe]:
+                if "Earth" in w.name:
+                    earth_worlds.append(w)
+                elif "Mars" in w.name:
+                    mars_worlds.append(w)
+                else:
+                    others.append(w)
+            
+            # Helper to add worlds to nodes
+            def add_to_node(node, w_list, current_idx):
+                for w in w_list:
+                    label = f"[yellow]{current_idx})[/] [cyan]{w.name}[/]"
+                    if w.last_played:
+                        label += f" [dim]({w.last_played.split('T')[0]})[/]"
+                    node.add(label)
+                    index_map[str(current_idx)] = w.world_id
+                    current_idx += 1
+                return current_idx
+            
+            i = add_to_node(earth_node, earth_worlds, i)
+            i = add_to_node(mars_node, mars_worlds, i)
+            i = add_to_node(u_node, others, i) # Add remaining directly to universe
+            
+        else:
+            # Standard Flat List for other universes
+            for w in by_universe[universe]:
+                label = f"[yellow]{i})[/] [cyan]{w.name}[/]"
+                if w.last_played:
+                    label += f" [dim]({w.last_played.split('T')[0]})[/]"
+                u_node.add(label)
+                index_map[str(i)] = w.world_id
+                i += 1
     
     if not worlds:
        root.add("[dim i]Empty[/]")

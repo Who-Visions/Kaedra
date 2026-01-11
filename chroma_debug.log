@@ -1,0 +1,20 @@
+=== CHROMA DEBUG LOG - 2026-01-09 18:15:20.921895 ===
+[18:15:20.922] ============================================================
+[18:15:20.923] CHROMA STAND DIAGNOSTIC TEST
+[18:15:20.923] ============================================================
+[18:15:20.923] [STEP 1] POST to SDK init endpoint...
+[18:15:21.077]   Status: 200
+[18:15:21.077]   Response: {"sessionid":53346,"uri":"http://localhost:53346/chromasdk"}
+[18:15:21.078]   Session ID: 53346
+[18:15:21.078]   Session URI: http://localhost:53346/chromasdk
+[18:15:21.078] [STEP 2] Waiting 3s for session port to stabilize...
+[18:15:24.079] [STEP 3] Testing heartbeat...
+[18:15:24.083]   Heartbeat response: 200 - {"tick":1}
+[18:15:24.083] [STEP 4] Sending CHROMA_CUSTOM to chromalink (5 RED LEDs)...
+[18:15:24.084]   Payload: {"effect": "CHROMA_CUSTOM", "param": [255, 255, 255, 255, 255]}
+[18:15:24.088]   Response status: 200
+[18:15:24.089]   Response body: {"result":0}
+[18:15:24.089]   Result code: 0
+[18:15:24.090]   SUCCESS: SDK accepted the command
+[18:15:24.090] [STEP 5] Continuous active drive for 10 seconds...
+[18:15:24.090] >>> LOOK AT YOUR STAND NOW <<<

@@ -150,7 +150,7 @@ async def startup_event():
     print(f"[*] Initializing Kaedra Agent (Project: {PROJECT_ID})...")
     try:
         # Initialize services
-        prompt_service = PromptService(project=PROJECT_ID, location=LOCATION)
+        prompt_service = PromptService(project=PROJECT_ID, location=MODEL_LOCATION)
         memory_service = MemoryService() # Assumes default init is fine
         
         # Initialize Services

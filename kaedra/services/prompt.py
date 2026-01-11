@@ -16,7 +16,7 @@ except ImportError:
     genai = None
     types = None
 
-from ..core.config import MODELS, PROJECT_ID, LOCATION, MODEL_LOCATION, DEFAULT_MODEL
+from kaedra.core.config import MODELS, PROJECT_ID, LOCATION, MODEL_LOCATION, DEFAULT_MODEL
 
 @dataclass
 class PromptResult:

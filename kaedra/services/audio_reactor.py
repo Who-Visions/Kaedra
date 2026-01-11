@@ -13,8 +13,8 @@ class AudioReactor:
     - RMS Energy (Volume)
     - Bass/Kick detection (FFT)
     """
-    def __init__(self, device_name_filter: str = "Mix"):
-        self.device_index = self._find_device(device_name_filter)
+    def __init__(self, device_id: Optional[str | int] = "Elgato Out Only"):
+        self.device_index = self._find_device(device_id)
         self.sample_rate = 44100 # Standard audio
         self.block_size = 2048   # Good for FFT resolution
         self.channels = 1        # Mono is enough for beat detection
@@ -31,37 +31,43 @@ class AudioReactor:
         self.gain = 2.0        # Software gain
         self.smooth_factor = 0.8
         
-    def _find_device(self, name_filter: str) -> Optional[int]:
-        print(f"[*] AudioReactor: Scanning for '{name_filter}'...")
+    def _find_device(self, target: Optional[str | int]) -> Optional[int]:
+        if target is None: return None
+        if isinstance(target, int): return target
+        
+        name_filter = str(target)
         try:
             devices = sd.query_devices()
             best_idx = None
             
             # 1. Try to find Specific Target (e.g. "Elgato Out Only")
-            # Note: capturing from output requires WASAPI loopback support in sounddevice/PortAudio
             for i, device in enumerate(devices):
-                if name_filter.lower() in device['name'].lower():
-                    # If it has inputs, great.
-                    if device['max_input_channels'] > 0:
-                        print(f"[*] Found Target Input: {device['name']} (Index {i})")
-                        return i
-                    # If output only, we might try loopback if supported (often appears as a separate device)
+                if name_filter.lower() in device['name'].lower() and device['max_input_channels'] > 0:
+                    return i
                     
             # 2. Fallback: Search for any "Mix" or "Stream" input if target failed
-            print(f"[!] Target '{name_filter}' has no inputs. Searching alternatives...")
             for i, device in enumerate(devices):
                 if device['max_input_channels'] > 0:
                     name = device['name']
-                    # Prefer Elgato Mixes, avoid Mic inputs unless requested
                     if "Elgato" in name and ("Mix" in name or "Stream" in name or "Output" in name):
-                         print(f"[*] Found Alternative Input: {name} (Index {i})")
                          return i
             
-            print(f"[!] No suitable loopback found for '{name_filter}'. Using default.")
             return None
-        except Exception as e:
-            print(f"[!] Error querying devices: {e}")
+        except Exception:
             return None
+
+    @classmethod
+    def list_devices(cls):
+        """List all available audio input devices."""
+        try:
+            devices = sd.query_devices()
+            inputs = []
+            for i, d in enumerate(devices):
+                if d['max_input_channels'] > 0:
+                    inputs.append((i, d['name']))
+            return inputs
+        except Exception:
+            return []
 
     def start(self):
         if self.running: return

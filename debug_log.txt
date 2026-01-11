@@ -1,0 +1,12 @@
+Debugging get_entity readback...
+Result Type: <class 'str'>
+Result Content excerpt: ### [METADATA]
+**Canon Status**: Draft
+**Category**: Artifact
+**Status**: Active
+
+**Description**:
+A legendary weapon lost to time.
+
+### [BODY]
+A legendary weapon lost to time....

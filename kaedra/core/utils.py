@@ -34,7 +34,10 @@ def extract_all_metadata(response: str) -> dict:
         'transcription': "",
         'light_simple': None,
         'light_json': None,
+        'light_json': None,
         'notion_log': None,
+        'notion_action': None,
+        'exec_cmd': None,
         'exec_cmd': None,
         'clean_text': response
     }
@@ -57,7 +60,9 @@ def extract_all_metadata(response: str) -> dict:
     json_match = re.search(r'```json\s*(\{.*?\})\s*```', result['clean_text'], re.DOTALL)
     if not json_match:
         # Fallback for bare JSON
-        json_match = re.search(r'(\{(?:"actions"|"notion_log"):\s*.*?\})', result['clean_text'], re.DOTALL)
+    if not json_match:
+        # Fallback for bare JSON
+        json_match = re.search(r'(\{(?:"actions"|"notion_log"|"notion_action"):\s*.*?\})', result['clean_text'], re.DOTALL)
     
     if json_match:
         try:
@@ -75,11 +80,13 @@ def extract_all_metadata(response: str) -> dict:
             # Handle Notion
             if "notion_log" in data:
                 result['notion_log'] = data["notion_log"]
+            elif "notion_action" in data:
+                result['notion_action'] = data["notion_action"]
             
             # Remove JSON from clean text
             result['clean_text'] = re.sub(r'```json\s*\{.*?\}\s*```', '', result['clean_text'], flags=re.DOTALL)
-            # We assume extract_light_command handles the light cleaning, so let's call it for lights
-            # and let it return the light actions.
+            # Remove bare JSON if matched that way
+            result['clean_text'] = re.sub(r'(\{(?:"actions"|"notion_log"|"notion_action"):\s*.*?\})', '', result['clean_text'], flags=re.DOTALL)
         except: pass
 
     # Call original light extractor to handle "actions" key and specific [LIGHT:...] tags

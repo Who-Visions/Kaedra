@@ -22,7 +22,7 @@ class StoryHighlighter(RegexHighlighter):
         # Emotional States / Stats
         r"(?P<stat>\b(Fear|Rage|Hope|Desire|Tension|Emotion|Momentum|Coherence|Entropy)\b)",
         # Cinematic Actions
-        r"(?P<action>\b(Zoom|Freeze|Escalate|Calm|Rewind|Bridge|Shift|Next|Transition)\b)",
+        r"(?P<action>\b(Zoom|Freeze|Escalate|Calm|Rewind|Bridge|Shift|Next|Transition|Light|Show|Sync)\b)",
         # Mars / Lore Context
         r"(?P<lore>\b(Mars|Olympus Mons|Tharsis|Caldera|Martian|Crimson|Dust|Low-G|Valles Marineris)\b)",
         # Dialogue
@@ -67,9 +67,9 @@ log = logging.getLogger("kaedra")
 
 from rich.text import Text
 
-def render_hud(mode: str, scene: int, pov: str, tension: float, emotions: dict) -> Text:
+def render_hud(mode: str, scene: int, pov: str, tension: float, emotions: dict, statuses: dict = None) -> Text:
     """Subtle, non-dashboard HUD for Elite Chat."""
-    # Tension Bar (Minimalist but pulsing)
+    # Tension Bar
     bar_width = 15
     filled = int(tension * bar_width)
     pulse = "!" if (time.time() % 1.0 > 0.5 and tension > 0.8) else "░"
@@ -82,6 +82,22 @@ def render_hud(mode: str, scene: int, pov: str, tension: float, emotions: dict) 
     else:
         dom_emo, dom_val = "NULL", 0.0
         
-    hud_line = f" [bold cyan]{mode}[/] | [bold white]SCENE {scene}[/] | [bold magenta]{pov}[/] | [bold yellow]TENSION:[/] [red]{bar}[/] [bold yellow]{tension:.2f}[/] | [dim]{dom_emo} {dom_val:.2f}[/]"
+    # Service Icons
+    icons = []
+    if statuses:
+        if statuses.get("notion"): icons.append("[green]📓[/]")
+        else: icons.append("[red]📓[/]")
+        
+        if statuses.get("lifx"): icons.append("[green]💡[/]")
+        else: icons.append("[yellow]💡[/]")
+        
+        if statuses.get("razer"): icons.append("[green]⌨[/]")
+        else: icons.append("[red]⌨[/]")
+        
+        if statuses.get("gemini"): icons.append("[green]🧠[/]")
+        else: icons.append("[red]🧠[/]")
+
+    status_line = " ".join(icons)
+    hud_line = f" [bold cyan]{mode}[/] | [bold white]SCENE {scene}[/] | [bold magenta]{pov}[/] | [bold yellow]TENSION:[/] [red]{bar}[/] [bold yellow]{tension:.2f}[/] | [dim]{dom_emo} {dom_val:.2f}[/] | {status_line}"
     
     return Text.from_markup(hud_line)

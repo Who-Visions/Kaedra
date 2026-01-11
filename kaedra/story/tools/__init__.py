@@ -1,5 +1,18 @@
 # kaedra/story/tools - StoryEngine Tool Functions
-from .notion import read_page_content, list_universe_pages, update_page_content, run_lore_automations
+from .notion import (
+    read_page_content, 
+    list_universe_pages, 
+    update_page_content, 
+    run_lore_automations, 
+    search_universe, 
+    index_full_universe,
+    get_character,
+    get_location,
+    get_event,
+    get_entity,
+    create_entity,
+    request_scribe_expansion
+)
 from .lore import read_local_lore, propose_canon_update
 from .youtube import ingest_youtube_content
 from .director import consult_director
@@ -19,9 +32,17 @@ from .loredb import (
 
 ENGINE_TOOLS = [
     read_page_content, 
-    list_universe_pages, 
+    list_universe_pages,
+    index_full_universe, 
     update_page_content,
+    get_character,
+    get_location,
+    get_event,
+    get_entity,
+    create_entity,
+    request_scribe_expansion,
     run_lore_automations,
+    search_universe,
     read_local_lore, 
     set_engine_mode, 
     consult_director,
@@ -44,8 +65,10 @@ __all__ = [
     "ENGINE_TOOLS",
     "read_page_content",
     "list_universe_pages",
+    "index_full_universe",
     "update_page_content",
     "run_lore_automations",
+    "search_universe",
     "read_local_lore",
     "propose_canon_update",
     "ingest_youtube_content",

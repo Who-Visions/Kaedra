@@ -27,10 +27,13 @@ def query_lore(sql: str) -> str:
     """
     from kaedra.services.loredb import LoreDB
     
-    # Get world path from engine context (will be set at runtime)
-    world_path = Path.cwd() / "lore" / "worlds" / "current"
-    if not world_path.exists():
+    import os
+    # Get world path from engine context
+    world_path_str = os.getenv("KAEDRA_WORLD_PATH")
+    if not world_path_str:
         return json.dumps({"error": "No active world", "results": []})
+    
+    world_path = Path(world_path_str)
     
     lore = LoreDB(world_path)
     results = lore.query(sql)
@@ -54,9 +57,12 @@ def search_lore(text: str, limit: int = 20) -> str:
     """
     from kaedra.services.loredb import LoreDB
     
-    world_path = Path.cwd() / "lore" / "worlds" / "current"
-    if not world_path.exists():
+    import os
+    world_path_str = os.getenv("KAEDRA_WORLD_PATH")
+    if not world_path_str:
         return json.dumps({"error": "No active world", "results": []})
+    
+    world_path = Path(world_path_str)
     
     lore = LoreDB(world_path)
     results = lore.search(text, limit)
@@ -82,9 +88,12 @@ def create_lore_block(type: str, content: str, attrs: Optional[str] = None) -> s
     """
     from kaedra.services.loredb import LoreDB
     
-    world_path = Path.cwd() / "lore" / "worlds" / "current"
-    if not world_path.exists():
+    import os
+    world_path_str = os.getenv("KAEDRA_WORLD_PATH")
+    if not world_path_str:
         return json.dumps({"error": "No active world"})
+    
+    world_path = Path(world_path_str)
     
     lore = LoreDB(world_path)
     attrs_dict = json.loads(attrs) if attrs else {}
@@ -112,9 +121,12 @@ def update_lore_block(id: str, content: Optional[str] = None, attrs: Optional[st
     """
     from kaedra.services.loredb import LoreDB
     
-    world_path = Path.cwd() / "lore" / "worlds" / "current"
-    if not world_path.exists():
+    import os
+    world_path_str = os.getenv("KAEDRA_WORLD_PATH")
+    if not world_path_str:
         return json.dumps({"error": "No active world"})
+    
+    world_path = Path(world_path_str)
     
     lore = LoreDB(world_path)
     attrs_dict = json.loads(attrs) if attrs else None
@@ -139,9 +151,12 @@ def get_backlinks(id: str) -> str:
     """
     from kaedra.services.loredb import LoreDB
     
-    world_path = Path.cwd() / "lore" / "worlds" / "current"
-    if not world_path.exists():
+    import os
+    world_path_str = os.getenv("KAEDRA_WORLD_PATH")
+    if not world_path_str:
         return json.dumps({"error": "No active world", "results": []})
+    
+    world_path = Path(world_path_str)
     
     lore = LoreDB(world_path)
     results = lore.get_backlinks(id)
@@ -162,9 +177,12 @@ def lore_stats() -> str:
     """
     from kaedra.services.loredb import LoreDB
     
-    world_path = Path.cwd() / "lore" / "worlds" / "current"
-    if not world_path.exists():
+    import os
+    world_path_str = os.getenv("KAEDRA_WORLD_PATH")
+    if not world_path_str:
         return json.dumps({"error": "No active world"})
+    
+    world_path = Path(world_path_str)
     
     lore = LoreDB(world_path)
     stats = lore.stats()
@@ -185,9 +203,12 @@ def sync_lore_to_cloud(target: str, id: Optional[str] = None) -> str:
     """
     from kaedra.services.loredb import LoreDB
     
-    world_path = Path.cwd() / "lore" / "worlds" / "current"
-    if not world_path.exists():
+    import os
+    world_path_str = os.getenv("KAEDRA_WORLD_PATH")
+    if not world_path_str:
         return json.dumps({"error": "No active world"})
+    
+    world_path = Path(world_path_str)
     
     lore = LoreDB(world_path)
     
@@ -217,9 +238,12 @@ def query_bigquery_lore(sql: str) -> str:
     """
     from kaedra.services.loredb import LoreDB
     
-    world_path = Path.cwd() / "lore" / "worlds" / "current"
-    if not world_path.exists():
+    import os
+    world_path_str = os.getenv("KAEDRA_WORLD_PATH")
+    if not world_path_str:
         return json.dumps({"error": "No active world"})
+    
+    world_path = Path(world_path_str)
     
     lore = LoreDB(world_path)
     results = lore.query_bigquery(sql)

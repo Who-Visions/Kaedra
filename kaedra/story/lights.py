@@ -73,11 +73,21 @@ class LightsController:
         self.pulse_count = 0
         self.audio_reactor = None
 
-    def pulse(self, color: str = "white", brightness: float = 1.0, duration: float = 0.1):
-        """Short pulse for beat detection (non-blocking)."""
+    def pulse(self, color: str = "white", from_color: str = None, period: float = 0.5, cycles: float = 2, persist: bool = False):
+        """Pulse effect for emphasis moments. Triggers LIFX and Razer."""
+        # LIFX Pulse (non-blocking via queue)
+        if self.lifx:
+            selector = "group:Living Room"
+            def do_pulse():
+                self.gate.call(
+                    lambda: self.lifx.pulse(selector, color=color, from_color=from_color, period=period, cycles=cycles, persist=persist),
+                    sig=f"pulse:{color}"
+                )
+            self.request_update(do_pulse)
+        
+        # Razer Pulse (quick flash)
         if self.razer:
-            # We use a thread to avoid blocking the engine's physics tick
-            threading.Thread(target=self._fire_pulse, args=(color, brightness, duration), daemon=True).start()
+            threading.Thread(target=self._fire_pulse, args=(color, 1.0, period / 2), daemon=True).start()
 
     def _fire_pulse(self, color, brightness, duration):
         # 1. Flash ON
@@ -95,28 +105,29 @@ class LightsController:
         self.razer.broadcast_static(0x000000)
 
     def init(self) -> bool:
-        """Initialize LIFX with connection status."""
+        """Initialize lighting services (Razer + LIFX)."""
         try:
             # 1. Init Razer (Hardware)
+            from kaedra.services.razer import RazerService
             self.razer = RazerService()
             if self.razer.connect():
                 log.info("Razer Chroma linked.")
             else:
                 log.warning("Razer Synapse not found (Hardware skipped)")
             
-            # 2. Init LIFX (IoT)
-            if not LIFX_TOKEN:
-                 log.warning("LIFX_TOKEN not set - lights disabled")
+            # 2. Init LIFX Service (Silent if disabled)
+            self.lifx = LIFXService()
+            if not self.lifx.enabled:
+                 log.info("LIFX: Service disabled (Token missing)")
                  return False
 
-            self.lifx = LIFXService()
             lights = self.lifx.list_lights()
             if not lights:
-                log.warning("LIFX: No lights found")
+                log.warning("LIFX: No lights found on account")
+                self.lifx.enabled = False
                 return False
                 
-            # Capture initial state of the target group if possible
-            # For now, we just grab the first light's state as a baseline reference
+            # Baseline reference
             first_light = lights[0]
             self._initial_state = {
                 "color": first_light.color,
@@ -129,61 +140,25 @@ class LightsController:
             self._lifx_thread = threading.Thread(target=self._worker, daemon=True)
             self._lifx_thread.start()
             
-            # Startup Mood: Purple 35%
-            # hue=280 (Purple), sat=1.0, bri=0.35
+            # Startup Mood
             self.set_color(hue=280, saturation=1.0, brightness=0.35)
-            
             log.info(f"LIFX connected: {len(lights)} light(s)")
             return True
         except Exception as e:
-            log.warning(f"Lights init panic: {e}")
+            log.warning(f"Lights init failed: {e}")
             return False
 
-    def set_color(self, color_name: str, brightness: float = 1.0):
-        """Initialize LIFX with connection status."""
-        if not LIFX_TOKEN:
-            log.warning("LIFX_TOKEN not set - lights disabled")
-            return False
+    def set_color_named(self, color_name: str, brightness: float = 1.0):
+        """Set LIFX color by name (Convenience wrapper)."""
+        if not self.lifx or not self.lifx.enabled:
+            return
             
-        try:
-            # 1. Init Razer (Hardware)
-            self.razer = RazerService()
-            if self.razer.connect():
-                log.info("Razer Chroma linked.")
-            else:
-                log.warning("Razer Synapse not found (Hardware skipped)")
-            
-            # 2. Init LIFX (IoT)
-            self.lifx = LIFXService()
-            lights = self.lifx.list_lights()
-            if not lights:
-                log.warning("LIFX: No lights found")
-                return False
-                
-            # Capture initial state of the target group if possible
-            # For now, we just grab the first light's state as a baseline reference
-            first_light = lights[0]
-            self._initial_state = {
-                "color": first_light.color,
-                "power": first_light.power,
-                "brightness": first_light.brightness
-            }
-            
-            # Start background worker
-            self._running = True
-            self._lifx_thread = threading.Thread(target=self._worker, daemon=True)
-            self._lifx_thread.start()
-            
-            # Startup Mood: Purple 35%
-            # hue=280 (Purple), sat=1.0, bri=0.35
-            self.set_color(hue=280, saturation=1.0, brightness=0.35)
-            
-            log.info(f"LIFX connected: {len(lights)} light(s)")
-            return True
-            
-        except Exception as e:
-            log.warning(f"LIFX init failed: {e}")
-            return False
+        def do_set():
+            self.gate.call(
+                lambda: self.lifx.set_color("group:Living Room", color=color_name, brightness=brightness),
+                sig=f"named:{color_name}:{brightness}"
+            )
+        self.request_update(do_set)
     
     def _worker(self):
         """Background worker for LIFX updates."""

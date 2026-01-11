@@ -29,10 +29,10 @@ from ..core.config import (
     THINKING_MESSAGES, LYRICS_DB, STARTUP_VIBES, RANDOM_FACTS
 )
 from ..services.memory import MemoryService
-from ..services.logging import LoggingService
+from ..services.kaedra_logging import LoggingService
 from ..services.prompt import PromptService
 from ..services.web import WebService
-from ..services import VIDEO_AVAILABLE, VideoService
+from ..services import VIDEO_AVAILABLE, VisualService
 from ..agents.kaedra import KaedraAgent
 from ..agents.blade import BladeAgent
 from ..agents.nyx import NyxAgent
@@ -54,7 +54,7 @@ def print_banner():
 ║   {Colors.GRAD_PURPLE}╚═╝  ╚═╝{Colors.GRAD_PINK}╚═╝  ╚═╝{Colors.GRAD_PINK}╚══════╝{Colors.GRAD_BLUE}╚═════╝ {Colors.GRAD_BLUE}╚═╝  ╚═╝{Colors.GRAD_GOLD}╚═╝  ╚═╝{Colors.GRAD_PURPLE}                            ║
 ║                                                                               ║
 ║   {Colors.GRAD_BLUE}v{__version__} | {__codename__} | {LOCATION}{Colors.GRAD_PURPLE}                                        ║
-║   {Colors.GRAD_GOLD}Who Visions LLC{Colors.GRAD_PURPLE}                                                             ║
+║   {Colors.GRAD_GOLD}Meralus{Colors.GRAD_PURPLE}                                                                     ║
 ║                                                                               ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝{Colors.RESET}
     """)
@@ -73,7 +73,7 @@ def print_banner():
 ║   {Colors.GRAD_PURPLE}╚═╝  ╚═╝{Colors.GRAD_PINK}╚═╝  ╚═╝{Colors.GRAD_PINK}╚══════╝{Colors.GRAD_BLUE}╚═════╝ {Colors.GRAD_BLUE}╚═╝  ╚═╝{Colors.GRAD_GOLD}╚═╝  ╚═╝{Colors.GRAD_PURPLE}                            ║
 ║                                                                               ║
 ║   {Colors.GRAD_BLUE}v{__version__} | {__codename__} | {LOCATION}{Colors.GRAD_PURPLE}                                        ║
-║   {Colors.GRAD_GOLD}Who Visions LLC{Colors.GRAD_PURPLE}                                                             ║
+║   {Colors.GRAD_GOLD}Meralus{Colors.GRAD_PURPLE}                                                                     ║
 ║                                                                               ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝{Colors.RESET}
     """)
@@ -87,8 +87,8 @@ def print_help():
 ╠═══════════════════════════════════════════════════════════════════════════════╣
 ║                                                                               ║
 ║  MODEL SWITCHING                                                              ║
-║    /flash      → Gemini 2.5 Flash (~$0.008) ⚡ FAST                            ║
-║    /pro        → Gemini 2.5 Pro (~$0.031) 🎯 BALANCED                         ║
+║    /flash      → Gemini 3 Flash Preview (~$0.008) ⚡ FAST                     ║
+║    /pro        → Gemini 3 Pro Preview (~$0.031) 🎯 BALANCED                   ║
 ║    /ultra      → Gemini 3 Pro Preview (~$0.038) 🔥 POWERFUL                   ║
 ║    /models     → Show available models                                        ║
 ║                                                                               ║
@@ -245,14 +245,14 @@ def main():
     prompt = PromptService(model_key=DEFAULT_MODEL)
     web = WebService()
     
-    # Initialize video service (optional)
-    video = None
-    if VIDEO_AVAILABLE and VideoService:
+    # Initialize visual service (optional)
+    visual = None
+    if VIDEO_AVAILABLE and VisualService:
         try:
-            video = VideoService(model_key=DEFAULT_VEO_MODEL)
-            print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Video generation: READY")
+            visual = VisualService(model_key=DEFAULT_VEO_MODEL)
+            print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Visual generation: READY")
         except Exception as e:
-            print(f"{Colors.DIM}[!] Video generation unavailable: {e}{Colors.RESET}")
+            print(f"{Colors.DIM}[!] Visual generation unavailable: {e}{Colors.RESET}")
     
     # Initialize agents
     kaedra = KaedraAgent(prompt, memory)
@@ -300,7 +300,7 @@ def main():
                 if cmd == "/exit":
                     if logger.is_session_active:
                         logger.stop_session()
-                    print(f"{Colors.kaedra_tag()} Severing link. Until next time, Commander.")
+                    print(f"{Colors.kaedra_tag()} Severing link. Until next time, Commander Meralus.")
                     break
                 
                 if cmd == "/help":
@@ -465,20 +465,20 @@ def main():
                 # VIDEO GENERATION COMMANDS
                 # ══════════════════════════════════════════════════════════
                 
-                if cmd.startswith("/video ") and video:
+                if cmd.startswith("/video ") and visual:
                     prompt = user_input[7:].strip()
                     if not prompt:
                         print(f"{Colors.system_tag()} Usage: /video <prompt>")
                         continue
                     
-                    print(f"\n{Colors.NEON_PURPLE}[VIDEO GENERATION]{Colors.RESET}")
-                    print(f"  Model: {video.model}")
+                    print(f"\n{Colors.NEON_PURPLE}[VISUAL GENERATION]{Colors.RESET}")
+                    print(f"  Model: {visual.model}")
                     print(f"  Prompt: {prompt[:80]}...")
                     print(f"\n{Colors.DIM}Starting generation (this may take several minutes)...{Colors.RESET}\n")
                     
                     try:
-                        result = video.generate_video(prompt)
-                        print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Video generated!")
+                        result = visual.generate_video(prompt)
+                        print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Visual generated!")
                         print(f"  File: {result.file_path}")
                         print(f"  Duration: {result.duration_seconds:.1f}s")
                         print(f"  Model: {result.model}\n")
@@ -487,20 +487,20 @@ def main():
                         print(f"{Colors.NEON_RED}[ERROR]{Colors.RESET} {e}\n")
                     continue
                 
-                if cmd.startswith("/videoimg ") and video:
+                if cmd.startswith("/videoimg ") and visual:
                     prompt = user_input[10:].strip()
                     if not prompt:
                         print(f"{Colors.system_tag()} Usage: /videoimg <prompt>")
                         continue
                     
-                    print(f"\n{Colors.NEON_PURPLE}[VIDEO GENERATION - WITH IMAGE]{Colors.RESET}")
+                    print(f"\n{Colors.NEON_PURPLE}[VISUAL GENERATION - WITH IMAGE]{Colors.RESET}")
                     print(f"  Step 1: Generating image with Nano Banana...")
-                    print(f"  Step 2: Generating video with {video.model}...")
+                    print(f"  Step 2: Generating video with {visual.model}...")
                     print(f"\n{Colors.DIM}This may take several minutes...{Colors.RESET}\n")
                     
                     try:
-                        result = video.generate_video_with_image(prompt)
-                        print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Video generated!")
+                        result = visual.generate_video_with_image(prompt)
+                        print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Visual generated!")
                         print(f"  File: {result.file_path}")
                         print(f"  Duration: {result.duration_seconds:.1f}s")
                         print(f"  Model: {result.model}\n")
@@ -509,7 +509,7 @@ def main():
                         print(f"{Colors.NEON_RED}[ERROR]{Colors.RESET} {e}\n")
                     continue
                 
-                if cmd.startswith("/extend ") and video:
+                if cmd.startswith("/extend ") and visual:
                     parts = user_input[8:].strip().split(" ", 1)
                     if len(parts) < 2:
                         print(f"{Colors.system_tag()} Usage: /extend <video_file> <extension_prompt>")
@@ -518,14 +518,14 @@ def main():
                     video_file = parts[0].strip()
                     extension_prompt = parts[1].strip()
                     
-                    print(f"\n{Colors.NEON_PURPLE}[VIDEO EXTENSION]{Colors.RESET}")
+                    print(f"\n{Colors.NEON_PURPLE}[VISUAL EXTENSION]{Colors.RESET}")
                     print(f"  Extending: {video_file}")
                     print(f"  Prompt: {extension_prompt[:80]}...")
                     print(f"\n{Colors.DIM}This may take several minutes...{Colors.RESET}\n")
                     
                     try:
-                        result = video.extend_video(video_file, extension_prompt)
-                        print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Video extended!")
+                        result = visual.extend_video(video_file, extension_prompt)
+                        print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Visual extended!")
                         print(f"  File: {result.file_path}")
                         print(f"  Duration: {result.duration_seconds:.1f}s\n")
                         logger.log_message("VIDEO", f"Extended: {result.file_path}", result.model)
@@ -534,21 +534,21 @@ def main():
                     continue
                 
                 if cmd == "/veomodel" or cmd.startswith("/veomodel "):
-                    if not video:
-                        print(f"{Colors.system_tag()} Video generation not available.")
+                    if not visual:
+                        print(f"{Colors.system_tag()} Visual generation not available.")
                         continue
                     
                     if cmd.startswith("/veomodel "):
                         model_key = user_input[10:].strip().lower()
                         if model_key in VEO_MODELS:
-                            video.set_model(model_key)
+                            visual.set_model(model_key)
                             print(f"{Colors.system_tag()} Veo model: {VEO_MODELS[model_key]}")
                         else:
                             print(f"{Colors.system_tag()} Unknown model. Available: {', '.join(VEO_MODELS.keys())}")
                     else:
                         print(f"\n{Colors.GOLD}[VEO MODELS]{Colors.RESET}\n")
                         for key, model_name in VEO_MODELS.items():
-                            marker = " ← ACTIVE" if key == video.model_key else ""
+                            marker = " ← ACTIVE" if key == visual.model_key else ""
                             print(f"  • {key}: {model_name}{marker}")
                         print()
                     continue

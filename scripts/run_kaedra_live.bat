@@ -6,5 +6,5 @@ FOR /F "eol=# tokens=*" %%i IN (.env) DO (
     SET "%%i"
 )
 
-call .venv\Scripts\python.exe listen_and_speak.py --tts pro --mic "Realtek"
+call .venv\Scripts\python.exe legacy\listen_and_speak.py --tts pro --mic "Realtek"
 pause

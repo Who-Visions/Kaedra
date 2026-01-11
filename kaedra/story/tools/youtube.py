@@ -2,6 +2,7 @@
 StoryEngine YouTube Tools
 Ingest YouTube content and save evidence packets.
 """
+import os
 import re
 import json
 import hashlib
@@ -10,6 +11,7 @@ from datetime import datetime
 from typing import Any, Dict
 
 from kaedra.ingestion import IngestionManager
+from ..ui import console
 
 
 def extract_youtube_id(url: str) -> str:
@@ -112,13 +114,12 @@ def ingest_youtube_content(url: str) -> str:
     from tools.ingest_youtube import ingest_single_video
     console.print(f"[dim]>> [YOUTUBE] Triggering pipeline for: {url}...[/]")
     try:
-        # Default world_id for now, engine can be updated later to pass this dynamically
-        # world_id = "world_bee9d6ac" 
-        from kaedra.story.engine import StoryEngine
-        # We'll try to get it if possible, otherwise fallback
-        world_id = "world_bee9d6ac"
+        # Get active world from environment (set by StoryEngine)
+        world_id = os.getenv("KAEDRA_ACTIVE_WORLD", "world_bee9d6ac")
         
+        # Trigger the pipeline
         ingest_single_video(url, world_id)
+        
         return (
             "[INGEST OK]\n"
             f"Video pushed to Notion Ingestion Queue.\n"
