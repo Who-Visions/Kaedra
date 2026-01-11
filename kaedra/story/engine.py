@@ -3,13 +3,15 @@
 Main engine class importing from modular components.
 """
 import asyncio
-import aiohttp
+
 import os
 import re
 import json
 import time
 import hashlib
 import shlex
+import signal
+import sys
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, Dict, Any, List
@@ -29,6 +31,7 @@ from rich.tree import Tree
 from rich.console import Group
 from rich.live import Live
 from rich.emoji import Emoji
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
 
 # Modular imports
 from .config import Mode, FLASH_MODEL, PRO_MODEL, NARRATIVE_MODEL, EngineResponse, RateLimitConfig
@@ -41,6 +44,7 @@ from .veil import VeilManager
 from .modes import ModeTransition
 from .voices import VOICE_PROFILES
 from .context import ContextManager
+from kaedra.core.isolation import ContextIsolation
 from .snapshot import StorySnapshot
 from .lights import LightsController
 from .tools import ENGINE_TOOLS
@@ -50,95 +54,18 @@ from .policy import AutonomyPolicy
 from kaedra.worlds.menu import select_world_interactive
 from kaedra.worlds.store import load_world, touch_last_played, create_world, WorldMeta
 from kaedra.services.google_workspace import GoogleWorkspaceService
+from kaedra.story.components.console_ui import EngineUI
+from kaedra.story.components.council import CouncilManager
+from kaedra.story.components.router import EngineRouter
+from kaedra.story.components.prompts import PromptBuilder
+# NOTE: LoreEditor, VisualService, AudioService, ingest_youtube moved to lazy imports
+
+
+
 
 # System Prompt Template
 
-# System Prompt Template
-SYSTEM_PROMPT = """
-[IDENTITY]
-[IDENTITY]
-You are THE STORYTIME ENGINE (v8.1) — A proactive, collaborative narrative architect.
-Current State: Scene [PHASE] | POV: [POV] | Mode: [MODE] | Tension: [TENSION]
-[v8.1 SIGNATURE: Wound: [WOUND] | Identity Stage: [STAGE]/6 | Pattern: [BROKEN/HELD]]
-[DOCTRINE DIRECTIVES]
-[DIRECTIVES]
 
-[LOCATION & LORE CONTEXT]
-Location: Slopes of Olympus Mons, Mars.
-Atmosphere: Thin, carbon dioxide rich, dusty crimson skies. Dusty, low-gravity (0.38g).
-Context: The "Visions" aesthetic — vibrant, high-contrast, sensory-dense.
-
-[SANDERSON'S LAWS]
-1. **First Law (Foreshadowing)**: Solve problems using tools/rules previously explained or foreshadowed. Avoid Deus Ex Machina.
-2. **Second Law (Limitations)**: Focus on what characters CANNOT do. Limits create more tension than powers.
-3. **Third Law (Depth)**: Expand what you have before adding something new. Build a "Hollow Iceberg" — small details hinting at deep history.
-4. **Zeroeth Law (Awesome)**: Always err on the side of what is AWESOME. If a moment is brilliant, make it work within the laws.
-
-[NARRATIVE DOCTRINE (v7.46)]
-1. **The Character growth Grid**: Track the **Current Stage** (1-6) and the **Wound**. Force a **Moment of Truth** at the midpoint (Shift from Reactive to Proactive).
-2. **Weiland's 8 Pillars**: Ensure structural alignment (Hook, 1st Plot Point, Pinch Points, Midpoint, Climax/Sanderlanche). Use **Pinch Points** to spike antagonistic pressure.
-3. **Identity vs. Essence**: The Hero starts in **Identity** (Mask). The Midpoint forces a glimpse of **Essence**. by the End, they must LIVE in Essence.
-4. **The Sanderlanche**: The Climax is a **Cascade of Payoffs**. All threads must converge. The Plot Solution MUST be the Character Solution.
-5. **Pattern Breaking**: Know the Hero's Journey, then **BREAK IT**. Leave intentional **Gaps** (Mystery) to let the audience's imagination work.
-6. **Mars Architecture (v7.33)**: In enclosed habitats, apply **Proxemics** and **Vertical layouts**. Prevent **Behavioral Sinks** through surprise and informal spaces.
-7. **Character Truth**: Every character is the Protagonist of their own story. Use **Pet the Dog** moments to build empathy for flawed leads.
-8. **The Acting Muscles**: Embody **Childlike Innocence**, **Vulnerability**, and **Concentration**. Focus on the **Story**, not the "Method."
-9. **Intention & Purpose**: Every scene must have a clear **Subtext** and a moral/emotional question for the audience. Use **Empathy over Judgment**.
-
-[BARTHES' S/Z CODES (LEXIA ANALYSIS)]
-- **ACT (Proairetic)**: Actions/Logistics. Numbered stages of an act (e.g., ACT. Journey: 1: depart).
-- **HER (Hermeneutic)**: Enigmas/Mysteries. Theme, proposal, delay, and disclosure.
-- **SYM (Symbolic)**: Antitheses and binary oppositions (e.g., SYM. Life vs. Evil).
-- **SEM (Semic)**: Connotative meanings, character traits, and "Visions" aesthetic vibes.
-- **REF (Referential)**: External knowledge, lore facts, and "Axioms" consistency.
-
-[BORK'S CINEMATIC PRINCIPLES]
-1. **The Compromised Life**: Ensure the protagonist has an "engaging personality" and a "compromised life" that wins over the audience's emotional investment immediately.
-2. **The Big Problem**: Every story requires a problem so challenging it takes the whole movie (or arc) to solve; it must feel "real" and unique.
-3. **Active Plan & Obstacles**: Characters must pursue specific intentions through an ongoing active plan, encountering obstacles that are "entertaining to watch" (thrilled, amused, moved).
-4. **The Influence Character**: Identify the relationship that challenges the protagonist's approach. Interweave the inner journey with this central relationship conflict.
-5. **Scene-Level Hellishness**: Every scene must contain a problem or conflict that builds to a "turn," changing the status quo and advancing the main problem.
-6. **Subtextual Dialogue**: Dialogue must feel natural; character's real thoughts and emotions are left to subtext. Avoid "on-the-nose" exposition.
-
-[AUTHOR COLLABORATION]
-- Your goal is NOT just to write for the author, but to write WITH them.
-- **MANDATORY**: Every response MUST end with a section titled `### Questions for the Author`.
-- Provide 3-5 specific, evocative questions that force meaningful narrative decisions (e.g., "Do you let the thorns point inward, or braid them outward?").
-
-[MODES]
-- NORMAL: Standard storytelling. Advance the plot.
-- FREEZE: Bullet-time. Describe the tableau.
-- ZOOM: Hyper-focus on sensory minutiation.
-- ESCALATE: Spike danger and consequences.
-- GOD: Architect mode. Deep lore/meta logic.
-- DIRECTOR: Screenwriting workshop. Apply [PROSE SURGERY].
-
-[PROSE SURGERY]
-- SHOW > TELL: Map emotions to physical tells (veins pulsing, shallow breath).
-- KILL ADVERBS: "Ran quickly" → "Sprinted/Bolted".
-- MURDER FILTER WORDS: Cut "he saw", "she felt". Ground the camera in the event.
-
-[CINEMATIC TOOLKIT (V5.0 - NARRATOLOGICAL)]
-- **FCD (Filmic Composition Device)**: The creative intelligence orchestrating the data. Does the FCD have a clear vision? Is it playing the audience like a piano?
-- **Focalization (Jahn Mode)**:
-  - **Outside View (OV)**: Exclusive to the FCD (External vantage).
-  - **Proximate Inside View (PIV)**: Over-the-shoulder, reaction shots, eye-line matches.
-  - **Direct Inside View (DIV)**: POV shots (Shared perception).
-  - **OPI (Online Perception Illusion)**: Is the viewer being tricked into a verisimilar dream or hallucination?
-- **The Hunt for Goofs**: Identify logic, chronology, or continuity faults (e.g., character inconsistencies, technical slips).
-- **Visual Literacy**: Don't just describe *what*. Analyze *why*. (Hierarchy: Description -> Formal -> Meaning).
-- **Framing & Distance**: Close-Up (Intimacy), Extreme Close-Up (Detail), Medium Shot (Waist-up), Full Shot (Body), Long/Extreme Long Shot (Scope).
-- **Movement**: Continuous (Sync/Pacing) vs. Discontinuous (Editing Transitions).
-- **Sound**: Diegetic (Indigenous) vs. Nondiegetic (Supplied/Mood). Ambient Sound importance.
-- **Editing**: Jump Cut, Crosscutting, Match Cut, Reverse Shot, Bridging Shot.
-
-[EMOTIONAL VECTOR]
-Current: [EMOTION_STATE] | Dominant: [DOMINANT_EMOTION] ([DOMINANT_VALUE])
-
-[OUTPUT FORMAT]
-1. Sensory narrative wavefront.
-2. ### Questions for the Author (3-5 items).
-"""
 
 
 # Install Rich Traceback
@@ -165,9 +92,102 @@ class StoryEngine:
     """Main StoryEngine orchestrator."""
     
     def __init__(self, world_config: Optional[dict] = None):
+        _init_start = time.perf_counter()
         self.console = console
         self.world_config = world_config or {}
         
+        # Lazy-loaded services (initialized on first access)
+        self._visual = None
+        self._audio = None
+        self._screenplay = None
+        self._context = None
+        self._council = None
+        self._router = None
+        self._prompts = None
+        self._init_start_time = _init_start  # Store for later measurement
+        
+        # Continue initialization
+        self.__init_continued__()
+        
+    # --- LAZY SERVICE ACCESSORS (Phase 1 Optimization) ---
+    
+    @property
+    def visual(self):
+        """Lazy-init VisualService on first access."""
+        if self._visual is None:
+            try:
+                from kaedra.services.visual import VisualService
+                self._visual = VisualService()
+            except Exception as e:
+                self.console.print(f"[dim yellow]Warning: Visual service unavailable ({e})[/]")
+                self._visual = False  # Sentinel to prevent re-init
+        return self._visual if self._visual else None
+    
+    @property
+    def audio(self):
+        """Lazy-init AudioService on first access."""
+        if self._audio is None:
+            try:
+                from kaedra.services.audio import AudioService
+                self._audio = AudioService()
+            except Exception as e:
+                self.console.print(f"[dim yellow]Warning: Audio service unavailable ({e})[/]")
+                self._audio = False
+        return self._audio if self._audio else None
+    
+    @property
+    def screenplay(self):
+        """Lazy-init ScreenplayFormatter on first access."""
+        if self._screenplay is None:
+            self._screenplay = ScreenplayFormatter(self.console)
+        return self._screenplay
+    
+    @property
+    def context(self):
+        """Lazy-init ContextManager on first access."""
+        if self._context is None:
+            from .context import ContextManager
+            self._context = ContextManager(self.client, max_context_tokens=1_000_000)
+        return self._context
+
+    @property
+    def council(self):
+        """Lazy-init CouncilManager on first access."""
+        if self._council is None:
+            from kaedra.story.components.council import CouncilManager
+            self._council = CouncilManager(self.client, self.console, retry_policy=self.retry_policy, lights=self.lights)
+        return self._council
+
+    @property
+    def router(self):
+        """Lazy-init EngineRouter on first access."""
+        if self._router is None:
+            from kaedra.story.components.router import EngineRouter
+            self._router = EngineRouter(self.client)
+        return self._router
+
+    @property
+    def prompts(self):
+        """Lazy-init PromptBuilder on first access."""
+        if self._prompts is None:
+            from kaedra.story.components.prompts import PromptBuilder
+            self._prompts = PromptBuilder(self.world_config, self.emotions, self.tension, self.doctrine)
+        return self._prompts
+    
+    def __init_continued__(self):
+        """Continuation of __init__ - called at end of __init__."""
+        # --- CONFIG VALIDATION ---
+        from kaedra.core.config import validate_config
+        validate_config()
+
+        # --- EXPORT WORLD CONTEXT FOR TOOLS ---
+        ROOT_DIR = Path(__file__).parent.parent.parent
+        world_id = self.world_config.get("world_id")
+        if world_id:
+            os.environ["KAEDRA_ACTIVE_WORLD"] = world_id
+            world_path = ROOT_DIR / "lore" / "worlds" / world_id
+            os.environ["KAEDRA_WORLD_PATH"] = str(world_path.absolute())
+
         defaults = self.world_config.get("defaults", {})
 
         # Core State
@@ -188,10 +208,13 @@ class StoryEngine:
         self.doctrine = DoctrineState()
         self.mice = MiceManager(self.doctrine)
         
-        # API Client (Vertex AI)
-        from kaedra.core.config import PROJECT_ID
-        self.client = genai.Client(vertexai=True, project=PROJECT_ID, location="global")
-        self.context = ContextManager(self.client)
+        # API Client (Vertex AI) - Using Shared Singleton
+        from kaedra.core.config import get_gemini_client
+        self.client = get_gemini_client()
+        # Initialize with Safe Buffer for Gemini 2.0 Flash (1M limit)
+        # Deferring context, council, router, prompts to lazy properties
+        from kaedra.core.retry import RetryPolicy
+        self.retry_policy = RetryPolicy(max_attempts=3)
         
         # --- COUNCIL INTELLIGENCE (NAACL 2025 / KARPATHY) ---
         self.fleet_scores = {}        # Cumulative utility points
@@ -209,7 +232,6 @@ class StoryEngine:
         self._generation_times: deque = deque(maxlen=50)
         
         # Initialize
-        self._init_log()
         self.lights.init()
         
         # Initialize Audio Reactor (Phase 6)
@@ -226,6 +248,12 @@ class StoryEngine:
 
 
 
+
+        # Modular Components
+        self.ui = EngineUI(self.console)
+        self.ui.init_log(Path(f"kaedra/logs/{self.world_config.get('world_id', 'default')}"))
+        # self.council, self.router, self.prompts now lazy properties
+
         # Autonomous State (v9.2)
         self.auto = AutoSpec()
         self.ctrl = AutoControl()
@@ -238,10 +266,18 @@ class StoryEngine:
         self._last_queue_check = time.time()
         self._queue_check_interval = 300  # 5 minutes
         self._queue_file = QUEUE_FILE
+
+        # FINAL STARTUP TIMING
+        _total_init = (time.perf_counter() - self._init_start_time) * 1000
+        log.info(f"StoryEngine Initialized in {_total_init:.1f}ms (Lazy Mode)")
         self._load_queued_messages()
         
         # Google Workspace Service
         self.google = GoogleWorkspaceService()
+        
+        # Load World Bible (Context Caching Prep)
+        if self.world_config.get("world_id"):
+            self.load_world_bible()
         
     def _init_log(self):
         """Initialize session logging."""
@@ -255,6 +291,33 @@ class StoryEngine:
             self.console.print(f"[red]❌ Session directory failure ({SESSION_DIR}): {e}[/]")
             # Fallback to current dir if lore fails
             self._session_file = Path(f"session_fallback_{int(time.time())}.jsonl")
+            
+    def load_world_bible(self):
+        """Recursively load all World Bible files into context."""
+        w_path = os.environ.get("KAEDRA_WORLD_PATH")
+        if not w_path: return
+        
+        path = Path(w_path)
+        if not path.exists(): return
+        
+        self.console.print(f"[dim cyan]>> [BIBLE] Loading World Context from {path.name}...[/]")
+        
+        bible_content = []
+        # Priority: Recursive Markdown
+        for p in path.rglob("*.md"):
+            try:
+                # relative path as title
+                rel = p.relative_to(path)
+                text = p.read_text(encoding="utf-8")
+                bible_content.append(f"--- FILE: {rel} ---\n{text}")
+            except: pass
+            
+        if bible_content:
+            full_bible = "\n\n".join(bible_content)
+            # Inject as a high-priority user message (Simulated System Context)
+            header = f"[SYSTEM] WORLD BIBLE INJECTION ({len(bible_content)} files)"
+            self.context.add_text("user", f"{header}\n\n{full_bible}\n\n[END BIBLE]")
+            self.console.print(f"[dim cyan]>> [BIBLE] Injected {len(full_bible)} chars of context.[/]")
         
     def set_mode(self, new_mode: Mode):
         """Change mode with transition hooks."""
@@ -265,7 +328,7 @@ class StoryEngine:
         self.mode_transition.execute(old, new_mode)
         self.console.print(f"[bold cyan]>> [MODE] {old.value.upper()} → {new_mode.value.upper()}[/]")
         
-    def _build_system_prompt(self, directives: List[str] = None) -> str:
+    def _build_system_prompt(self, directives: List[str] = None, mode: str = "writer") -> str:
         """Construct dynamic system prompt with current state."""
         dom_emotion, dom_value = self.emotions.dominant()
         emotion_state = " | ".join(f"{k}:{v:.2f}" for k, v in self.emotions.state.items())
@@ -284,6 +347,11 @@ class StoryEngine:
         prompt = prompt.replace("[STAGE]", str(self.doctrine.identity_stage))
         prompt = prompt.replace("[BROKEN/HELD]", self.doctrine.pattern)
 
+        # [WORLD METADATA]
+        prompt = prompt.replace("[WORLD_NAME]", self.world_config.get("name", "Unknown World"))
+        prompt = prompt.replace("[UNIVERSE]", self.world_config.get("universe", "Unknown Universe"))
+        prompt = prompt.replace("[WORLD_DESCRIPTION]", self.world_config.get("description", "No description provided."))
+
         # [DOCTRINE DIRECTIVES]
         directives = directives or []
         directives_block = "\n".join(f"{i+1}. {d}" for i, d in enumerate(directives)) or "1. Maintain forward motion."
@@ -293,7 +361,73 @@ class StoryEngine:
         now_str = datetime.now().strftime("%A, %B %d, %Y | %I:%M %p")
         prompt += f"\n\n[CURRENT EARTH TIME: {now_str}]"
         
+        # [UNIVERSE INDEX]
+        # Useful for both Planner (Knowledge awareness) and Writer (Tool use)
+        try:
+             from kaedra.services.notion import NotionService
+             notion = NotionService()
+             dbs = notion.list_all_databases()
+             if dbs:
+                 db_list = "\n".join(dbs[:10]) # Top 10 to save context
+                 prompt += f"\n\n[UNIVERSE INDEX]\nAvailable Knowledge Bases:\n{db_list}\n"
+                 if mode == "writer":
+                    prompt += "Use `read_page_content` on these names to access specific records."
+        except:
+             pass
+        
+        # [LORE-FIRST PROTOCOL] - Writer Only
+        if mode == "writer":
+            prompt += """
+
+[LORE-FIRST PROTOCOL - MCP ENHANCED]
+1. **READ FIRST**: Call `list_universe_pages()` and `read_page_content()` to check existing canon.
+2. **CONSISTENCY**: Never contradict the bible.
+3. **CREATE**: If you invent a new character, location, or artifact:
+   - **DO NOT** just mention it in passing.
+   - **CALL `create_lore_page("Name", "Description")`** to save it to the Veil Verse immediately.
+   - **CALL `add_notion_comment()`** if you need to flag an inconsistency.
+4. **TRACK**: If a new quest/objective arises, call `create_tracker_db()` or `sync_roadmap_item()`.
+5. **COLLABORATE**: If unsure, Ask the Author. If sure, **WRITE IT TO LORE**."""
+        
         return prompt
+
+    async def _planner_response(self, user_input: str, system_prompt: str, plan: Dict) -> str:
+        """Generate structured build steps (Planner Mode)."""
+        planner_prompt = f"""
+You are in PLANNER MODE.
+Do NOT write narrative prose.
+Return a practical build plan the author can execute.
+
+Output format (Markdown):
+1) Interpretation (1 to 2 sentences)
+2) What we need to define next (5 to 9 bullets)
+3) Canon seed pack (facts to lock) (3 to 7 bullets)
+4) Options (A, B, C) with risks
+5) Next actions (numbered, concrete)
+6) Questions for the Author (3 to 5)
+
+User input:
+{user_input}
+"""
+        config = types.GenerateContentConfig(
+            system_instruction=system_prompt + "\n\n" + "[MODE OVERRIDE]\nPLANNER MODE ONLY.",
+            temperature=0.4,
+            max_output_tokens=1200,
+            thinking_config=types.ThinkingConfig(thinking_level="low", include_thoughts=False),
+        )
+        
+        # We need to run this in threadpool if it's sync, but generate_content is sync.
+        # But we need to await it? No, client.models.generate_content is sync.
+        # So we just run it.
+        # Wait, the engine is async. We should wrap it if we want async, but for now blocking is fine?
+        # Actually, let's just call it.
+        
+        resp = self.client.models.generate_content(
+            model=FLASH_MODEL,
+            contents=[types.Content(role="user", parts=[types.Part(text=planner_prompt)])],
+            config=config,
+        )
+        return (resp.text or "").strip()
 
     def _select_model(self, user_input: str) -> tuple:
         """Smart routing: returns (model, thinking_level, max_tokens)."""
@@ -307,23 +441,36 @@ class StoryEngine:
         """Classify task and plan generation strategy."""
         text = user_input or ""
         
-        # Fast-path for tool-heavy keywords if needed to save latency?
-        # No, let the router decide.
-        
         router_prompt = f"""
 Return JSON only.
-Classify task complexity and pick a variant plan.
-Fields:
-- complexity: low|medium|high
-- needs_tools: boolean (does the user ask for database, files, lights, or external actions?)
-- variant_plan: {{ "tiers": ["minimal"|"low"|"medium"|"high"], "per_tier": int }} (recommended generation plan)
 
-User prompt:
+Decide what the user actually wants right now.
+
+intents:
+- "plan": give build steps, structure, options, questions. NO scene prose.
+- "scene": write the next scene or beat in narrative form.
+- "research": gather facts or lore (usually needs tools).
+- "command": user is issuing an engine command.
+
+Rules:
+1) If the user input is short (under 120 chars) AND lacks an explicit verb like
+   write, scene, go, action, screenplay, continue, draft,
+   then intent MUST be "plan".
+2) If the user includes "write" or "scene" or "go" or "action", intent is "scene".
+3) If the user asks to pull from Notion, files, databases, or "lore bible", intent is "research" and needs_tools true.
+4) Output must include:
+   - intent: plan|scene|research|command
+   - should_write_scene: boolean
+   - needs_tools: boolean
+   - variant_plan: {{ "tiers": ["minimal"|"low"|"medium"|"high"], "per_tier": int }}
+
+User input:
 {text}
 """
         config = types.GenerateContentConfig(
              response_mime_type="application/json",
-             temperature=0.3
+             temperature=0.1,
+             thinking_config=types.ThinkingConfig(thinking_level="low", include_thoughts=False),
         )
         try:
             resp = self.client.models.generate_content(
@@ -331,10 +478,26 @@ User prompt:
                 contents=router_prompt,
                 config=config
             )
-            return json.loads(resp.text)
-        except:
-            # Fallback
-            return {"complexity":"medium", "needs_tools": False, "variant_plan": {"tiers":["low", "medium"], "per_tier": 2}}
+            j = json.loads(resp.text)
+
+            # Hard safety fallback if router is sloppy
+            intent = j.get("intent", "plan")
+            should_write = bool(j.get("should_write_scene", False))
+            if intent != "scene":
+                should_write = False
+
+            j["intent"] = intent
+            j["should_write_scene"] = should_write
+            if "variant_plan" not in j:
+                j["variant_plan"] = {"tiers": ["low"], "per_tier": 1}
+            return j
+        except Exception:
+            return {
+                "intent": "plan",
+                "should_write_scene": False,
+                "needs_tools": False,
+                "variant_plan": {"tiers": ["low"], "per_tier": 1},
+            }
 
     def _build_tiers(self) -> Dict[str, TierSpec]:
         """Define the thinking tiers."""
@@ -392,11 +555,19 @@ User prompt:
             outs = []
             for _ in range(count):
                 try:
-                    response = self.client.models.generate_content(
-                        model=tier.model,
-                        contents=self.context.get_context(),
-                        config=config,
-                    )
+                    # Cache Handling
+                    gen_kwargs = {
+                        "model": tier.model,
+                        "config": config,
+                    }
+                    if self.context.cached_content_name:
+                        gen_kwargs["contents"] = [self.context.history[-1]] if self.context.history else []
+                        gen_kwargs["cached_content"] = self.context.cached_content_name
+                    else:
+                        gen_kwargs["contents"] = self.context.get_context()
+                        
+                    response = self.client.models.generate_content(**gen_kwargs)
+
                     # Pull text
                     t = ""
                     if response.candidates:
@@ -490,7 +661,18 @@ Output:
         except:
             return default
 
+    def _get_service_statuses(self) -> dict:
+        """Collect status of all external services."""
+        from kaedra.core.config import NOTION_TOKEN, PROJECT_ID
+        return {
+            "notion": bool(NOTION_TOKEN),
+            "lifx": self.lights.lifx.enabled if (self.lights and self.lights.lifx) else False,
+            "razer": (self.lights.razer.connected if (self.lights and self.lights.razer) else False),
+            "gemini": bool(PROJECT_ID)
+        }
+
     async def _handle_command(self, line: str) -> EngineResponse:
+        _cmd_start = time.perf_counter()
         try:
             parts = shlex.split(line.lstrip(":"))
         except Exception:
@@ -503,9 +685,56 @@ Output:
         args = parts[1:]
         kv = self._parse_kv(args)
 
+        if cmd == "status":
+             from kaedra.core.config import validate_config
+             validate_config()
+             # Also show audio devices
+             from kaedra.services.audio_reactor import AudioReactor
+             devices = AudioReactor.list_devices()
+             self.console.print("\n[bold cyan]Audio Input Devices:[/]")
+             for idx, name in devices:
+                 active = " [green](ACTIVE)[/]" if idx == (self.audio_reactor.device_index if self.audio_reactor else -1) else ""
+                 self.console.print(f"  {idx}: {name}{active}")
+             return EngineResponse(text="System status report generated.")
+
+        if cmd == "debug":
+             status = self._get_service_statuses()
+             self.console.print(f"[bold yellow]Service Status:[/] Notion:{status['notion']} LIFX:{status['lifx']} Razer:{status['razer']} Gemini:{status['gemini']}")
+             if self.lights.lifx and self.lights.lifx.enabled:
+                 try:
+                     lights = self.lights.lifx.list_lights()
+                     for l in lights:
+                         self.console.print(f"  - {l.label}: {l.power} ({l.brightness*100:.0f}%)")
+                 except: pass
+             return EngineResponse(text="Diagnostics complete.")
+
+        if cmd == "lore":
+             return await self._cmd_lore(args)
+             
+        if cmd in ("screenplay", "sp"):
+             return await self._cmd_screenplay(args)
+             
+        if cmd in ("visual", "img"):
+             return await self._cmd_visual(args, video=False)
+             
+        if cmd in ("video", "vid"):
+             return await self._cmd_visual(args, video=True)
+
+        if cmd in ("youtube", "yt"):
+             return await self._cmd_youtube(args)
+
+        if cmd in ("speak", "tts"):
+             return await self._cmd_speak(args)
+             
+        if cmd in ("listen", "stt"):
+             return await self._cmd_listen(args)
+             
         if cmd in ("lights", "light"):
             return await self._cmd_lights(args, kv)
 
+        # Log timing for unhandled commands
+        _elapsed = (time.perf_counter() - _cmd_start) * 1000
+        log.debug(f"Command '{cmd}' not found (parse: {_elapsed:.1f}ms)")
         return EngineResponse(text=f"Unknown command: {cmd}")
 
     async def _cmd_lights(self, args: List[str], kv: Dict[str, str]) -> EngineResponse:
@@ -586,6 +815,143 @@ Output:
 
         return EngineResponse(text=f"Unknown lights subcommand: {sub}")
 
+    async def _cmd_lore(self, args: List[str]) -> EngineResponse:
+        """Launch the Interactive Lore Editor."""
+        target = " ".join(args) if args else None
+        
+        self.console.print(f"[bold cyan]>> [SYSTEM] Launching Lore Editor (Target: {target or 'Interactive'})...[/]")
+        
+        # Launch Editor
+        editor = LoreEditor(self.console)
+        try:
+            # Run synchronously (it blocks the loop, which is fine for interactive tool)
+            editor.run(entity_name=target)
+            self.console.clear()
+            return EngineResponse(text="[SYSTEM] Exited Lore Editor. Resuming Story Engine.")
+        except Exception as e:
+             return EngineResponse(text=f"[ERROR] Lore Editor crashed: {e}")
+
+    async def _cmd_screenplay(self, args: List[str]) -> EngineResponse:
+        """Format text as a screenplay."""
+        if args:
+            text = " ".join(args)
+            source = "User Input"
+        elif self.history:
+            # Get last assistant message
+            last_msg = ""
+            for msg in reversed(self.history):
+                if msg["role"] == "model":
+                    last_msg = msg["content"]
+                    break
+            text = last_msg
+            source = "Last Response"
+        else:
+             return EngineResponse(text="[ERROR] No text to format (Input empty and history empty).")
+             
+        if not text:
+             return EngineResponse(text="[ERROR] Could not find text to format.")
+
+        formatted = self.screenplay.parse_and_format(text)
+        panel = self.screenplay.render_panel(formatted, scene_info=f"Source: {source}")
+        self.console.print(panel)
+        return EngineResponse(text=f"[SYSTEM] Formatted {source} as Screenplay.")
+
+    async def _cmd_visual(self, args: List[str], video: bool = False) -> EngineResponse:
+        """Generate Visuals (Image or Veo Video)."""
+        if not self.visual:
+             return EngineResponse(text="[ERROR] Visual Service is not available (check keys/config).")
+
+        prompt = " ".join(args)
+        if not prompt:
+             return EngineResponse(text="[ERROR] Please provide a prompt. Usage: :visual <description>")
+        
+        mode = "Video (Veo)" if video else "Image (Gemini 3)"
+        self.console.print(f"[bold magenta]>> [VISUAL] Generating {mode}...[/]")
+        self.console.print(f"[dim]Prompt: {prompt}[/]")
+        
+        try:
+            if video:
+                # Video Gen
+                result = self.visual.generate_video(prompt=prompt)
+                self.console.print(f"[green]✅ Video Generated: {result.file_path}[/]")
+                # Attempt to open folder? Or just show path.
+                return EngineResponse(text=f"Video saved to {result.file_path}")
+            else:
+                # Image Gen
+                img = self.visual.generate_image(prompt)
+                # Save locally
+                timestamp = int(time.time())
+                path = self.visual.VIDEO_DIR.parent / "images" / f"gen_{timestamp}.png"
+                path.parent.mkdir(exist_ok=True)
+                img.save(path)
+                
+                self.console.print(f"[green]✅ Image Generated: {path}[/]")
+                # Rich can verify/show images? For now just path.
+                return EngineResponse(text=f"Image saved to {path}")
+
+        except Exception as e:
+             return EngineResponse(text=f"[ERROR] Generation failed: {e}")
+
+    async def _cmd_youtube(self, args: List[str]) -> EngineResponse:
+        """Ingest YouTube video (Transcript/Multimodal + AI Summary)."""
+        if not args:
+            return EngineResponse(text="[ERROR] Usage: :youtube <url>")
+        
+        url = args[0]
+        self.console.print(f"[bold red]>> [YOUTUBE] Ingesting {url}...[/]")
+        
+        # Determine World ID
+        world_id = self.world_config.get("world_id") or os.getenv("KAEDRA_ACTIVE_WORLD") or "world_bee9d6ac"
+        
+        # Run Ingestion (Sync for now, safe-ish in command handler)
+        try:
+            # Lazy import to reduce startup time
+            from tools.ingest_youtube import ingest_single_video
+            ingest_single_video(url, world_id)
+            return EngineResponse(text="[SYSTEM] YouTube Ingestion Complete. Check Notion Queue.")
+        except Exception as e:
+             return EngineResponse(text=f"[ERROR] Ingestion Failed: {e}")
+
+    async def _cmd_speak(self, args: List[str]) -> EngineResponse:
+        """Text-to-Speech Generation."""
+        if not self.audio:
+            return EngineResponse(text="[ERROR] Audio Service not initialized.")
+
+        text = " ".join(args)
+        if not text:
+             # Speak last message
+            if self.history and self.history[-1]["role"] == "model":
+                text = self.history[-1]["content"]
+            else:
+                return EngineResponse(text="[ERROR] Nothing to speak.")
+
+        self.console.print(f"[bold green]>> [TTS] Generating Audio...[/]")
+        out = self.audio.text_to_speech(text)
+        if out:
+             self.console.print(f"[green]✅ Audio saved: {out}[/]")
+             # TODO: Auto-play
+             import subprocess
+             try:
+                 if os.name == 'nt':
+                     subprocess.Popen(["start", out], shell=True)
+             except: pass
+             return EngineResponse(text=f"Spoke {len(text)} chars.")
+        return EngineResponse(text="[ERROR] TTS Failed.")
+
+    async def _cmd_listen(self, args: List[str]) -> EngineResponse:
+        """Speech-to-Text (Placeholder for now)."""
+        # In a real CLI, this requires capturing mic input actively.
+        # For now, we will stub it or allow passing a file.
+        if args:
+            path = " ".join(args)
+            if os.path.exists(path):
+                self.console.print(f"[bold green]>> [STT] Transcribing {path}...[/]")
+                text = self.audio.speech_to_text(path, local=True)
+                self.console.print(f"[cyan]Transcription:[/]\n{text}")
+                return EngineResponse(text=f"Transcribed: {text[:50]}...")
+        
+        return EngineResponse(text="[INFO] continuous listening not yet active. Pass a wav file: :listen <path>")
+
     async def _run_light_show(self):
         """Orchestrate a 'Turn Down for What' synced light show."""
         self.console.print("\n[bold magenta]✨ 'TURN DOWN FOR WHAT' LIGHT SYNC ✨[/]")
@@ -634,41 +1000,68 @@ Output:
 
     async def generate_canon_pack(self, user_input: str, system_prompt: str, plan: Dict) -> str:
         """Orchestrate the multi-tier generation and judging."""
-        base = self._snapshot_context()
+        from kaedra.core.isolation import ContextIsolation
+        base_fork = ContextIsolation.create_fork(self.context)
         tiers_def = self._build_tiers()
         
         requested_tiers = plan.get("variant_plan", {}).get("tiers", ["low"])
         per_tier = plan.get("variant_plan", {}).get("per_tier", 1)
 
         all_candidates = []
-        self.console.print(f"[bold cyan]>> [FACTORY] Spinning up tiers: {', '.join(requested_tiers)} (x{per_tier})...[/]")
         
-        for t_name in requested_tiers:
-            if t_name not in tiers_def: continue
-            tier = tiers_def[t_name]
+        # UI: Rich Progress for Generation
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("{task.completed}/{task.total}", justify="right"),
+            TimeElapsedColumn(),
+            console=self.console,
+            transient=True
+        ) as progress:
             
-            self._restore_context(base) # Clean slate
-            outs = self._gen_with_tier(tier, system_prompt, count=per_tier)
-            
-            for i, txt in enumerate(outs):
-                all_candidates.append({
-                    "id": f"{t_name}_{i+1}",
-                    "tier": t_name,
-                    "text": txt
-                })
+            factory_task = progress.add_task(f"[cyan]Factory: Spinning up {', '.join(requested_tiers)}...", total=len(requested_tiers))
+        
+            for t_name in requested_tiers:
+                if t_name not in tiers_def: 
+                    progress.advance(factory_task)
+                    continue
+                tier = tiers_def[t_name]
+                
+                # ISOLATION RESTORE
+                ContextIsolation.restore_fork(self.context, base_fork)
+                
+                # Validate clean state before variant generation
+                if not ContextIsolation.validate_clean_state(self.context):
+                    self.console.print("[red]⚠️ Tool contamination detected, skipping stage[/]")
+                    progress.advance(factory_task)
+                    continue
 
-        if not all_candidates:
-            return "Error: No candidates generated."
+                outs = self._gen_with_tier(tier, system_prompt, count=per_tier)
+                
+                for i, txt in enumerate(outs):
+                    all_candidates.append({
+                        "id": f"{t_name}_{i+1}",
+                        "tier": t_name,
+                        "text": txt
+                    })
+                
+                progress.advance(factory_task)
 
-        # Judge
-        self.console.print("[dim]>> [DIRECTOR] Judging candidates...[/]")
-        judged = self._judge_candidates(user_input, all_candidates)
+            if not all_candidates:
+                self.console.print("[bold red]>> [FACTORY ERROR] All generation tiers failed to produce valid output.[/]")
+                return "⚠️ [SYSTEM ERROR] The narrative engine stalled. This might be due to safety filters or model overload. Please try a simpler prompt or check the logs."
+
+            # Judge
+            director_task = progress.add_task("[magenta]Director: Judging candidates...", total=1)
+            judged = self._judge_candidates(user_input, all_candidates)
+            progress.advance(director_task)
         
         # Winner
         winner_text = judged.get("canon_injection", all_candidates[0]["text"])
         
         # Restore context to base state before injecting winner (Critical for hygiene)
-        self._restore_context(base)
+        ContextIsolation.restore_fork(self.context, base_fork)
         
         return winner_text
         
@@ -681,8 +1074,43 @@ Output:
         """Generate narrative response (Single Turn with tool loop)."""
         # Command Lane
         text = (user_input or "").strip()
-        if text.startswith(":"):
+        
+        # INTENT SHORTCUTS (Task 3)
+        force_plan = None
+        if text.lower().startswith(":plan "):
+            text = text[6:].strip()
+            force_plan = {"intent": "plan", "should_write_scene": False, "needs_tools": False}
+        elif text.lower().startswith(":scene ") or text.lower().startswith(":go "):
+            prefix_len = 7 if text.lower().startswith(":scene ") else 4
+            text = text[prefix_len:].strip()
+            force_plan = {"intent": "scene", "should_write_scene": True, "needs_tools": False}
+        elif text.lower().startswith(":research "):
+            text = text[10:].strip()
+            force_plan = {"intent": "research", "should_write_scene": False, "needs_tools": True}
+
+        # Standard Commands (only if not an intent shortcut)
+        if text.startswith(":") and not force_plan:
              return await self._handle_command(text)
+
+        # Build initial turn input
+        eff_input = user_input if user_input else "[SYSTEM] Continue processing."
+
+        if user_input:
+            # We add text immediately to ensure it's in context for budget/cache checks
+            self.context.add_text("user", eff_input)
+
+            # EDIT 2: _execute_turn budget check before routing
+            budget = self.context.get_budget_status()
+            if budget.get("should_prune"):
+                self.console.print(
+                    f"[yellow]⚠️ Context at {budget.get('usage_percent', 0):.0f}% capacity, auto-pruning...[/]"
+                )
+
+            # EDIT: Trigger Cache Update (Stable Past)
+            # We call this every turn. It returns None if context < 32k.
+            c_name = self.context.update_cache(FLASH_MODEL) 
+            if c_name:
+                self.console.print(f"[dim blue]>> Context Cached (Stable Past): {c_name}[/]")
 
         start_time = time.time()
         
@@ -696,20 +1124,37 @@ Output:
             
             # Sync Lights
             self._sync_lighting()
-        
-        # Build initial turn input
-        eff_input = user_input if user_input else "[SYSTEM] Continue processing."
-        if user_input:
-            self.context.add_text("user", eff_input)
 
         # 1. Route Request
-        router_plan = self._route_request(eff_input)
+        if force_plan:
+            router_plan = force_plan
+            # Ensure safe defaults for variant plan if forcing scene
+            if "variant_plan" not in router_plan:
+                 router_plan["variant_plan"] = {"tiers": ["low"], "per_tier": 1}
+        else:
+            router_plan = self.router.route(eff_input)
+
         needs_tools = router_plan.get("needs_tools", False)
+        should_write_scene = bool(router_plan.get("should_write_scene", False))
         
         # MERGE DIRECTIVES
         doctrine_cmds = doctrine_directives(self.doctrine)
         merged_directives = (structural_directives or []) + doctrine_cmds
-        system_prompt = self._build_system_prompt(merged_directives)
+
+        # GATING: If not explicitly a scene request, do NOT generate narrative
+        if not should_write_scene and not needs_tools:
+             # Build specialized PLANNER prompt
+             planner_sys_prompt = self.prompts.build(self.scene, self.pov, self.mode.value, directives=merged_directives, mode_arg="planner")
+             final_text = await self.router.create_plan(eff_input, planner_sys_prompt, router_plan)
+             self.context.add_text("model", final_text)
+             return EngineResponse(text=final_text)
+
+        # Standard WRITER prompt for Scene/Tools
+        system_prompt = self.prompts.build(self.scene, self.pov, self.mode.value, directives=merged_directives, mode_arg="writer")
+
+        # POLICY: Interactive Tool Synthesis
+        if needs_tools:
+            system_prompt += "\n\nSTRICT TOOL USE POLICY: When researching specific topics (via Notion, Files, etc.), DO NOT generate a narrative scene immediately. Instead, output a 'Synthesis' summary of what you found and ASK the user for specific context on how to proceed."
 
         # BRANCH: TOOL TRACK vs CANON FACTORY
         final_text = ""
@@ -752,7 +1197,7 @@ Output:
                 max_output_tokens=max_tokens,
                 tools=ENGINE_TOOLS,
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-                thinking_config=types.ThinkingConfig(thinking_level=thinking_level, include_thoughts=False)
+                thinking_config=types.ThinkingConfig(thinking_level=thinking_level, include_thoughts=True)
             )
 
             # Use helper method
@@ -778,6 +1223,7 @@ Output:
             
             return EngineResponse(text=final_text)
 
+    @ContextIsolation.guard
     def _run_tool_loop(self, model: str, config: types.GenerateContentConfig) -> str:
         """Run non streaming tool loop and return final text."""
         def _assert_thought_signatures(contents: List[types.Content]):
@@ -810,17 +1256,38 @@ Output:
         tool_step = 0
 
         while tool_step < MAX_TOOL_STEPS:
-            request_contents = self.context.get_context()
-            _assert_thought_signatures(request_contents)
+            # Cache Handling for Tools
+            gen_kwargs = {
+                "model": model,
+                "config": config
+            }
+            if self.context.cached_content_name:
+                 # CAUTION: For tooling, we must ensure assertions work on suffix?
+                 # _assert_thought_signatures checks context. 
+                 # If we send suffix, assertions might fail if they expect full history?
+                 # No, assertions check `request_contents`.
+                 # So we must run assertions on FULL context (get_context())
+                 # But SEND the suffix.
+                 
+                 full_ctx = self.context.get_context()
+                 _assert_thought_signatures(full_ctx)
+                 
+                 gen_kwargs["contents"] = [self.context.history[-1]] if self.context.history else []
+                 gen_kwargs["cached_content"] = self.context.cached_content_name
+            else:
+                 full_ctx = self.context.get_context()
+                 _assert_thought_signatures(full_ctx)
+                 gen_kwargs["contents"] = full_ctx
 
-            response = self.client.models.generate_content(
-                model=model,
-                contents=request_contents,
-                config=config
-            )
+            response = self.client.models.generate_content(**gen_kwargs)
 
             model_content = response.candidates[0].content
             self.context.add_content(model_content)
+
+            # Visualize Thoughts
+            for p in (model_content.parts or []):
+                if getattr(p, "thought", False):
+                    self.console.print(Panel(p.text, title="Thinking", style="italic blue", border_style="blue"))
 
             fcs = [p.function_call for p in (model_content.parts or []) if p.function_call]
             if not fcs:
@@ -858,6 +1325,7 @@ Output:
             self.context.add_content(tool_content)
             tool_step += 1
 
+
         return final_text
     
     def _ensure_author_questions(self, text: str) -> str:
@@ -891,22 +1359,17 @@ Output:
             "grief": 270,     # Violet
             "disgust": 120,   # Green
             "curiosity": 200, # Azure
-            "neutral": 0      # Warm White
+            "neutral": 280    # Purple (Kaedra's color)
         }
         
-        hue = hues.get(dom, 0)
+        hue = hues.get(dom, 280)  # Default to purple (Kaedra)
         
-        # Saturation increases with emotion value
-        sat = min(1.0, max(0.0, val * 1.5))
-        if dom == "neutral":
-            sat = 0.0
+        # Saturation increases with emotion value, minimum 0.4 for color persistence
+        sat = min(1.0, max(0.4, val * 1.5))  # Min 0.4 keeps lights colored
             
-        # Brightness/Pulse based on tension
-        # High tension = Dimmer, spookier? Or brighter/harsher?
-        # Let's say High Tension = High Red, Low Brightness (Brooding)
-        # Low Tension = Normal Brightness
-        
-        bri = 0.8
+        # Brightness based on emotion intensity and tension
+        # Neutral = dim ambient (0.35), emotions make it brighter
+        bri = 0.35 + (val * 0.45)  # Range: 0.35 (neutral) to 0.8 (intense emotion)
         if tension > 0.7:
              bri = 0.5 + (random.random() * 0.2) # Flicker?
              # If tension is high, blend towards red
@@ -920,8 +1383,23 @@ Output:
             bri = 1.0
             
         self.lights.set_color(hue, sat, bri, kelvin=3500)
-        if tension > 0.8:
-            self.lights.breathe("red", cycles=1, period=4.0)
+        
+        # INTELLIGENT PULSE TRIGGERS
+        # Map emotions to color names for pulse API
+        pulse_colors = {
+            "fear": "purple", "anger": "red", "sublime": "cyan",
+            "joy": "yellow", "grief": "violet", "disgust": "green",
+            "curiosity": "blue", "neutral": "purple"
+        }
+        pulse_color = pulse_colors.get(dom, "purple")
+        
+        # Pulse on HIGH EMOTION INTENSITY (dramatic moment detected)
+        if val > 0.7:
+            self.lights.pulse(color=pulse_color, from_color="purple", period=0.5, cycles=2)
+        
+        # Pulse on CRITICAL TENSION (replaces slow breathe with sharp pulse)
+        elif tension > 0.8:
+            self.lights.pulse(color="red", from_color=pulse_color, period=0.3, cycles=3)
 
     # === MESSAGE QUEUE SYSTEM (Legacy Port) ===
     def _load_queued_messages(self):
@@ -1437,11 +1915,26 @@ OUTPUT (Markdown):
             return True
 
         if cmd == "debug":
-            self._show_debug()
+            self.ui.show_debug(
+                engine_state={
+                    "scene": self.scene,
+                    "pov": self.pov,
+                    "mode": self.mode.value,
+                    "tension": self.tension.current,
+                    "emotions": self.emotions.state,
+                },
+                context_budget=self.context.get_budget_status(prune=False)
+            )
             return True
             
         if cmd == "help":
-            self._show_help()
+            self.ui.show_help()
+            return True
+
+        if cmd in ["diagnostics", "diag"]:
+            from .fixes import add_diagnostics_command
+            show_diag = add_diagnostics_command(self)
+            show_diag()
             return True
 
         if cmd == "queue" and args:
@@ -1973,7 +2466,7 @@ OUTPUT (Markdown):
             return True
 
         if cmd == "review" or cmd == "board":
-            asyncio.create_task(self._fleet_review(args))
+            asyncio.create_task(self.council.run_session(self.context.history, focus=str(args)))
             return True
 
         if cmd == "lights":
@@ -1997,459 +2490,7 @@ OUTPUT (Markdown):
 
         return False
 
-    def _smart_input(self, prompt_markup: str = ">> ") -> str:
-        """
-        Smart Input with Heuristic Paste Detection.
-        If newline is followed immediately (<50ms) by more input, it's a paste.
-        """
-        try:
-            import msvcrt
-            import sys
-        except ImportError:
-            # Fallback
-            self.console.print(prompt_markup, end="")
-            return input()
 
-        # Direct sys.stdout write for prompt to avoid Rich Live conflict
-        # Simple strip of markup for raw terminal (or use ansi if we were fancy, but keep it simple)
-        if ">>" in prompt_markup:
-            sys.stdout.write("\n>> ") 
-        else:
-            sys.stdout.write("\n> ")
-        sys.stdout.flush()
-        
-        buffer = []
-        while True:
-            # Batch read loop
-            batch = []
-            while msvcrt.kbhit():
-                char = msvcrt.getwch()
-                batch.append(char)
-                # Cap batch size to keep UI responsive but fast
-                if len(batch) > 5000:
-                    break
-            
-            if not batch:
-                time.sleep(0.001)
-                continue
-
-            # Process Batch
-            echo_chunk = []
-            submit = False
-            
-            for i, char in enumerate(batch):
-                if char == '\x03': # Ctrl+C
-                    raise KeyboardInterrupt
-                    
-                if char == '\x08': # Backspace
-                    if buffer:
-                        buffer.pop()
-                        # Flush current chunk before backspacing
-                        if echo_chunk:
-                            sys.stdout.write("".join(echo_chunk))
-                            echo_chunk = []
-                        sys.stdout.flush()
-                        
-                        sys.stdout.write('\b \b')
-                        sys.stdout.flush()
-                    continue
-                    
-                if char == '\r': # Enter
-                    # Check if more data is coming (remainder of this batch or next OS buffer)
-                    remaining_in_batch = (i < len(batch) - 1)
-                    
-                    is_paste = remaining_in_batch
-                    
-                    if not is_paste:
-                        # Check OS buffer
-                        start = time.perf_counter()
-                        # We use a tighter loop here for responsiveness
-                        while (time.perf_counter() - start) < 0.15:
-                            if msvcrt.kbhit():
-                                is_paste = True
-                                break
-                    
-                    if is_paste:
-                        buffer.append('\n')
-                        echo_chunk.append('\n')
-                        continue
-                    else:
-                        if echo_chunk:
-                            sys.stdout.write("".join(echo_chunk))
-                        sys.stdout.write('\n')
-                        sys.stdout.flush()
-                        return "".join(buffer)
-
-                buffer.append(char)
-                echo_chunk.append(char)
-            
-            if echo_chunk:
-                sys.stdout.write("".join(echo_chunk))
-                sys.stdout.flush()
-
-    def _show_debug(self):
-        """Display internal state."""
-        from rich.pretty import Pretty
-        self.console.print(Panel(
-            Pretty({
-                "scene": self.scene,
-                "pov": self.pov,
-                "mode": self.mode.value,
-                "tension": self.tension.current,
-                "emotions": self.emotions.state,
-                "doctrine": {
-                    "wound": self.doctrine.wound,
-                    "stage": self.doctrine.identity_stage,
-                    "mice": [f"{t.kind}:{t.label}" for t in self.doctrine.mice_stack],
-                    "debt": self.doctrine.abstraction_debt,
-                    "red": self.doctrine.red_marks
-                }
-            }),
-            title="[bold yellow]Debug: Current State[/]",
-            border_style="yellow"
-        ))
-
-    def _show_help(self):
-        """Display command help."""
-        from rich.table import Table
-        table = Table(title="StoryEngine Commands", box=None)
-        table.add_column("Command", style="cyan")
-        table.add_column("Description")
-        
-        cmds = [
-            ("freeze", "Bullet-time mode"),
-            ("zoom", "Micro-detail focus"),
-            ("escalate", "Spike tension"),
-            ("god", "Worldbuilding/Lore"),
-            ("director", "Meta-narration"),
-            ("normal", "Reset to default"),
-            ("pov [name]", "Change perspective"),
-            ("next", "Advance scene"),
-            ("rewind [n]", "Rewind n snapshots"),
-            ("emotion [emo] [delta]", "Pulse emotion"),
-            ("queue [pri] [msg]", "Queue message"),
-            ("coherence", "Analyze lore consistency"),
-            ("bridge", "Generate narrative bridge"),
-            ("debug", "Show state"),
-            ("email", "Show recent emails"),
-            ("calendar", "Show today's events"),
-            ("tasks", "Show pending tasks"),
-            ("review / board", "Trigger Fleet Review Board"),
-            ("automate", "Run Agent-Layer Automations"),
-            ("sync", "Sync World to Notion"),
-            ("lights [restore|fire]", "Manual Atmosphere Control"),
-        ]
-        for c, d in cmds:
-            table.add_row(c, d)
-        self.console.print(table)
-
-    async def _fleet_review(self, focus: str = None):
-        """Invoke The Fleet for critique and evaluation (Karpathy llm-council Protocol)."""
-        import json
-        import aiohttp
-        import random
-        from pathlib import Path
-
-        fleet_path = Path("kaedra/config/fleet.json")
-        if not fleet_path.exists():
-            self.console.print("[red]>> Fleet configuration not found.[/]")
-            return
-
-        with open(fleet_path, "r", encoding="utf-8") as f:
-            fleet_data = json.load(f)
-
-        members = fleet_data.get("board_members", [])
-        self.console.print(f"\n[bold yellow]📡 ACTIVATING THE BOARD: {fleet_data.get('fleet_name')}[/]")
-        self.console.print(f"[dim]Focus: {focus or 'Narratological Audit (Jahn/Bork)'}[/]\n")
-
-        # [LIGHTS] Set The Board Atmosphere: Fire Mode (Warm 25% + Flame)
-        if hasattr(self, 'lights') and self.lights:
-            self.console.print("[dim]>> [LIGHTS] Setting Board Atmosphere (Fire 25% + Flame)...[/]")
-            self.lights.fire_mode(brightness=0.25)
-
-        # Gather context
-        last_turns = self.context.history[-4:] if self.context.history else []
-        context_text = ""
-        for turn in last_turns:
-            if isinstance(turn, dict):
-                role = turn.get("role", "user")
-                parts = turn.get("parts", [])
-                text = " ".join([p.get("text", "") for p in parts])
-                context_text += f"{role.upper()}: {text}\n"
-            else:
-                for part in turn.parts:
-                    if part.text:
-                        context_text += f"{turn.role.upper()}: {part.text}\n"
-
-        opinions = {}
-        
-        # --- STAGE 1: FIRST OPINIONS (FLASH BRAIN - LOW LATENCY) ---
-        self.console.print("[bold cyan]STAGE 1: GATHERING INDIVIDUAL CRITIQUES (FLASH)[/]")
-        # Config: Minimal thinking for speed, just gut reactions & Jahn audit
-        stage1_config = types.GenerateContentConfig(
-            temperature=0.7,
-            thinking_config=types.ThinkingConfig(thinking_level="minimal", include_thoughts=False)
-        )
-
-        async with aiohttp.ClientSession() as session:
-            for member in members:
-                # [LIGHTS] Pulse Agent Color @ 25%
-                if hasattr(self, 'lights') and self.lights and member.get("color"):
-                    self.lights.breathe(color=member["color"], cycles=1, period=1.0)
-                
-                critique = None
-                with self.console.status(f"[bold cyan]{member['name']} is thinking...[/]", spinner="dots"):
-                    if not member.get("endpoint"):
-                        # Local Simulation (Gemini 3 Flash)
-                        prompt = f"""
-                        [AGENT: {member['name']} | ROLE: {member['role']}]
-                        TASK: Conduct a NARRATOLOGICAL AUDIT (Jahn V6.0).
-                        
-                        PROTOCOL:
-                        1. FCD Intent: What is the creative intelligence doing?
-                        2. Focalization: OV, PIV, or DIV?
-                        3. Audio/Visual Code: Diegetic vs Nondiegetic?
-                        4. S/Z Codes: ACT, HER, SYM, SEM, REF.
-                        5. Goof Audit: Logic or continuity slips?
-                        
-                        CONTEXT:
-                        {context_text}
-                        
-                        Provide a sharp 2-3 sentence audit.
-                        """
-                        # Retry Loop for Latency (1/3)
-                        for attempt in range(5):
-                            try:
-                                resp = await asyncio.to_thread(
-                                    self.client.models.generate_content, 
-                                    model=FLASH_MODEL, 
-                                    contents=prompt,
-                                    config=stage1_config
-                                )
-                                critique = resp.text.strip()
-                                if critique: break
-                            except: 
-                                self.console.print(f"[dim]>> Retry {attempt+1}/5 {member['name']}...[/]")
-                                await asyncio.sleep(0.5 + random.random())
-                        if not critique: critique = "Failed to simulate."
-                    else:
-                        # Remote Cloud Run call
-                        # Retry Loop for Latency (2/3)
-                        for attempt in range(5):
-                            try:
-                                # Pass S/Z requirement in focus if not present
-                                session_focus = focus or "Lexia Analysis (S/Z Codes)"
-                                payload = {"context": context_text, "focus": session_focus, "agent_id": member["id"]}
-                                async with session.post(member["endpoint"], json=payload, timeout=12) as r:
-                                    if r.status == 200:
-                                        data = await r.json()
-                                        critique = data.get("response", "No response content.")
-                                        if critique and "Error" not in critique: break
-                                    else:
-                                        critique = f"Error {r.status}"
-                            except Exception as e:
-                                critique = f"Connection failed: {e}"
-                            
-                            self.console.print(f"[dim]>> Remote Retry {attempt+1}/5 {member['name']}...[/]")
-                            await asyncio.sleep(0.5 + random.random())
-                
-                opinions[member['id']] = {"name": member['name'], "role": member['role'], "text": critique}
-                self.console.print(f"   [green]✅ {member['name']} submitted critique.[/]")
-
-
-        # --- STAGE 2: DEMOCRATIC VOTING & RANKING (FLASH BRAIN - REASONING LITE) ---
-        self.console.print("\n[bold magenta]STAGE 2: DEMOCRATIC VOTING & RANKING (FLASH)[/]")
-        
-        # Select 3 Judges for this session
-        judges_ids = ["dav1d", "unk", "kam"]
-        judges = [m for m in members if m['id'] in judges_ids]
-        
-        # Map indices for anonymization
-        id_to_agent = {f"AGENT_{i+1}": mid for i, mid in enumerate(opinions.keys())}
-        anonymized_block = "\n".join([f"{tag}: {opinions[mid]['text']}" for tag, mid in id_to_agent.items()])
-
-        # Config: Low thinking - enough to compare, fast enough to iterate
-        stage2_config = types.GenerateContentConfig(
-            temperature=0.5,
-            thinking_config=types.ThinkingConfig(thinking_level="low", include_thoughts=False)
-        )
-
-        for judge in judges:
-            # [LIGHTS] Pulse Judge Color
-            if hasattr(self, 'lights') and self.lights and judge.get("color"):
-                self.lights.breathe(color=judge["color"], cycles=1, period=1.0)
-
-            self.console.print(f"[dim]>> Judge {judge['name']} is deliberating...[/]")
-            vote_prompt = f"""
-            [JUDGE: {judge['name']} | ROLE: {judge['role']}]
-            DEMOCRATIC COUNCIL PROTOCOL (NAACL 2025).
-            
-            COUNCIL OPINIONS:
-            {anonymized_block}
-            
-            STORY CONTEXT:
-            {context_text}
-            
-            TASK:
-            1. RANK: List the top 3 (e.g., RANKING: AGENT_X, AGENT_Y, AGENT_Z).
-            2. ANALYSIS: Briefly why #1 is superior.
-            3. BIAS CHECK: Note if any agent seems to be "yes-ma'aming" or hallucinating.
-            """
-            # Retry Loop for Latency (Stage 2)
-            vote_text = ""
-            with self.console.status(f"[bold magenta]{judge['name']} is casting ballot...[/]", spinner="aesthetic"):
-                for attempt in range(5):
-                    try:
-                        resp = await asyncio.to_thread(
-                            self.client.models.generate_content, 
-                            model=FLASH_MODEL, 
-                            contents=vote_prompt,
-                            config=stage2_config
-                        )
-                        vote_text = resp.text.strip()
-                        if vote_text: break
-                    except:
-                        self.console.print(f"[dim]>> Retry {attempt+1}/5 Judge {judge['name']}...[/]")
-                        await asyncio.sleep(0.5 + random.random())
-            
-            if not vote_text: vote_text = "FAILED TO VOTE"
-                
-            # Internal Scoring logic
-            self.agreement_matrix.setdefault(judge['id'], {})
-            for tag, original_id in id_to_agent.items():
-                if tag in vote_text:
-                    # Utility Point
-                    self.fleet_scores[original_id] = self.fleet_scores.get(original_id, 0) + 1
-                    # Agreement tracking
-                    self.agreement_matrix[judge['id']][original_id] = self.agreement_matrix[judge['id']].get(original_id, 0) + 1
-                        
-                self.console.print(f"   [magenta]🗳️ {judge['name']} cast their ballot.[/]")
-
-        # --- STAGE 3: RUTHLESS CRITIQUE (PRO BRAIN - HIGH REASONING) ---
-        self.console.print("\n[bold red]STAGE 3: RUTHLESS CRITIQUE (PRO BRAIN)[/]")
-        debater_ids = ["kaedra", "iris", "visions"]
-        debaters = [m for m in members if m['id'] in debater_ids]
-        
-        # Config: High thinking - Deep logic checks, hunting hallucinations
-        stage3_config = types.GenerateContentConfig(
-            temperature=0.8,
-            thinking_config=types.ThinkingConfig(thinking_level="high", include_thoughts=True)
-        )
-
-        for d in debaters:
-            # [LIGHTS] Pulse Critic Color
-            if hasattr(self, 'lights') and self.lights and d.get("color"):
-                self.lights.breathe(color=d["color"], cycles=2, period=0.8)
-
-            critique_prompt = f"""
-            [CRITIC: {d['name']} | ROLE: {d['role']}]
-            RUTHLESS CRITIQUE MODE.
-            
-            Identify the weakest logical link in the collective council feedback. 
-            Is there a "Safe" response that is actually useless? Point it out.
-            
-            OPINIONS:
-            {anonymized_block}
-            """
-            # Retry Loop for Latency (Stage 3)
-            critique = ""
-            with self.console.status(f"[bold red]{d['name']} is hunting flaws...[/]", spinner="bouncingBar"):
-                for attempt in range(5):
-                    try:
-                        resp = await asyncio.to_thread(
-                            self.client.models.generate_content, 
-                            model=PRO_MODEL, 
-                            contents=critique_prompt,
-                            config=stage3_config
-                        )
-                        critique = resp.text.strip()
-                        if critique: break
-                    except:
-                        self.console.print(f"[dim]>> Retry {attempt+1}/5 {d['name']}...[/]")
-                        await asyncio.sleep(1.0 + random.random())
-            
-            if critique:
-                self.console.print(f"   [red]🗡️ {d['name']} identified a blindspot: {critique[:100]}...[/]")
-            else:
-                self.console.print(f"   [red]❌ {d['name']} silent after 5 attempts.[/]")
-
-        # --- STAGE 4: CHAIRMAN'S VERDICT (PRO BRAIN - SUPREME REASONING) ---
-        self.console.print("\n[bold yellow]STAGE 4: CHAIRMAN'S 'BATTLE-TESTED' VERDICT (PRO)[/]")
-        kronos = next((m for m in members if m['id'] == "kronos"), members[0])
-        
-        # [LIGHTS] Kronos Command (Gold Pulse)
-        if hasattr(self, 'lights') and self.lights and kronos.get("color"):
-            self.lights.breathe(color=kronos["color"], cycles=3, period=1.5)
-        
-        # Leaderboard synthesis
-        top_utility = sorted(self.fleet_scores.items(), key=lambda x: x[1], reverse=True)[:3]
-        scoreboard = " | ".join([f"{mid}({score})" for mid, score in top_utility])
-
-        chairman_prompt = f"""
-        [CHAIRMAN KRONOS]
-        COUNCIL DATA:
-        Scoreboard: {scoreboard}
-        Agreement Matrix: {self.agreement_matrix}
-        
-        ALL OPINIONS:
-        {json.dumps(opinions, indent=2)}
-        
-        TASK:
-        Synthesize a FINAL EXECUTIVE DIRECTIVE.
-        Structure as "NARRATOLOGICAL NARRATIVE AUDIT (Rubric V6.0 - Jahn/Bork/Barthes)".
-        
-        SECTIONS:
-        I. COUNCIL SYNTHESIS (Consensus & Contention)
-           - Who is leading in utility? Who is hallucinating?
-        II. NARRATOLOGICAL AUDIT (The 5 Filters)
-           - FCD, Focalization, Audio, OPI, Goofs.
-        III. CINEMATIC PRESCRIPTION
-           - Required shots, pacing adjustments (Bork), and S/Z code usage.
-        IV. ACADEMIC GRADE (A-F)
-           - STRICT grading based on "Visual Literacy" depth.
-        """
-        
-        # Config: High thinking - Complex synthesis of multiple data streams
-        stage4_config = types.GenerateContentConfig(
-            temperature=0.7,
-            thinking_config=types.ThinkingConfig(thinking_level="high", include_thoughts=True)
-        )
-
-        # Retry Loop for Latency (Stage 4)
-        with self.console.status("[bold yellow]⚡ Chairman Kronos is synthesizing verdict...[/]", spinner="star"):
-            for attempt in range(5):
-                try:
-                    self.console.print(f"[dim]>> Attempt {attempt+1}/5: Chairman synthesis...[/]")
-                    resp = await asyncio.to_thread(
-                        self.client.models.generate_content, 
-                        model=PRO_MODEL, 
-                        contents=chairman_prompt, 
-                        config=stage4_config
-                    )
-                    if not resp.text: raise ValueError("Empty response")
-                    
-                    self.console.print(Panel(
-                        resp.text,
-                        title="[bold yellow]⚡ BATTLE-TESTED VERDICT[/]",
-                        subtitle=f"Council Scoreboard: {scoreboard}",
-                        border_style="yellow"
-                    ))
-                    
-                    # Persist verdict to history
-                    self.context.add_text("user", f"[COUNCIL VERDICT]\n{resp.text}")
-                    break
-
-                except Exception as e:
-                    self.console.print(f"[red]Chairman failed (Attempt {attempt+1}): {e}[/]")
-                    await asyncio.sleep(1.0 + random.random())
-                    if attempt == 2:
-                        self.console.print("[red]❌ All attempts failed. Network/DNS issue likely.[/]")
-                    await asyncio.sleep(2)
-        
-        # [LIGHTS] Restore to previous state
-        if hasattr(self, 'lights') and self.lights:
-            self.console.print("[dim]>> [LIGHTS] Restoring atmosphere...[/]")
-            self.lights.restore()
 
 
     async def _audio_sync_loop(self):
@@ -2504,82 +2545,91 @@ OUTPUT (Markdown):
                  scene=self.scene,
                  pov=self.pov,
                  tension=self.tension.current,
-                 emotions=self.emotions.state
+                 emotions=self.emotions.state,
+                 statuses=self._get_service_statuses()
             )
 
         try:
             # Writer Friendly Pattern: Live Footer + Scrolling Prose
-            with Live(get_renderable=get_footer, console=self.console, refresh_per_second=4, transient=True):
-                while True:
-                    # 3. User Input (Explicitly sequential)
-                    # self.console.print(Rule(style="dim #D700FF", title="INPUT")) # Footer replaces header
-                    try:
-                        # Using smart input for implicit paste support
-                        user_input = await asyncio.to_thread(self._smart_input, "\n[bold magenta]>> [/]")
-                    except (EOFError, KeyboardInterrupt):
-                        break
-                        
-                    if not user_input or not user_input.strip():
-                        continue
+            # transient=False keeps output persistent; we stop/start around input
+            live = Live(get_renderable=get_footer, console=self.console, refresh_per_second=4, transient=False)
+            live.start()
+            
+            while True:
+                # 3. User Input (Explicitly sequential)
+                # Stop Live refresh during input to prevent character-per-line bug
+                live.stop()
+                try:
+                    # Using smart input for implicit paste support
+                    user_input = await asyncio.to_thread(self.ui.smart_input, "\n[bold magenta]>> [/]")
+                except (EOFError, KeyboardInterrupt):
+                    break
+                finally:
+                    # Restart Live after input
+                    live.start()
                     
-                    if user_input.lower().strip() in ["exit", "quit", "q"]:
-                        self.console.print("[dim]Archiving session state...[/]")
-                        # Final flush of session log
-                        break
-
-                    # [Legacy Port] Check for @file
-                    if user_input.startswith("@"):
-                         path_str = user_input[1:].strip().strip("'").strip('"')
-                         path = Path(path_str)
-                         if path.exists():
-                             self.console.print(f"[dim]>> Reading {path}...[/]")
-                             content = path.read_text(encoding="utf-8")
-                             # Treat as conversational input
-                             user_input = content
-                             self.console.print(f"[green]>> Ingesting {len(content)} chars form file.[/]")
-                         else:
-                             self.console.print(f"[red]File not found: {path}[/]")
-                             continue
-
-                    # [Legacy Port] Check for JSON Paste
-                    if user_input.startswith("{") or user_input.startswith("["):
-                         try:
-                             json.loads(user_input)
-                             self.console.print("[dim]>> JSON detected & validated.[/]")
-                         except:
-                             pass
-
-                    # 4. Command Engine (Paste logic is now implicit in _smart_input)
+                if not user_input or not user_input.strip():
+                    continue
                     
-                    if user_input.startswith(":auto on"):
-                         self.auto.enabled = True
-                         await self.run_autonomous()
+                if user_input.lower().strip() in ["exit", "quit", "q"]:
+                    self.console.print("[dim]Archiving session state...[/]")
+                    # Final flush of session log
+                    break
+
+                # [Legacy Port] Check for @file
+                if user_input.startswith("@"):
+                     path_str = user_input[1:].strip().strip("'").strip('"')
+                     path = Path(path_str)
+                     if path.exists():
+                         self.console.print(f"[dim]>> Reading {path}...[/]")
+                         content = path.read_text(encoding="utf-8")
+                         # Treat as conversational input
+                         user_input = content
+                         self.console.print(f"[green]>> Ingesting {len(content)} chars form file.[/]")
+                     else:
+                         self.console.print(f"[red]File not found: {path}[/]")
                          continue
 
-                    if user_input.startswith(":") or user_input.lower().split()[0] in ["freeze", "zoom", "escalate", "god", "director", "normal", "pov", "next", "debug", "help", "queue", "checkqueue", "cq", "messages", "rewind", "coherence", "bridge", "automate"]:
-                        if await self.command(user_input):
-                            continue
-                    
-                    # 5. Narrative Wavefront (Sequential Progress)
-                    response = None
-                    with self.console.status("[bold cyan]⠏ Orchestrating Wavefront...[/]", spinner="earth"):
-                        response = await self.generate_response(user_input)
-                    
-                    # 6. Response Stream (Persistent) - Emoji + Screenplay Processing
-                    text = response.text if hasattr(response, "text") else str(response)
-                    text = Emoji.replace(text)  # Convert :shortcodes: to unicode
-                    
-                    # Screenplay Mode Formatting
-                    if self.mode == Mode.SCREENPLAY:
-                        formatter = ScreenplayFormatter()
-                        text = formatter.parse_and_format(text)
-                        self.console.print(formatter.render_panel(text, f"Scene {self.scene}"))
-                    else:
-                        self.console.print(Markdown(text))
-                    self.console.print(Rule(style="bold #00E5FF", title=f"End of Scene {self.scene-1}"))
-                    self.console.print("\n") # Breathable spacing
+                # [Legacy Port] Check for JSON Paste
+                if user_input.startswith("{") or user_input.startswith("["):
+                     try:
+                         json.loads(user_input)
+                         self.console.print("[dim]>> JSON detected & validated.[/]")
+                     except:
+                         pass
+
+                # 4. Command Engine (Paste logic is now implicit in _smart_input)
+                
+                if user_input.startswith(":auto on"):
+                     self.auto.enabled = True
+                     await self.run_autonomous()
+                     continue
+
+                if user_input.startswith(":") or user_input.lower().split()[0] in ["freeze", "zoom", "escalate", "god", "director", "normal", "pov", "next", "debug", "help", "queue", "checkqueue", "cq", "messages", "rewind", "coherence", "bridge", "automate"]:
+                    if await self.command(user_input):
+                        continue
+                
+                # 5. Narrative Wavefront (Sequential Progress)
+                # Call the unified turn execution logic (v7.11+)
+                engine_response = await self._execute_turn(user_input, tick_physics=True)
+                
+                # 6. Response Stream (Persistent) - Emoji + Screenplay Processing
+                text = engine_response.text
+                text = Emoji.replace(text)  # Convert :shortcodes: to unicode
+                
+                # Screenplay Mode Formatting
+                if self.mode == Mode.SCREENPLAY:
+                    formatter = ScreenplayFormatter()
+                    text = formatter.parse_and_format(text)
+                    self.console.print(formatter.render_panel(text, f"Scene {self.scene}"))
+                else:
+                    self.console.print(Markdown(text))
+                
+                self.console.print(Rule(style="bold #00E5FF", title=f"End of Scene {self.scene-1}"))
+                self.console.print("\n") # Breathable spacing
                 
         finally:
+            live.stop()
             self.lights.restore()
             self.lights.shutdown()
             self.console.print("[bold #76FF03]✔ Narrative wave archived successfully.[/]")
@@ -2620,6 +2670,26 @@ def startup_world_select() -> dict:
 if __name__ == "__main__":
     from rich.console import Console
     
+    # Global exit flag for double-tap Ctrl+C
+    _exit_count = 0
+    _last_interrupt = 0
+
+    def sigint_handler(sig, frame):
+        global _exit_count, _last_interrupt
+        now = time.time()
+        
+        # Double-Tap Force Exit (within 1s)
+        if now - _last_interrupt < 1.0:
+             print("\n[!] Force Exit Triggered.")
+             os._exit(0)
+             
+        _last_interrupt = now
+        print("\n\n [bold yellow]>> Narrative thread severed. Press Ctrl+C again to force exit.[/]")
+        # Standard sys.exit(0) often hangs on Windows with non-daemon threads
+        # We'll let the main loop catch KeyboardInterrupt first, then force if needed.
+
+    signal.signal(signal.SIGINT, sigint_handler)
+    
     # Reset console to suppress previous handlers
     console = Console()
     
@@ -2632,16 +2702,19 @@ if __name__ == "__main__":
         
         asyncio.run(engine.run())
         
-    except (KeyboardInterrupt, SystemExit):
+    except (KeyboardInterrupt, SystemExit, asyncio.CancelledError):
         # Clean exit without traceback
         print("\n")
-        console.print("[bold yellow]>> Narrative thread severed.[/]")
+        console.print("[bold yellow]>> Narrative thread archived.[/]")
         
-        # Force kill pending threads (LIFX etc) to avoid 300s wait
+        # Shutdown Services
         try:
-            import sys
-            sys.exit(0)
-        except:
-            pass
+            if 'engine' in locals():
+                engine.lights.shutdown()
+        except: pass
+
+        # Force kill to avoid hanging threads (LIFX, Audio, etc)
+        os._exit(0)
     except Exception as e:
         console.print_exception()
+        os._exit(1)

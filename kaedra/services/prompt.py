@@ -1,19 +1,22 @@
 """
-KAEDRA v0.0.6 - Prompt Service
-Handles LLM interactions with Vertex AI / Gemini.
+KAEDRA v0.1.0 - Prompt Service
+Handles LLM interactions with Vertex AI / Gemini via google-genai SDK.
+Integrates GeminiSmartRouter for dual-brain (Flash + Pro) orchestration.
 """
 
 import time
-from typing import Optional, Generator, Dict, Any, List
-from dataclasses import dataclass
+import asyncio
+from typing import Optional, Generator, Dict, Any, List, Union
+from dataclasses import dataclass, field
 
-import vertexai
-import vertexai
-from vertexai.generative_models import GenerativeModel, Tool
-from vertexai.language_models import TextEmbeddingModel
+try:
+    from google import genai
+    from google.genai import types
+except ImportError:
+    genai = None
+    types = None
 
 from ..core.config import MODELS, PROJECT_ID, LOCATION, MODEL_LOCATION, DEFAULT_MODEL
-
 
 @dataclass
 class PromptResult:
@@ -22,230 +25,206 @@ class PromptResult:
     model: str
     latency_ms: float
     grounded: bool = False
+    thoughts: Optional[str] = None
     metadata: Optional[Dict] = None
-
 
 class PromptService:
     """
-    Manages LLM prompt generation via Vertex AI.
+    Manages LLM prompt generation with Smart Routing.
     
     Features:
-    - Multiple model support (flash/pro/ultra)
-    - Google Search grounding
-    - Streaming responses
-    - Retry logic with exponential backoff
-    - Latency tracking
+    - Dual-Brain Architecture (Flash fast, Pro deep)
+    - Automatic scaling based on query complexity (Smart Router)
+    - Thinking Level Support (Minimal, High)
+    - Google Search grounding integration
     """
+    
+    DEEP_THINKING_KEYWORDS = [
+        "research", "analyze", "deep dive", "review", "debug",
+        "check this code", "plan", "strategy", "step by step",
+        "break down", "compare", "evaluate", "investigate", "explain why"
+    ]
     
     def __init__(self, 
                  model_key: str = DEFAULT_MODEL,
                  project: str = PROJECT_ID,
-                 location: str = LOCATION,
+                 location: str = "global", # Gemini 3 requires global endpoint for dynamic routing
                  enable_grounding: bool = True):
-        """
-        Initialize the prompt service.
-        
-        Args:
-            model_key: Model key from MODELS dict (flash/pro/ultra)
-            project: GCP project ID
-            location: GCP region
-            enable_grounding: Whether to enable Google Search grounding
-        """
+        """Initialize with Vertex AI settings."""
         self.project = project
         self.location = location
         self.enable_grounding = enable_grounding
-        self._current_model_key = model_key
+        self._default_model_key = model_key
         
-        self.model_location = MODEL_LOCATION
-        
-        # Initialize Vertex AI
-        vertexai.init(project=project, location=self.model_location)
-        
-        # Model cache
-        self._models: Dict[str, GenerativeModel] = {}
-    
-    @property
-    def current_model(self) -> str:
-        """Get the current model name."""
-        return MODELS.get(self._current_model_key, MODELS[DEFAULT_MODEL])
-    
-    @property
-    def current_model_key(self) -> str:
-        """Get the current model key."""
-        return self._current_model_key
-    
-    def set_model(self, model_key: str) -> str:
-        """
-        Switch to a different model.
-        
-        Args:
-            model_key: Model key (flash/pro/ultra)
+        # Initialize Client
+        if genai:
+            self.client = genai.Client(vertexai=True, project=project, location=location)
+        else:
+            self.client = None
+            print("[!] PromptService: google-genai SDK not found.")
+
+    def needs_deep_thinking(self, query: str) -> bool:
+        """Detect if query requires Gemini 3 Pro reasoning."""
+        q_lower = query.lower()
+        return any(kw in q_lower for kw in self.DEEP_THINKING_KEYWORDS)
+
+    def _get_config(self, thinking_level: str = "high") -> Any:
+        """Build standard generation config with Gemini 3 thinking."""
+        tools = []
+        if self.enable_grounding:
+            tools.append(types.Tool(google_search=types.GoogleSearch()))
             
-        Returns:
-            The model name that was set
-        """
-        if model_key in MODELS:
-            self._current_model_key = model_key
-        return self.current_model
-    
-    def _get_model(self, model_key: str = None) -> GenerativeModel:
-        """Get or create a GenerativeModel instance."""
-        key = model_key or self._current_model_key
-        model_name = MODELS.get(key, MODELS[DEFAULT_MODEL])
-        
-        if model_name not in self._models:
-            try:
-                if self.enable_grounding:
-                    tools = [
-                        Tool.from_google_search_retrieval(
-                            google_search_retrieval=vertexai.generative_models.GoogleSearchRetrieval()
-                        ),
-                    ]
-                    self._models[model_name] = GenerativeModel(model_name, tools=tools)
-                else:
-                    self._models[model_name] = GenerativeModel(model_name)
-            except Exception:
-                # Fallback without grounding
-                self._models[model_name] = GenerativeModel(model_name)
-        
-        return self._models[model_name]
-    
+        return types.GenerateContentConfig(
+            temperature=1.0, # Recommended for Gemini 3
+            tools=tools if tools else None,
+            thinking_config=types.ThinkingConfig(thinking_level=thinking_level, include_thoughts=True)
+        )
+
     def generate(self, 
                  prompt: str, 
                  model_key: str = None,
                  system_instruction: str = None,
-                 temperature: float = 0.7,
+                 temperature: float = 1.0,
                  max_tokens: int = 4096,
                  response_schema: Dict = None,
                  response_mime_type: str = None) -> PromptResult:
         """
-        Generate a response from the LLM.
-        
-        Args:
-            prompt: The user prompt
-            model_key: Override model key
-            system_instruction: System instruction to prepend
-            temperature: Generation temperature (0.0-1.0)
-            max_tokens: Maximum output tokens
-            response_schema: dict representing the JSON schema for structured output
-            response_mime_type: MIME type, e.g. 'application/json'
-            
-        Returns:
-            PromptResult with response text and metadata
+        Synchronous generation with Smart Routing.
         """
-        model = self._get_model(model_key)
-        model_name = MODELS.get(model_key or self._current_model_key)
+        return asyncio.run(self.generate_async(
+            prompt, model_key, system_instruction, 
+            temperature, max_tokens, response_schema, response_mime_type
+        ))
+
+    async def generate_async(self,
+                             prompt: str,
+                             model_key: str = None,
+                             system_instruction: str = None,
+                             temperature: float = 1.0,
+                             max_tokens: int = 4096,
+                             response_schema: Dict = None,
+                             response_mime_type: str = None) -> PromptResult:
+        """
+        Async generation with Smart Router logic.
+        """
+        if not self.client:
+            return PromptResult("[!] GenAI Client not initialized", "N/A", 0)
+
+        # 1. Smart Routing Logic
+        target_model_key = model_key or self._default_model_key
+        thinking_level = "low" # Standard Flash speed
         
-        # Build full prompt
-        full_prompt = prompt
-        if system_instruction:
-            full_prompt = f"{system_instruction}\n\n{prompt}"
+        # Automatic Scale-up
+        if not model_key and self.needs_deep_thinking(prompt):
+            target_model_key = "pro"
+            thinking_level = "high"
+            print(f"[*] Smart Router: Escalating to Pro (High Thinking)")
+        elif target_model_key == "flash" and not self.needs_deep_thinking(prompt):
+             # For ultra fast simple tasks on flash
+             thinking_level = "minimal"
+
+        model_id = MODELS.get(target_model_key, MODELS[DEFAULT_MODEL])
         
-        # Build generation config
-        gen_config = {
-            "temperature": temperature,
-            "max_output_tokens": max_tokens,
-        }
+        # 2. Build Config
+        gen_config = self._get_config(thinking_level)
+        gen_config.temperature = 1.0 # Force 1.0 as per best practices
+        gen_config.max_output_tokens = max_tokens
+        gen_config.system_instruction = system_instruction
         
         if response_schema:
-            gen_config["response_schema"] = response_schema
-            # Usually requires application/json if schema is provided
-            if not response_mime_type:
-                gen_config["response_mime_type"] = "application/json"
-        
-        if response_mime_type:
-            gen_config["response_mime_type"] = response_mime_type
-        
-        # Generate with timing
+            gen_config.response_schema = response_schema
+            gen_config.response_mime_type = "application/json"
+        elif response_mime_type:
+            gen_config.response_mime_type = response_mime_type
+
+        # 3. Execution
         start_time = time.time()
-        
         try:
-            response = model.generate_content(
-                full_prompt,
-                generation_config=gen_config
+            # We use the aio (async) client
+            response = await self.client.aio.models.generate_content(
+                model=model_id,
+                contents=prompt,
+                config=gen_config
             )
             
-            latency_ms = (time.time() - start_time) * 1000
+            latency = (time.time() - start_time) * 1000
+            
+            # Extract content and thoughts
+            final_text = ""
+            thoughts = ""
+            
+            if response.candidates and response.candidates[0].content:
+                for part in response.candidates[0].content.parts:
+                    if part.thought:
+                        thoughts += part.text
+                    elif part.text:
+                        final_text += part.text
             
             return PromptResult(
-                text=response.text if hasattr(response, 'text') else str(response),
-                model=model_name,
-                latency_ms=latency_ms,
-                grounded=self.enable_grounding
+                text=final_text or response.text,
+                model=model_id,
+                latency_ms=latency,
+                grounded=self.enable_grounding,
+                thoughts=thoughts if thoughts else None
             )
-            
         except Exception as e:
-            latency_ms = (time.time() - start_time) * 1000
-            return PromptResult(
-                text=f"[ERROR] Generation failed: {e}",
-                model=model_name,
-                latency_ms=latency_ms,
-                metadata={'error': str(e)}
-            )
-    
+            latency = (time.time() - start_time) * 1000
+            print(f"[!] Generation failed: {e}")
+            return PromptResult(f"[ERROR] {e}", model_id, latency, metadata={"error": str(e)})
+
     def generate_stream(self, 
                         prompt: str,
                         model_key: str = None,
                         system_instruction: str = None) -> Generator[str, None, None]:
         """
-        Generate a streaming response.
-        
-        Args:
-            prompt: The user prompt
-            model_key: Override model key
-            system_instruction: System instruction
+        Generator for streaming responses (Sync wrapper for aio).
+        """
+        async def _stream():
+            config = self._get_config("minimal")
+            config.system_instruction = system_instruction
+            model_id = MODELS.get(model_key or self._default_model_key, MODELS[DEFAULT_MODEL])
             
-        Yields:
-            Text chunks as they're generated
-        """
-        model = self._get_model(model_key)
-        
-        full_prompt = prompt
-        if system_instruction:
-            full_prompt = f"{system_instruction}\n\n{prompt}"
-        
-        try:
-            response = model.generate_content(full_prompt, stream=True)
-            for chunk in response:
-                if hasattr(chunk, 'text'):
-                    yield chunk.text
-        except Exception as e:
-            yield f"[ERROR] Streaming failed: {e}"
-    
-    async def generate_async(self,
-                             prompt: str,
-                             model_key: str = None,
-                             system_instruction: str = None,
-                             response_schema: Dict = None,
-                             response_mime_type: str = None) -> PromptResult:
-        """
-        Async version of generate for concurrent operations.
-        
-        Note: Currently wraps sync call. Full async support pending
-        Vertex AI SDK updates.
-        """
-        # TODO: Use true async when Vertex AI SDK supports it
-        return self.generate(prompt, model_key, system_instruction, 
-                             response_schema=response_schema, 
-                             response_mime_type=response_mime_type)
+            stream = await self.client.aio.models.generate_content_stream(
+                model=model_id,
+                contents=prompt,
+                config=config
+            )
+            async for chunk in stream:
+                yield chunk.text
+
+        # This is tricky for a sync generator. For now, we recommend use_async
+        # or implement a thread-loop bridge if absolutely needed.
+        # Most modern Kaedra surfaces are transitioning to async.
+        raise NotImplementedError("Use generate_async_stream instead.")
+
+    async def generate_async_stream(self, prompt: str, model_key: str = None, system_instruction: str = None):
+         """True async stream handling."""
+         target_model_key = model_key or self._default_model_key
+         thinking_level = "minimal"
+         if not model_key and self.needs_deep_thinking(prompt):
+            target_model_key = "pro"
+            thinking_level = "high"
+
+         model_id = MODELS.get(target_model_key, MODELS[DEFAULT_MODEL])
+         config = self._get_config(thinking_level)
+         config.system_instruction = system_instruction
+         
+         return await self.client.aio.models.generate_content_stream(
+             model=model_id,
+             contents=prompt,
+             config=config
+         )
 
     def embed(self, text: str, model: str = "text-embedding-004") -> List[float]:
-        """
-        Generate embeddings for a given text.
-        
-        Args:
-            text: The text to embed
-            model: Embedding model name
-            
-        Returns:
-            List of floats representing the embedding vector
-        """
+        """Generate embeddings using the modern client."""
+        if not self.client: return []
         try:
-            embedding_model = TextEmbeddingModel.from_pretrained(model)
-            embeddings = embedding_model.get_embeddings([text])
-            if embeddings:
-                return embeddings[0].values
-            return []
+             # Simplified sync call for embeddings usually okay
+             response = self.client.models.embed_content(
+                 model=model,
+                 contents=text
+             )
+             return response.embeddings[0].values
         except Exception as e:
             print(f"[!] Embedding error: {e}")
             return []

@@ -15,9 +15,9 @@ except ImportError:
 # GCP CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
 
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "69017097813")
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "gen-lang-client-0939852539")
 LOCATION = os.getenv("KAEDRA_LOCATION", "us-central1")
-MODEL_LOCATION = "global" # Gemini 3 Preview models require global endpoint
+MODEL_LOCATION = "global" # Gemini 3 Preview models require global endpoint for dynamic routing
 
 # --- SHARED GEMINI CLIENT ---
 _SHARED_CLIENT = None
@@ -27,8 +27,7 @@ def get_gemini_client():
     global _SHARED_CLIENT
     if _SHARED_CLIENT is None:
         try:
-            from google import genai
-            _SHARED_CLIENT = genai.Client(vertexai=True, project=PROJECT_ID, location="global")
+            _SHARED_CLIENT = genai.Client(vertexai=True, project=PROJECT_ID, location=MODEL_LOCATION)
         except ImportError:
             pass
     return _SHARED_CLIENT
