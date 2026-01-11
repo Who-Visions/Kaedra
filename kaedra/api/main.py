@@ -5,7 +5,12 @@ from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+import sys
 
+# Add project root to path
+sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+
+# Import Kaedra core components
 # Import Kaedra core components
 from kaedra.services.prompt import PromptService
 from kaedra.services.memory import MemoryService
@@ -13,6 +18,7 @@ from kaedra.services.research import ResearchService
 from kaedra.services.web import WebService
 from kaedra.services.wispr import WisprMonitor
 from kaedra.services.tts import TTSService
+from kaedra.services.visual import VisualService
 from kaedra.agents.kaedra import KaedraAgent
 from kaedra.core.config import PROJECT_ID, LOCATION, AGENT_RESOURCE_NAME
 from kaedra.core.google_tools import GOOGLE_TOOLS
@@ -21,7 +27,7 @@ from kaedra.core.tools import FreeToolsRegistry
 # Load environment variables
 load_dotenv()
 
-# Service Metadata
+# Service metadata
 SERVICE_NAME = "kaedra-shadow-tactician"
 SERVICE_ICON = "🌑"
 SERVICE_ROLE = "Shadow Tactician"
@@ -31,7 +37,7 @@ CLOUD_RUN_URL = "https://kaedra-69017097813.us-central1.run.app"
 app = FastAPI(
     title="Kaedra API",
     description="Shadow Tactician Agent API",
-    version="0.0.8"
+    version="0.0.9"
 )
 
 # -------------------------------------------------------------------------
@@ -51,7 +57,7 @@ app.add_middleware(
 
 A2A_CARD = {
     "name": "Kaedra",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "id": "kaedra-shadow-tactician",
     "description": SERVICE_DESCRIPTION,
     "role": SERVICE_ROLE,
@@ -62,13 +68,17 @@ A2A_CARD = {
         "shadow_operations",
         "multi_agent_coordination",
         "gemini-3-reasoning",
-        "voice_command_listener"
+        "voice_command_listener",
+        "visual_generation"
     ],
     "endpoints": {
         "chat": "/v1/chat/completions",
         "info": "/.well-known/agent.json",
         "webhook": "/webhook/notion",
-        "sync": "/sync"
+        "sync": "/sync",
+        "generate_image": "/generate-image",
+        "generate": "/generate",
+        "models": "/v1/models"
     },
     "input_schema": {
         "type": "object",
@@ -101,8 +111,9 @@ class AppState:
     agent: Optional[KaedraAgent] = None
     research_service: Optional[ResearchService] = None
     web_service: Optional[WebService] = None
-    wispr_service: Optional[WisprMonitor] = None # Changed from wispr_monitor
-    tts_service: Optional[TTSService] = None # Added tts_service
+    wispr_service: Optional[WisprMonitor] = None
+    tts_service: Optional[TTSService] = None
+    visual_service: Optional[VisualService] = None
 
 state = AppState()
 
@@ -121,7 +132,6 @@ async def handle_voice_command(command_text: str):
         response = await state.agent.run(query=command_text, context=context)
         
         # Log response
-        # Note: Colors.kaedra_tag() is not defined in the provided context, omitting for now.
         print(f"\nKaedra: {response.content}\n") 
         
         # Speak response if TTS is available
@@ -147,6 +157,13 @@ async def startup_event():
         state.web_service = WebService()
         state.research_service = ResearchService(prompt_service)
         
+        # Visual Service (New)
+        try:
+            state.visual_service = VisualService()
+            print("[+] Visual Service initialized.")
+        except Exception as ve:
+             print(f"[!] Visual Service failed to initialize: {ve}")
+        
         # TTS only works on local machines with audio output (not Cloud Run)
         try:
             state.tts_service = TTSService()
@@ -160,7 +177,6 @@ async def startup_event():
         
         # Initialize Wispr Monitor
         # Only start if on local Windows machine or appropriately configured environment
-        # We can check for the existence of the DB path in the class init logic
         user_home = os.environ.get("USERPROFILE", "")
         if "super" in user_home.lower(): # Simple check to only run on your local machine
             print("[*] Starting Wispr Listener...")
@@ -214,6 +230,13 @@ class OpenAIChatCompletionResponse(BaseModel):
 class GenerateRequest(BaseModel):
     prompt: str
     model: Optional[str] = "gemini-3-flash-preview"
+    temperature: float = 0.7
+    use_grounding: bool = True
+
+class GenerateResponse(BaseModel):
+    response: str
+    model_used: str
+    grounded: bool
 
 class SearchRequest(BaseModel):
     query: str
@@ -233,6 +256,16 @@ class EmbeddingRequest(BaseModel):
     text: str
     model: str = "text-embedding-004"
 
+# Visual Request Models
+class ImageRequest(BaseModel):
+    prompt: str
+
+class VideoGenerationRequest(BaseModel):
+    prompt: str
+    resolution: str = "720p"
+    aspect_ratio: str = "16:9"
+    number_of_videos: int = 1
+
 # -------------------------------------------------------------------------
 # ENDPOINTS
 # -------------------------------------------------------------------------
@@ -243,7 +276,7 @@ async def health_check():
     return {
         "status": "ok",
         "service": "kaedra-shadow-tactician",
-        "version": "0.0.8",
+        "version": "0.0.9",
         "grounding_enabled": True
     }
 
@@ -252,7 +285,7 @@ async def root():
     return {
         "status": "online",
         "agent": "Kaedra",
-        "version": "0.0.8",
+        "version": "0.0.9",
         "docs": "/docs"
     }
 
@@ -260,7 +293,7 @@ async def root():
 async def v1_root():
     return {
         "version": "v1",
-        "services": ["chat", "api"]
+        "services": ["chat", "api", "visual"]
     }
 
 @app.get("/v1/api")
@@ -268,7 +301,7 @@ async def v1_api_info():
     """General API information."""
     return {
         "name": "Kaedra Intelligence API",
-        "endpoints": ["/v1/chat"],
+        "endpoints": ["/v1/chat", "/generate-image", "/generate/video", "/v1/models"],
         "status": "operational"
     }
 
@@ -359,7 +392,7 @@ async def fleet_chat_endpoint(request: OpenAIChatCompletionRequest):
     """
     return await openai_chat_endpoint(request)
 
-@app.post("/generate")
+@app.post("/generate", response_model=GenerateResponse)
 async def fleet_generate(request: GenerateRequest):
     """
     Fleet Generate Endpoint: Direct text generation.
@@ -369,9 +402,116 @@ async def fleet_generate(request: GenerateRequest):
     
     result = await state.agent.prompt_service.generate_async(
         prompt=request.prompt,
-        model_key="flash" # Default to Flash for speed
+        model_key=request.model or "flash" # Default to Flash for speed
     )
-    return {"text": result.text, "model": result.model}
+    return GenerateResponse(
+        response=result.text,
+        model_used=result.model,
+        grounded=True
+    )
+
+@app.post("/generate-image")
+async def generate_image(request: ImageRequest):
+    """
+    Generate an image using Gemini 3 Pro Image Preview.
+    """
+    if not state.visual_service:
+        # Try lazy init
+        try:
+            state.visual_service = VisualService()
+        except Exception as e:
+            raise HTTPException(status_code=503, detail=f"Visual Service unavailable: {e}")
+            
+    try:
+        # We run the synchronous call in an async executor to avoid blocking
+        import asyncio
+        loop = asyncio.get_event_loop()
+        
+        # This returns a PIL Image object
+        image_obj = await loop.run_in_executor(None, state.visual_service.generate_image, request.prompt)
+        
+        # For API, we need to return bytes or a signed URL. 
+        # Since this is a simple setup, we'll convert to base64 for direct return
+        import io
+        import base64
+        
+        buffered = io.BytesIO()
+        image_obj.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        
+        return {
+            "status": "success",
+            "image_type": "png",
+            "image_base64": img_str,
+            "prompt": request.prompt
+        }
+    except Exception as e:
+         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate/video")
+async def generate_video(request: VideoGenerationRequest):
+    """
+    Generate a video using Veo 3.1.
+    NOTE: This is a long-running operation.
+    """
+    if not state.visual_service:
+        try:
+           state.visual_service = VisualService()
+        except Exception as e:
+            raise HTTPException(status_code=503, detail=f"Visual Service unavailable: {e}")
+            
+    try:
+        # Run in executor (this can take 60s+)
+        import asyncio
+        loop = asyncio.get_event_loop()
+        
+        result = await loop.run_in_executor(
+            None, 
+            lambda: state.visual_service.generate_video(
+                prompt=request.prompt,
+                resolution=request.resolution,
+                aspect_ratio=request.aspect_ratio,
+                number_of_videos=request.number_of_videos
+            )
+        )
+        
+        return {
+            "status": "success",
+            "file_path": str(result.file_path), # In Cloud Run this is local ephemeral
+            "duration": result.duration_seconds,
+            "model": result.model
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/v1/models")
+async def list_models_v1():
+    """List available models (OpenAI/Fleet compatible)."""
+    return {
+        "object": "list",
+        "data": [
+            {"id": "gemini-3-flash-preview", "object": "model", "owned_by": "google"},
+            {"id": "gemini-3-pro-preview", "object": "model", "owned_by": "google"},
+            {"id": "gemini-2.5-flash-preview-tts:Kore", "object": "model", "owned_by": "google"},
+            {"id": "veo-3.1-generate-preview", "object": "model", "owned_by": "google"}
+        ]
+    }
+
+@app.get("/models")
+async def list_models_alias():
+    """Alias for List Models."""
+    return await list_models_v1()
+
+@app.get("/config")
+async def get_config():
+    """Get current agent configuration."""
+    return {
+         "service": SERVICE_NAME,
+         "project": PROJECT_ID,
+         "region": LOCATION,
+         "deploy_mode": "Cloud Run" if os.getenv("K_SERVICE") else "Local",
+         "visual_enabled": state.visual_service is not None
+    }
 
 @app.post("/search")
 async def fleet_search(request: SearchRequest):
@@ -466,6 +606,11 @@ async def get_a2a_card_alias():
     """Alias for A2A Card."""
     return A2A_CARD
 
+@app.get("/agent-card")
+async def get_agent_card_alias_2():
+    """Alias for Agent Card (Fleet Standard)."""
+    return A2A_CARD
+
 @app.get("/.well-known/agent.json")
 async def get_agent_card_standard():
     """
@@ -477,7 +622,7 @@ async def get_agent_card_standard():
         "description": SERVICE_DESCRIPTION,
         "icon": SERVICE_ICON,
         "role": SERVICE_ROLE,
-        "version": "0.0.8",
+        "version": "0.0.9",
         "capabilities": [
             "strategic-planning",
             "intelligence-synthesis",
@@ -485,12 +630,14 @@ async def get_agent_card_standard():
             "gemini-3-reasoning",
             "deep-research",
             "embeddings",
-            "code-execution"
+            "code-execution",
+            "visual-generation"
         ],
         "endpoints": {
             "chat": f"{CLOUD_RUN_URL}/v1/chat/completions",
             "health": f"{CLOUD_RUN_URL}/health",
-            "card": f"{CLOUD_RUN_URL}/.well-known/agent.json"
+            "card": f"{CLOUD_RUN_URL}/.well-known/agent.json",
+            "generate_image": f"{CLOUD_RUN_URL}/generate-image"
         },
         "extensions": {
             "color": "neon pink",
@@ -598,6 +745,69 @@ async def sync_status(world_id: str):
             status["bible_entries"] += len(entries)
     
     return status
+
+# -------------------------------------------------------------------------
+# MOBILE / LORE ENDPOINTS
+# -------------------------------------------------------------------------
+
+@app.get("/worlds")
+async def list_available_worlds():
+    """List all available worlds for the mobile app selector."""
+    import sys
+    # Ensure root is in path to import kaedra modules depending on execution context
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if root not in sys.path:
+        sys.path.insert(0, root)
+        
+    from kaedra.worlds.store import list_worlds
+    worlds = list_worlds()
+    return {"worlds": [w.__dict__ for w in worlds]}
+
+@app.get("/lore/feed")
+async def get_lore_feed(world_id: str = "world_bee9d6ac"):
+    """Get the Ingestion Feed (New Lore) for a specific world."""
+    from pathlib import Path
+    import json
+    
+    # Locate World
+    worlds_root = Path(__file__).parent.parent.parent / "lore" / "worlds"
+    world_path = worlds_root / world_id
+    
+    if not world_path.exists():
+        raise HTTPException(status_code=404, detail=f"World {world_id} not found")
+        
+    ingestion_path = world_path / "ingestion.json"
+    if not ingestion_path.exists():
+        return {"items": []}
+        
+    try:
+        data = json.loads(ingestion_path.read_text(encoding="utf-8"))
+        return data # Returns {"items": [...]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load ingestion feed: {e}")
+
+@app.get("/lore/bible")
+async def get_world_bible(world_id: str = "world_bee9d6ac"):
+    """Get the World Bible (Canon Lore) for a specific world."""
+    from pathlib import Path
+    import json
+    
+    # Locate World
+    worlds_root = Path(__file__).parent.parent.parent / "lore" / "worlds"
+    world_path = worlds_root / world_id
+    
+    if not world_path.exists():
+        raise HTTPException(status_code=404, detail=f"World {world_id} not found")
+        
+    bible_path = world_path / "world_bible.json"
+    if not bible_path.exists():
+        return {"sections": {}}
+        
+    try:
+        data = json.loads(bible_path.read_text(encoding="utf-8"))
+        return data # Returns {"sections": {...}}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load world bible: {e}")
 
 # -------------------------------------------------------------------------
 # RUNNER

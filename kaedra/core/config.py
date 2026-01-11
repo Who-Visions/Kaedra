@@ -18,6 +18,20 @@ except ImportError:
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "69017097813")
 LOCATION = os.getenv("KAEDRA_LOCATION", "us-central1")
 MODEL_LOCATION = "global" # Gemini 3 Preview models require global endpoint
+
+# --- SHARED GEMINI CLIENT ---
+_SHARED_CLIENT = None
+
+def get_gemini_client():
+    """Returns a shared Gemini GenAI client instance."""
+    global _SHARED_CLIENT
+    if _SHARED_CLIENT is None:
+        try:
+            from google import genai
+            _SHARED_CLIENT = genai.Client(vertexai=True, project=PROJECT_ID, location="global")
+        except ImportError:
+            pass
+    return _SHARED_CLIENT
 AGENT_RESOURCE_NAME = os.getenv(
     "KAEDRA_AGENT_RESOURCE",
     "projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200"
@@ -29,6 +43,21 @@ AGENT_RESOURCE_NAME = os.getenv(
 
 LIFX_TOKEN = os.getenv("LIFX_TOKEN", "")
 NOTION_TOKEN = os.getenv("NOTION_TOKEN", "")
+
+def validate_config():
+    """Validates essential configuration and logs status."""
+    from kaedra.story.ui import log
+    status = []
+    if NOTION_TOKEN: status.append("[green]📓 Notion[/]")
+    else: status.append("[red]📓 Notion (Missing)[/]")
+    
+    if LIFX_TOKEN: status.append("[green]💡 LIFX[/]")
+    else: status.append("[yellow]💡 LIFX (Missing)[/]")
+    
+    if PROJECT_ID: status.append("[green]🧠 Gemini[/]")
+    else: status.append("[red]🧠 Gemini (Check GCP Project)[/]")
+    
+    log.info(f"System Check: {' | '.join(status)}")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # INVOICE SERVICE CONFIGURATION (Stripe + Square)
@@ -43,9 +72,9 @@ SQUARE_ENVIRONMENT = os.getenv("SQUARE_ENVIRONMENT", "sandbox")  # or "productio
 # ══════════════════════════════════════════════════════════════════════════════
 
 MODELS = {
-    "flash": "gemini-2.0-flash-exp",           # Latest Flash V2 (Fast & Cheap)
-    "pro": "gemini-3.0-pro-preview",             # Latest Pro V3 (Deep Reasoning) - $0.30+/1M
-    "ultra": "gemini-3.0-pro-preview",           # Using Pro V3 for Ultra slot
+    "flash": "gemini-3-flash-preview",           # Latest Flash V3 (Fast)
+    "pro": "gemini-3-pro-preview",             # Latest Pro V3 (Deep Reasoning)
+    "ultra": "gemini-3-pro-preview",           # Using Pro V3 for Ultra slot
     "tts-flash": "gemini-2.5-flash-preview-tts:Kore", # Gemini 2.5 Flash TTS (Updated)
     "tts-flash-lite": "gemini-2.5-flash-preview-tts:Kore", # Fallback to Flash for now
     "tts-pro": "gemini-2.5-pro-preview-tts:Aoede",     # Gemini 2.5 Pro TTS (Updated)

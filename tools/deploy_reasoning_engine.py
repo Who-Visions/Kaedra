@@ -67,11 +67,27 @@ if __name__ == "__main__":
     print(f"[*] Project: {PROJECT}")
     print(f"[*] Bucket: {BUCKET}\n")
     
+    from kaedra.agents.kaedra import KaedraAgent
+    from kaedra.services.prompt import PromptService
+    from kaedra.services.memory import MemoryService
+    
+    # Instantiate the real agent for deployment
+    # Note: For Reasoning Engine, we may need to handle dependency serialization carefully
+    agent = KaedraAgent(prompt_service=PromptService())
+    
     remote_app = reasoning_engines.ReasoningEngine.create(
-        Kaedra(),
-        requirements=["google-cloud-aiplatform>=1.50.0"],
-        display_name="kaedra-shadow-tactician",
-        description="Kaedra - Strategic Intelligence Partner"
+        agent,
+        tools=[agent.generate_image],
+        requirements=[
+            "google-cloud-aiplatform>=1.50.0",
+            "google-genai>=0.3.0",
+            "google-cloud-storage>=2.14.0",
+            "notion-client>=2.0.0",
+            "httpx>=0.27.0",
+            "pydantic>=2.0.0"
+        ],
+        display_name="kaedra-shadow-tactician-v5",
+        description="Kaedra - Strategic Intelligence Partner with Image Gen"
     )
     
     print("\n✅ [SUCCESS] Kaedra deployed!")

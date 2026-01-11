@@ -10,6 +10,13 @@ from .base import BaseAgent, AgentResponse
 from ..services.prompt import PromptService, PromptResult
 from ..services.memory import MemoryService
 
+try:
+    from google import genai
+    from google.genai import types
+except ImportError:
+    genai = None
+    types = None
+
 
 KAEDRA_PROFILE = """You are KAEDRA, a shadow tactician and strategic intelligence partner for Who Visions LLC.
 
@@ -75,6 +82,17 @@ class KaedraAgent(BaseAgent):
                  prompt_service: PromptService,
                  memory_service: Optional[MemoryService] = None):
         super().__init__(prompt_service, memory_service, name="KAEDRA")
+        
+        # Initialize GenAI Client for direct image generation (Vertex AI)
+        if genai:
+            try:
+                self.genai_client = genai.Client(vertexai=True, location='us-central1')
+                print("[✅] KaedraAgent: GenAI Client initialized (Vertex AI)")
+            except Exception as e:
+                print(f"[!] KaedraAgent: Failed to initialize GenAI Client: {e}")
+                self.genai_client = None
+        else:
+            self.genai_client = None
     
     @property
     def profile(self) -> str:
@@ -98,6 +116,12 @@ Actions: list, get, create, send, revenue, search, status, generate, extract
 Providers: stripe, square, both
 
 Use this when the user asks about invoices, revenue, payments, or billing.
+
+[IMAGE TOOL]
+To generate an image based on a description, output:
+[TOOL: generate_image(prompt="detailed description of the visual")]
+
+Use this when the user wants to see something or requests an image/visualization.
 """
     
     async def run(self, query: str, context: str = None) -> AgentResponse:
@@ -250,6 +274,25 @@ Use this when the user asks about invoices, revenue, payments, or billing.
                 except Exception as e:
                     print(f"[!] Invoice tool execution failed: {e}")
         
+        # Parse for [TOOL: generate_image(...)]
+        if "[TOOL: generate_image" in result.text:
+            import re
+            match = re.search(r'\[TOOL: generate_image\(prompt=["\'](.*?)["\']\)\]', result.text)
+            if match:
+                prompt_arg = match.group(1)
+                try:
+                    print(f"[*] Executing Image Tool: prompt='{prompt_arg}'")
+                    # Use the new method
+                    image_response = self.generate_image(prompt_arg)
+                    
+                    # Log and report GCS URI
+                    gcs_info = f" (Backed up to: {image_response.gcs_uri})" if hasattr(image_response, 'gcs_uri') else ""
+                    new_context = f"Image Generation Result: Successfully generated image using {image_response.model if hasattr(image_response, 'model') else 'Gemini'}{gcs_info}."
+                    follow_up_prompt = f"{query}\n\n[SYSTEM] Tool Output:\n{new_context}"
+                    result = self.prompt.generate(self._build_prompt(follow_up_prompt, combined_context))
+                except Exception as e:
+                    print(f"[!] Image generation failed: {e}")
+        
         latency = (time.time() - start_time) * 1000
         
         return AgentResponse(
@@ -258,6 +301,102 @@ Use this when the user asks about invoices, revenue, payments, or billing.
             model=result.model,
             latency_ms=latency
         )
+
+    def generate_image(self, prompt: str, model_id: str = "gemini-3-pro-image-preview"):
+        """
+        Industrial image generation tool for Kaedra.
+        Supports gemini-3-pro-image-preview with gemini-2.1-flash-image fallback.
+        """
+        if not self.genai_client:
+             # Try lazy init if missing
+             try:
+                 self.genai_client = genai.Client(vertexai=True, location='us-central1')
+             except Exception as e:
+                 raise RuntimeError(f"GenAI Client not initialized: {e}")
+
+        # 1. Primary: Gemini 3 Pro Image (Imagen 3)
+        if "gemini-3" in model_id:
+            try:
+                print(f"[*] Calling Gemini 3 Pro Image for: {prompt[:50]}...")
+                response = self.genai_client.models.generate_images(
+                    model=model_id,
+                    prompt=prompt,
+                    config=types.GenerateImagesConfig(
+                        number_of_images=1,
+                        aspect_ratio="16:9",
+                        safety_filter_level="BLOCK_ONLY_HIGH",
+                        include_rai_reason=True,
+                        output_mime_type="image/jpeg"
+                    )
+                )
+                
+                # Auto-Backup to GCS
+                if response.generated_images:
+                    img_bytes = response.generated_images[0].image.image_bytes
+                    gcs_uri = self._backup_asset(img_bytes, prompt, "image/jpeg")
+                    # Attach metadata to response for internal use
+                    response.gcs_uri = gcs_uri
+                
+                return response
+            except Exception as e:
+                print(f"[!] Gemini 3 failed, falling back to 2.5: {e}")
+                model_id = "gemini-2.1-flash-image" # Fallback
+
+        # 2. Fallback: Gemini 2.x Flash Image
+        try:
+            print(f"[*] Calling {model_id} for: {prompt[:50]}...")
+            response = self.genai_client.models.generate_content(
+                model=model_id,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE"]
+                )
+            )
+            
+            # Auto-Backup to GCS
+            if hasattr(response, 'parts') and response.parts:
+                for part in response.parts:
+                    if hasattr(part, 'as_image'):
+                        img = part.as_image()
+                        # Extract bytes if possible
+                        import io
+                        from PIL import Image
+                        img_byte_arr = io.BytesIO()
+                        img.save(img_byte_arr, format='JPEG')
+                        img_bytes = img_byte_arr.getvalue()
+                        gcs_uri = self._backup_asset(img_bytes, prompt, "image/jpeg")
+                        response.gcs_uri = gcs_uri
+                        break
+
+            return response
+        except Exception as e:
+            raise RuntimeError(f"Image generation failed for all models: {e}")
+
+    def _backup_asset(self, data: bytes, prompt: str, content_type: str) -> str:
+        """Helper to back up generated assets to GCS."""
+        try:
+            from kaedra.services.storage_utils import get_storage_client
+            import uuid
+            import hashlib
+            
+            bucket_name = "gen-lang-client-0939852539-images"
+            client = get_storage_client()
+            bucket = client.bucket(bucket_name)
+            
+            # Generate deterministic but unique filename
+            p_hash = hashlib.md5(prompt.encode()).hexdigest()[:8]
+            u_id = str(uuid.uuid4())[:8]
+            filename = f"kaedra_gen_{p_hash}_{u_id}.jpg"
+            
+            blob = bucket.blob(filename)
+            blob.upload_from_string(data, content_type=content_type)
+            
+            uri = f"gs://{bucket_name}/{filename}"
+            print(f"[✅] Asset backed up to: {uri}")
+            return uri
+        except Exception as e:
+            print(f"[⚠️] Asset backup failed: {e}")
+            return "N/A (Backup Failed)"
     
     def run_sync(self, query: str, context: str = None) -> AgentResponse:
         """Synchronous version of run for non-async contexts."""

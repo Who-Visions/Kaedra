@@ -1,4 +1,4 @@
-"""KAEDRA Services - Memory, Logging, Prompt handling, Web fetching, and Video generation."""
+"""KAEDRA Services - Memory, Logging, Prompt handling, Web fetching, and Visual generation."""
 
 try:
     from .memory import MemoryService, MemoryEntry
@@ -9,17 +9,17 @@ except (ImportError, Exception) as e:
     MemoryService = None
     MemoryEntry = None
 
-from .logging import LoggingService, SessionInfo
+from .kaedra_logging import LoggingService, SessionInfo
 from .prompt import PromptService, PromptResult
 from .web import WebService, WebPage
 
 try:
-    from .video import VideoService, VideoResult
+    from .visual import VisualService, VisualResult
     VIDEO_AVAILABLE = True
 except ImportError:
     VIDEO_AVAILABLE = False
-    VideoService = None
-    VideoResult = None
+    VisualService = None
+    VisualResult = None
 
 __all__ = [
     'MemoryService', 'MemoryEntry',
@@ -29,4 +29,4 @@ __all__ = [
 ]
 
 if VIDEO_AVAILABLE:
-    __all__.extend(['VideoService', 'VideoResult'])
+    __all__.extend(['VisualService', 'VisualResult'])
