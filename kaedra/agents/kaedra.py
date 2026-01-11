@@ -84,15 +84,44 @@ class KaedraAgent(BaseAgent):
         super().__init__(prompt_service, memory_service, name="KAEDRA")
         
         # Initialize GenAI Client for direct image generation (Vertex AI)
+        self._genai_client = None
+        self._ensure_genai_client()
+
+    def _ensure_genai_client(self):
+        """Idempotent init for direct GenAI client."""
+        if self._genai_client: return
+        
         if genai:
             try:
-                self.genai_client = genai.Client(vertexai=True, location='us-central1')
+                self._genai_client = genai.Client(vertexai=True, location='us-central1')
                 print("[✅] KaedraAgent: GenAI Client initialized (Vertex AI)")
             except Exception as e:
                 print(f"[!] KaedraAgent: Failed to initialize GenAI Client: {e}")
-                self.genai_client = None
+                self._genai_client = None
         else:
-            self.genai_client = None
+            self._genai_client = None
+
+    @property
+    def genai_client(self):
+        if not self._genai_client:
+            self._ensure_genai_client()
+        return self._genai_client
+
+    @genai_client.setter
+    def genai_client(self, value):
+        self._genai_client = value
+
+    def __getstate__(self):
+        """Exclude clients from pickling."""
+        state = self.__dict__.copy()
+        if "_genai_client" in state:
+            del state["_genai_client"]
+        return state
+
+    def __setstate__(self, state):
+        """Restore state."""
+        self.__dict__.update(state)
+        self._genai_client = None
     
     @property
     def profile(self) -> str:

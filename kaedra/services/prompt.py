@@ -55,13 +55,42 @@ class PromptService:
         self.location = location
         self.enable_grounding = enable_grounding
         self._default_model_key = model_key
+        self._client = None
         
-        # Initialize Client
+        # Initialize Client (Lazy init via property is preferred for pickling, but we do it here too)
+        self._ensure_client()
+
+    def _ensure_client(self):
+        """Idempotent client initialization."""
+        if self._client: return
+        
         if genai:
-            self.client = genai.Client(vertexai=True, project=project, location=location)
+            try:
+                self._client = genai.Client(vertexai=True, project=self.project, location=self.location)
+            except Exception as e:
+                print(f"[!] PromptService: Client init failed: {e}")
+                self._client = None
         else:
-            self.client = None
             print("[!] PromptService: google-genai SDK not found.")
+
+    @property
+    def client(self):
+        """Lazy-loaded GenAI client."""
+        if not self._client:
+            self._ensure_client()
+        return self._client
+
+    def __getstate__(self):
+        """Exclude client from pickling to avoid thread lock errors."""
+        state = self.__dict__.copy()
+        if "_client" in state:
+            del state["_client"]
+        return state
+
+    def __setstate__(self, state):
+        """Restore state and re-init client lazily."""
+        self.__dict__.update(state)
+        self._client = None
 
     def needs_deep_thinking(self, query: str) -> bool:
         """Detect if query requires Gemini 3 Pro reasoning."""
