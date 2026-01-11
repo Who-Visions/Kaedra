@@ -35,7 +35,7 @@ KAEDRA is a **Story Engine** and **Universe Architect** for deep narrative work.
 
 | Feature | Description |
 |---------|-------------|
-| 🧠 **Multi-Tier AI** | Gemini 3 Pro with thinking budgets and tiered generation |
+| 🧠 **Multi-Tier AI** | Gemini 3 Pro/Flash with Smart Routing and Thinking Levels |
 | 📜 **World Registry** | Multi-save system with persistent world states |
 | 🤖 **Universe Automations** | Self-cleaning database (Canon, Timeline, Power scoring) |
 | 🎤 **Voice Dictation** | Wispr Flow integration for hands-free writing |
@@ -51,6 +51,7 @@ KAEDRA is a **Story Engine** and **Universe Architect** for deep narrative work.
 Use `:` prefix for commands. Natural language for writing.
 
 ### 📝 Writing Flow
+
 | Command | Description |
 |---------|-------------|
 | `:next` | ⏭️ Advance to next Scene (resets Tension) |
@@ -61,6 +62,7 @@ Use `:` prefix for commands. Natural language for writing.
 | `:quit` | 💾 Save and Exit |
 
 ### 🤖 Automation
+
 | Command | Description |
 |---------|-------------|
 | `:automate` | 🔄 Run Universe Automations (Canon, Timeline, Power) |
@@ -72,6 +74,7 @@ Use `:` prefix for commands. Natural language for writing.
 | `:roadmap sync` | 🔗 Sync to Notion + Drive |
 
 ### 💡 Hardware
+
 | Command | Description |
 |---------|-------------|
 | `:lights fire` | 🔥 Fire atmosphere (LIFX flame + Razer sparks) |
@@ -86,6 +89,7 @@ Use `:` prefix for commands. Natural language for writing.
 AI-callable functions available during generation:
 
 ### 📚 Lore & Notion
+
 | Tool | Purpose |
 |------|---------|
 | `read_page_content` | 📖 Read Notion page content |
@@ -96,6 +100,7 @@ AI-callable functions available during generation:
 | `propose_canon_update` | 💡 Suggest lore changes |
 
 ### 🎬 Screenwriting
+
 | Tool | Purpose |
 |------|---------|
 | `consult_director` | 🎥 Screenwriting guidance (structure, character, twist, etc.) |
@@ -104,6 +109,7 @@ AI-callable functions available during generation:
 | `clean_timeline_data` | 📅 Auto-tag timeline eras |
 
 ### 🌍 World Building
+
 | Tool | Purpose |
 |------|---------|
 | `ingest_youtube_content` | 📺 Extract YouTube transcripts |
@@ -114,12 +120,14 @@ AI-callable functions available during generation:
 ## 🔌 Services
 
 ### 💡 Hardware Control
+
 | Service | Description |
 |---------|-------------|
 | `lifx.py` (27KB) | 💡 LIFX bulb control (colors, effects, scenes) |
 | `razer.py` (13KB) | ⌨️ Razer Chroma keyboard (per-key matrix, fire effect) |
 
 ### 🎤 Voice & Audio
+
 | Service | Description |
 |---------|-------------|
 | `wispr.py` (8KB) | 🎤 Wispr Flow Desktop integration (dictation) |
@@ -131,6 +139,7 @@ AI-callable functions available during generation:
 | `transcription.py` (3KB) | ✍️ Speech-to-text conversion |
 
 ### 📋 Productivity
+
 | Service | Description |
 |---------|-------------|
 | `notion.py` (15KB) | 📓 Notion API integration |
@@ -138,6 +147,7 @@ AI-callable functions available during generation:
 | `invoices.py` (43KB) | 💰 Invoice generation & tracking |
 
 ### 🌐 Research & Media
+
 | Service | Description |
 |---------|-------------|
 | `video.py` (11KB) | 🎬 Video ingestion & analysis |
@@ -146,9 +156,10 @@ AI-callable functions available during generation:
 | `memory.py` (9KB) | 🧠 Long-term memory management |
 
 ### ⚙️ Core
+
 | Service | Description |
 |---------|-------------|
-| `prompt.py` (9KB) | 📝 Prompt engineering utilities |
+| `prompt.py` (12KB) | 📝 Gemini 3 Smart Router & Thought Extraction |
 | `logging.py` (7KB) | 📊 Session logging (JSON turns) |
 | `fast_flow.py` (6KB) | ⚡ Fast streaming responses |
 
@@ -170,6 +181,7 @@ Multi-agent system with specialized personas:
 ## 🎨 Hardware Integration
 
 ### 💡 LIFX Smart Lights
+
 | Feature | Description |
 |---------|-------------|
 | Color Control | HSB + Kelvin temperature |
@@ -180,6 +192,7 @@ Multi-agent system with specialized personas:
 | Selector | Target specific groups/zones |
 
 ### ⌨️ Razer Blade 15 Keyboard
+
 | Feature | Description |
 |---------|-------------|
 | Static Colors | Solid color across all keys |
@@ -190,6 +203,7 @@ Multi-agent system with specialized personas:
 | Breathing | Two-color pulse effect |
 
 **Requirements:**
+
 - Razer Synapse 4 Beta (fixes REST API errors)
 - Enable "Kaedra Story Engine" in Chroma Apps
 
@@ -216,15 +230,18 @@ lore/worlds/world_id/
 Trigger with `:automate` command:
 
 ### 📦 Production Pipeline
+
 - **Canon Promotion**: `Concept` → `In Development`
 - **Release Closeout**: `Released` → `Completed` + `Phase 1` tag
 
 ### ✅ Consistency Checks
+
 - **Timeline Validator**: Auto-tag Era (Ancient, Classical, Modern, Future)
 - **Power Scoring**: Calculate `Importance Score` (30-95) from Power Level
 - **Retcon Safety**: Rename + deactivate retconned entries
 
 ### 🔗 Connection & Media
+
 - **Major Characters**: Alert for connection review
 - **Media Alerts**: Ping social scheduler on release
 - **Ingestion**: Move "Approved" ideas to Bible
@@ -257,6 +274,7 @@ kaedra/
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.10+
 - Google Cloud Vertex AI credentials
 - LIFX Token (optional)
