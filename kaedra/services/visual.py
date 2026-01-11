@@ -67,7 +67,7 @@ class VisualService:
         
         # 1. Prefer Vertex AI (ADC) - Using Shared Singleton
         if PROJECT_ID and not api_key:
-             from .config import get_gemini_client
+             from ..core.config import get_gemini_client
              self.client = get_gemini_client()
         
         # 2. Fallback to API Keys (Legacy/Override)
