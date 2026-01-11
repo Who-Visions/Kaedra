@@ -77,17 +77,16 @@ if __name__ == "__main__":
     
     remote_app = reasoning_engines.ReasoningEngine.create(
         agent,
-        tools=[agent.generate_image],
         requirements=[
-            "google-cloud-aiplatform>=1.50.0",
-            "google-genai>=0.3.0",
+            "google-cloud-aiplatform>=1.79.0",
+            "google-genai>=1.56.0",
             "google-cloud-storage>=2.14.0",
             "notion-client>=2.0.0",
             "httpx>=0.27.0",
             "pydantic>=2.0.0"
         ],
-        display_name="kaedra-shadow-tactician-v5",
-        description="Kaedra - Strategic Intelligence Partner with Image Gen"
+        display_name="kaedra-shadow-tactician-v6",
+        description="Kaedra - Strategic Intelligence Partner"
     )
     
     print("\n✅ [SUCCESS] Kaedra deployed!")
