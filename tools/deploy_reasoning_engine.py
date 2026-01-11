@@ -83,7 +83,8 @@ if __name__ == "__main__":
             "google-cloud-storage>=2.14.0",
             "notion-client>=2.0.0",
             "httpx>=0.27.0",
-            "pydantic>=2.0.0"
+            "pydantic>=2.0.0",
+            "pytz>=2024.1"
         ],
         display_name="kaedra-shadow-tactician-v6",
         description="Kaedra - Strategic Intelligence Partner"
