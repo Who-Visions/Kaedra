@@ -7,10 +7,9 @@ API Docs: https://assets.razerzone.com/dev_portal/REST/html/index.html
 import requests
 import time
 import threading
-import json
 import random
 import colorsys
-from typing import Callable, Optional, Dict, Any
+from typing import Callable, Optional, Dict
 
 import logging
 log = logging.getLogger("kaedra")
@@ -20,9 +19,9 @@ class RazerService:
     Control Razer Chroma devices via local REST API.
     Requires Razer Synapse with 'Chroma Connect' enabled.
     """
-    
+
     DEFAULT_URI = "http://localhost:54235/razer/chromasdk"
-    
+
     def __init__(self):
         self.uri: Optional[str] = None
         self.session_id: Optional[int] = None
@@ -32,7 +31,7 @@ class RazerService:
         self._link_running = False
         self._running = False
         self.session = requests.Session()
-        
+
         # Define base pallet for common colors (BGR format for Razer)
         self.COLORS = {
             "red": 0x0000FF,
@@ -57,35 +56,35 @@ class RazerService:
             "device_supported": ["keyboard", "mouse", "headset", "mousepad", "keypad", "chromalink"],
             "category": "application"
         }
-        
+
         try:
             resp = requests.post(self.DEFAULT_URI, json=payload, timeout=2.0)
             if resp.status_code == 200:
                 data = resp.json()
                 self.uri = data.get("uri")
                 self.session_id = data.get("sessionid")
-                
+
                 if self.uri:
                     log.info(f"Razer Chroma connected: {self.uri}")
-                    
+
                     # Wait for session port to be ready (SDK quirk)
                     time.sleep(2.0)
-                    
+
                     self._start_heartbeat()
-                    
+
                     # Visual Confirmation: REMOVED to prevent interference with Active Drive
                     # self.set_static("green")
                     # threading.Timer(1.0, self.restore).start()
-                    
+
                     return True
             else:
                 log.warning(f"Razer connect failed: {resp.status_code}")
-                
+
         except Exception as e:
             # Common if Synapse isn't running
-            log.warning(f"Razer Chroma handshake error: {e}") 
+            log.warning(f"Razer Chroma handshake error: {e}")
             pass
-            
+
         return False
 
     def _start_heartbeat(self):
@@ -101,12 +100,12 @@ class RazerService:
         to avoid concurrency issues on the local REST server.
         """
         log.info("[Razer] Starting Unified Connection/Drive Loop")
-        
+
         last_heartbeat = 0
-        
+
         while self._running and self.uri:
             t_now = time.time()
-            
+
             # 1. Heartbeat (Every 1.0s)
             if t_now - last_heartbeat >= 1.0:
                 try:
@@ -119,14 +118,14 @@ class RazerService:
             try:
                 # endpoint 'chromalink' (5 LEDs)
                 requests.put(f"{self.uri}/chromalink", json={"effect": "CHROMA_CUSTOM", "param": self._link_target_color}, timeout=0.2)
-                
+
                 # endpoint 'mousepad' (15 LEDs) - The Laptop Stand PID 3853 often maps here
                 # Tile the 5-zone color list to fulfill the 15-element requirement
                 requests.put(f"{self.uri}/mousepad", json={"effect": "CHROMA_CUSTOM", "param": self._link_target_color * 3}, timeout=0.2)
-                
+
                 # endpoint 'headset' (5 LEDs)
                 requests.put(f"{self.uri}/headset", json={"effect": "CHROMA_CUSTOM", "param": self._link_target_color}, timeout=0.2)
-                
+
             except Exception as e:
                 log.warning(f"[Razer] Drive Loop Error: {e}")
 
@@ -165,13 +164,13 @@ class RazerService:
     def set_static(self, color_name: str):
         """Set all devices to a static color."""
         color = self.COLORS.get(color_name.lower(), 0xFFFFFF)
-        
+
         # Update target for the active drive loop (Stand)
         self._link_target_color = [color] * 5
-        
+
         # 'CHROMA_STATIC' effect for peripherals
         payload = {"effect": "CHROMA_STATIC", "param": {"color": color}}
-        
+
         # Broadcast to main devices
         self._send("keyboard", json_data=payload)
         self._send("mouse", json_data=payload)
@@ -192,7 +191,7 @@ class RazerService:
     def breathe(self, color1: str, color2: str = None):
         """Breathing effect."""
         c1 = self.COLORS.get(color1.lower(), 0xFFFFFF)
-        
+
         if color2:
             c2 = self.COLORS.get(color2.lower(), 0x000000)
             # CHROMA_BREATHING type 2 (Two colors)
@@ -207,7 +206,7 @@ class RazerService:
     # ═══════════════════════════════════════════════════════════════════════════
     # CHROMA LINK (3rd Party Devices - 5 Virtual LEDs)
     # ═══════════════════════════════════════════════════════════════════════════
-    
+
     CHROMALINK_LEDS = 5
 
     def set_chromalink_static(self, color_name: str):
@@ -225,7 +224,7 @@ class RazerService:
         if len(zone_colors) != self.CHROMALINK_LEDS:
             log.warning(f"ChromaLink requires exactly {self.CHROMALINK_LEDS} colors, got {len(zone_colors)}")
             return
-        
+
         # Update target for active loop
         self._link_target_color = list(zone_colors)
 
@@ -246,7 +245,7 @@ class RazerService:
     COLOR_COLS = 24
     KEY_ROWS = 6
     KEY_COLS = 22
-    
+
     ROWS = COLOR_ROWS
     COLS = COLOR_COLS
 
@@ -256,11 +255,11 @@ class RazerService:
         grid: List[List[int]] - 6 rows of 22 cols (int colors).
         """
         if not self.uri: return
-        
+
         if len(grid) != self.COLOR_ROWS or (grid and len(grid[0]) != self.COLOR_COLS):
             # log.warning(f"Grid size mismatch: expected {self.COLOR_ROWS}x{self.COLOR_COLS}")
             return
-        
+
         payload = {
             "effect": "CHROMA_CUSTOM2",
             "param": {
@@ -298,9 +297,9 @@ class RazerService:
 
     def _start_effect(self, runner: Callable[[], None]) -> None:
         if not hasattr(self, '_effect_lock'):
-             self._effect_lock = threading.RLock()
-             self._effect_stop = threading.Event()
-             
+            self._effect_lock = threading.RLock()
+            self._effect_stop = threading.Event()
+
         with self._effect_lock:
             self.stop_effect()
             self._effect_stop.clear()
@@ -310,24 +309,24 @@ class RazerService:
     def stop_effect(self):
         """Stop active animation."""
         if not hasattr(self, '_effect_lock'): return
-        
+
         with self._effect_lock:
             self._effect_stop.set()
             t = getattr(self, '_effect_thread', None)
             self._effect_thread = None
-            
+
         if t and t.is_alive():
             t.join(timeout=0.2)
-        
+
         self.restore()
 
     def restore(self):
         """Reset to None (let Synapse take over) or Default White."""
         if not self.uri: return
         for device in ["keyboard", "mouse", "headset", "mousepad", "keypad", "chromalink", "headsetstand"]:
-             try:
-                 self.session.delete(f"{self.uri}/{device}", timeout=1)
-             except: pass
+            try:
+                self.session.delete(f"{self.uri}/{device}", timeout=1)
+            except: pass
 
     def broadcast_static(self, color_int: int):
         """Public alias for _broadcast_static."""
@@ -338,7 +337,7 @@ class RazerService:
         color_int = int(color_int)
         # Update loop target for the stand
         self._link_target_color = [color_int] * 5
-        
+
         payload = {"effect": "CHROMA_STATIC", "param": {"color": color_int}}
         # Skip keyboard as it uses CHROMA_CUSTOM
         for device in ["mouse", "headset", "mousepad", "keypad", "chromalink", "headsetstand"]:
@@ -356,7 +355,7 @@ class RazerService:
         RED = 0x0000FF
         ORANGE = 0x00A5FF
         YELLOW = 0x00FFFF
-        
+
         def runner():
             import random
             while not self._effect_stop.is_set():
@@ -367,7 +366,7 @@ class RazerService:
                         if chance > 0.90: grid[r][c] = YELLOW
                         elif chance > 0.70: grid[r][c] = ORANGE
                         elif chance > 0.50: grid[r][c] = RED
-                
+
                 try:
                     self.set_custom(grid)
                     time.sleep(0.1)
@@ -385,10 +384,10 @@ class RazerService:
             t0 = time.time()
             dt = 1.0 / max(1, fps)
             frame_count = 0
-            
+
             # Initial set for peripherals
             self._broadcast_static(base_color_int)
-            
+
             while not self._effect_stop.is_set():
                 t = time.time() - t0
                 grid = []
@@ -401,17 +400,17 @@ class RazerService:
                         row.append(self._bgr_int_from_hsv(hue, 1.0, v))
                     grid.append(row)
                 self.set_custom(grid)
-                
+
                 # SPATIAL WAVE FOR STAND (5 LEDs)
                 # Map 5 LEDs across the width
                 stand_colors = []
-                
+
                 for idx in [0, 5, 11, 16, 21]:
                     # Calculate wave
                     eff_x = min(idx, width-1)
                     local_wave = (1.0 + math.sin(phase - (eff_x / width) * 2.0 * math.pi)) * 0.5
-                    
-                    # BOOSTED BRIGHTNESS: Min 0.2, Max 1.0 
+
+                    # BOOSTED BRIGHTNESS: Min 0.2, Max 1.0
                     # Previously was too dim (0.05)
                     local_v = self._clamp(0.2 + 0.8 * local_wave)
                     stand_colors.append(self._bgr_int_from_hsv(hue, 1.0, local_v))
@@ -420,7 +419,7 @@ class RazerService:
                 self.set_chromalink_zones(stand_colors)
                 # Sync other devices to center color
                 self._broadcast_static(stand_colors[2])
-                
+
                 frame_count += 1
                 time.sleep(dt)
 
@@ -436,11 +435,11 @@ class RazerService:
             while not self._effect_stop.is_set():
                 t = time.time() - t0
                 base = (t / max(0.05, period)) % 1.0
-                
+
                 # Peripherals: Update every 5th frame (~6 FPS) to save bandwidth
                 if frame_count % 5 == 0:
-                     peri_color = self._bgr_int_from_hsv(base, 1.0, brightness)
-                     self._broadcast_static(peri_color)
+                    peri_color = self._bgr_int_from_hsv(base, 1.0, brightness)
+                    self._broadcast_static(peri_color)
 
                 grid = []
                 for y in range(height):
@@ -481,24 +480,24 @@ class RazerService:
                 for _ in range(random.randint(1, 3)):
                     n = random.randint(12, 40)
                     coords = {(random.randrange(height), random.randrange(width)) for _ in range(n)}
-                    
+
                     # Flash All Devices White
                     self._broadcast_static(white_int)
-                    
+
                     for f in range(6):
                         if self._effect_stop.is_set(): return
                         decay = 1.0 - (f / 5.0)
-                        
+
                         # Peripherals flash decay? Too fast. Just reset to base after flash.
                         if f == 0: self._broadcast_static(white_int)
                         elif f == 3: self._broadcast_static(base_color_int)
-                        
+
                         grid = [[base_color_int for _ in range(width)] for _ in range(height)]
                         for (yy, xx) in coords:
                             grid[yy][xx] = self._bgr_int_from_hsv(0.0, 0.0, decay) # white flash
                         self.set_custom(grid)
                         time.sleep(dt)
-                
+
                 # Ensure we return to base
                 self._broadcast_static(base_color_int)
 
@@ -518,14 +517,14 @@ class RazerService:
                 try:
                     tension = self._clamp(float(get_tension() or 0.0))
                 except: tension = 0.0
-                
+
                 # Pulse amplitude rises with tension
                 pulse = (1.0 + math.sin((t / max(0.05, period)) * 2.0 * math.pi)) * 0.5
                 v = min_b + (max_b - min_b) * (0.25 + 0.75 * tension) * pulse
                 bgr = self._bgr_int_from_hsv(hue, 1.0, self._clamp(v))
-                
+
                 if frame_count % 3 == 0: # 10 FPS updates for peripherals
-                     self._broadcast_static(bgr)
+                    self._broadcast_static(bgr)
 
                 grid = [[bgr for _ in range(width)] for _ in range(height)]
                 self.set_custom(grid)

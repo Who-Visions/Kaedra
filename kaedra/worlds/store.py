@@ -55,7 +55,7 @@ def list_worlds() -> List[WorldMeta]:
         except Exception as e:
             # Skip corrupted manifests
             continue
-            
+
     return sorted(worlds, key=lambda w: w.last_played or "", reverse=True)
 
 def load_world(world_id: str) -> dict[str, Any]:
@@ -69,7 +69,7 @@ def touch_last_played(world_id: str, engine_version: str) -> None:
     manifest = folder / "world.json"
     if not manifest.exists():
         return
-        
+
     data = json.loads(manifest.read_text(encoding="utf-8"))
     data["last_played"] = _now_iso()
     data["engine_version"] = engine_version

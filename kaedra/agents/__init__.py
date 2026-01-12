@@ -1,11 +1,10 @@
 """KAEDRA Agents - KAEDRA, BLADE, and NYX agents."""
 
 from .base import BaseAgent, AgentResponse
-from .kaedra import KaedraAgent
-from .blade import BladeAgent
-from .nyx import NyxAgent
+# Intentionally removed eager imports of KaedraAgent, BladeAgent, NyxAgent
+# to prevent "import cascade" crashes during deployment.
+# Users must import these explicitly from their submodules.
 
 __all__ = [
     'BaseAgent', 'AgentResponse',
-    'KaedraAgent', 'BladeAgent', 'NyxAgent'
 ]

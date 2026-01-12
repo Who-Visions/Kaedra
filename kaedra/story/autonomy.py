@@ -6,7 +6,7 @@ import asyncio
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 
 
 class AutoState(str, Enum):

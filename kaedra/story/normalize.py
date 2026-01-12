@@ -38,23 +38,23 @@ def normalize_turn(t: Any) -> Dict:
         raw_role = t.get("role", "user")
     else:
         raw_role = getattr(t, "role", "user")
-        
+
     # 2. Map role
     role_map = {
         "assistant": "model",
         "model": "model",
         "user": "user",
-        "system": "user", 
+        "system": "user",
     }
     role = role_map.get(str(raw_role).lower(), "user")
-    
+
     # 3. Capture and normalize parts
     if isinstance(t, dict):
         parts_in = t.get("parts", [])
         if not parts_in:
-             # Handle legacy single-string turns
-             text = t.get("content") or t.get("text") or ""
-             parts_in = [{"text": str(text)}] if text else []
+            # Handle legacy single-string turns
+            text = t.get("content") or t.get("text") or ""
+            parts_in = [{"text": str(text)}] if text else []
     else:
         parts_in = getattr(t, "parts", [])
 
@@ -92,7 +92,7 @@ def normalize_turn(t: Any) -> Dict:
 
         if part_dict:
             parts_out.append(part_dict)
-            
+
     # 4. Return unified dict
     return {"role": role, "parts": parts_out}
 
@@ -119,7 +119,7 @@ def normalize_timeline(events: list) -> list:
     """Clean, sort, and merge timeline events."""
     if not events:
         return []
-    
+
     cleaned = []
     for e in events:
         if not isinstance(e, dict):
@@ -136,10 +136,10 @@ def normalize_timeline(events: list) -> list:
         if not c["event"]:
             continue
         cleaned.append(c)
-    
+
     # Sort by date
     cleaned.sort(key=event_sort_key)
-    
+
     # Merge exact duplicates
     seen = set()
     merged = []
@@ -148,5 +148,5 @@ def normalize_timeline(events: list) -> list:
         if sig not in seen:
             seen.add(sig)
             merged.append(e)
-    
+
     return merged

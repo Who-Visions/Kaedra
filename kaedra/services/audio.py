@@ -3,15 +3,12 @@ Audio Service v2.0
 Handles Text-to-Speech (Gemini 2.5 TTS) and Speech-to-Text (Faster Whisper / Gemini).
 Updated to Gemini 2.5 TTS API per official documentation.
 """
-import os
-import time
 import wave
 import logging
 from pathlib import Path
 from typing import Optional, Union, BinaryIO, List, Dict
 
 # Config
-from kaedra.core.config import PROJECT_ID
 try:
     from google import genai
     from google.genai import types
@@ -81,13 +78,34 @@ def save_wave_file(filename: str, pcm_data: bytes, channels: int = 1, rate: int 
 
 class AudioService:
     def __init__(self):
-        # 1. Initialize Gemini Client (TTS & Cloud STT) - Shared Singleton
-        from kaedra.core.config import get_gemini_client
-        self.client = get_gemini_client()
+        # 1. Initialize Gemini Client (TTS & Cloud STT) - Lazy
+        self._client = None
 
-        # 2. Initialize Whisper (Local STT) - Lazy load to save VRAM
+        # 2. Whisper (Local STT) - Lazy
         self._whisper = None
-        
+
+    @property
+    def client(self):
+        if not self._client:
+            from kaedra.core.config import get_gemini_client
+            try:
+                self._client = get_gemini_client()
+            except Exception as e:
+                print(f"[!] AudioService GenAI Init Failed: {e}")
+                self._client = None
+        return self._client
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if "_client" in state: del state["_client"]
+        if "_whisper" in state: del state["_whisper"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._client = None
+        self._whisper = None
+
     def _get_whisper(self):
         if not self._whisper and WhisperModel:
             print("[INFO] Loading Whisper Model (base.en) on GPU...")
@@ -99,21 +117,21 @@ class AudioService:
         return self._whisper
 
     def text_to_speech(
-        self, 
-        text: str, 
-        voice: str = "Kore", 
+        self,
+        text: str,
+        voice: str = "Kore",
         output_path: str = "output.wav",
         pro: bool = False
     ) -> Optional[str]:
         """
         Generate single-speaker speech from text using Gemini 2.5 TTS.
-        
+
         Args:
             text: The text to speak. Can include style prompts like "Say cheerfully: ..."
             voice: Voice name from VOICES dict (default: Kore)
             output_path: Where to save the .wav file
             pro: Use Pro model (higher quality) vs Flash (faster)
-            
+
         Returns:
             Path to saved audio file, or None on failure.
         """
@@ -122,7 +140,7 @@ class AudioService:
             return None
 
         model = TTS_MODEL_PRO if pro else TTS_MODEL_FLASH
-        
+
         print(f"[TTS] Generating ({len(text)} chars | Voice: {voice} | Model: {model.split('-')[-1]})...")
         try:
             response = self.client.models.generate_content(
@@ -139,15 +157,15 @@ class AudioService:
                     )
                 )
             )
-            
+
             # Extract audio data
             audio_data = response.candidates[0].content.parts[0].inline_data.data
-            
+
             # Save as wave file
             path = Path(output_path)
             path.parent.mkdir(parents=True, exist_ok=True)
             save_wave_file(str(path), audio_data)
-            
+
             print(f"[TTS] Saved: {path}")
             return str(path)
 
@@ -164,7 +182,7 @@ class AudioService:
     ) -> Optional[str]:
         """
         Generate multi-speaker audio (up to 2 speakers) using Gemini 2.5 TTS.
-        
+
         Args:
             text: Transcript with speaker names, e.g.:
                   "Joe: How's it going?
@@ -173,20 +191,20 @@ class AudioService:
                       [{"name": "Joe", "voice": "Kore"}, {"name": "Jane", "voice": "Puck"}]
             output_path: Where to save the .wav file
             pro: Use Pro model vs Flash
-            
+
         Returns:
             Path to saved audio file, or None on failure.
         """
         if not self.client:
             print("[ERROR] TTS Unavailable: Gemini Client not initialized.")
             return None
-        
+
         if len(speakers) > 2:
             print("[WARN] Gemini TTS supports max 2 speakers. Using first 2.")
             speakers = speakers[:2]
 
         model = TTS_MODEL_PRO if pro else TTS_MODEL_FLASH
-        
+
         # Build speaker configs
         speaker_configs = []
         for s in speakers:
@@ -200,7 +218,7 @@ class AudioService:
                     )
                 )
             )
-        
+
         print(f"[TTS] Generating Multi-Speaker ({len(speakers)} speakers)...")
         try:
             response = self.client.models.generate_content(
@@ -215,15 +233,15 @@ class AudioService:
                     )
                 )
             )
-            
+
             # Extract audio data
             audio_data = response.candidates[0].content.parts[0].inline_data.data
-            
+
             # Save as wave file
             path = Path(output_path)
             path.parent.mkdir(parents=True, exist_ok=True)
             save_wave_file(str(path), audio_data)
-            
+
             print(f"[TTS] Multi-Speaker Saved: {path}")
             return str(path)
 
@@ -241,7 +259,7 @@ class AudioService:
             model = self._get_whisper()
             if not model:
                 return "[Error: Faster Whisper not installed/loaded]"
-            
+
             segments, info = model.transcribe(audio_source, beam_size=5)
             text = " ".join([segment.text for segment in segments])
             return text.strip()
@@ -249,7 +267,7 @@ class AudioService:
             # Cloud STT via Gemini Multimodal
             if not self.client:
                 return "[Error: Cloud STT unavailable - no Gemini client]"
-            
+
             try:
                 # Read audio file
                 if isinstance(audio_source, str):
@@ -271,9 +289,9 @@ class AudioService:
                 else:
                     audio_bytes = audio_source.read()
                     mime_type = "audio/wav"
-                
+
                 print(f"[STT] Transcribing via Gemini ({len(audio_bytes)} bytes)...")
-                
+
                 response = self.client.models.generate_content(
                     model="gemini-2.5-flash",
                     contents=[
@@ -281,9 +299,9 @@ class AudioService:
                         types.Part.from_bytes(data=audio_bytes, mime_type=mime_type)
                     ]
                 )
-                
+
                 return response.text.strip() if response.text else "[No transcript generated]"
-                
+
             except Exception as e:
                 return f"[Error: Cloud STT failed: {e}]"
 

@@ -21,7 +21,7 @@ try:
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
-    
+
 def simple_yaml_parse(text: str) -> Dict[str, Any]:
     """Simple YAML frontmatter parser (no external deps)."""
     result = {}
@@ -102,7 +102,7 @@ class SkillMetadata:
 
 class BaseSkill(ABC):
     """Abstract base class for legacy Python skills."""
-    
+
     @property
     @abstractmethod
     def name(self) -> str: pass
@@ -124,35 +124,35 @@ class BaseSkill(ABC):
 class SkillManager:
     """
     Manages skill registration and selection.
-    
+
     Supports both:
     - Filesystem-based SKILL.md files (new, preferred)
     - Legacy Python BaseSkill classes (backward compatible)
     """
-    
+
     def __init__(self, skills_dir: Optional[Path] = None):
         # Default to kaedra/skills directory
         if skills_dir is None:
             skills_dir = Path(__file__).parent.parent / "skills"
-        
+
         self.skills_dir = skills_dir
         self.filesystem_skills: List[SkillMetadata] = []
         self.legacy_skills: List[BaseSkill] = []
         self.current_skill: Optional[SkillMetadata] = None
         self._default_skill: Optional[SkillMetadata] = None
-        
+
         # Discover filesystem-based skills
         self._discover_filesystem_skills()
-        
+
         # Load legacy skills as fallback
         self._load_legacy_skills()
-        
+
     def _discover_filesystem_skills(self):
         """Scan skills directory for SKILL.md files."""
         if not self.skills_dir.exists():
             print(f"[!] Skills directory not found: {self.skills_dir}")
             return
-            
+
         for skill_path in self.skills_dir.glob("*/SKILL.md"):
             try:
                 metadata = self._parse_metadata(skill_path)
@@ -164,30 +164,30 @@ class SkillManager:
                     print(f"[+] Discovered skill: {metadata.name} (priority: {metadata.priority})")
             except Exception as e:
                 print(f"[!] Failed to parse {skill_path}: {e}")
-        
+
         # Sort by priority (higher = checked first)
         self.filesystem_skills.sort(key=lambda s: s.priority, reverse=True)
-        
+
         # Set default skill as current if available
         if self._default_skill:
             self.current_skill = self._default_skill
         elif self.filesystem_skills:
             self.current_skill = self.filesystem_skills[-1]  # Lowest priority as default
-    
+
     def _parse_metadata(self, path: Path) -> Optional[SkillMetadata]:
         """Parse YAML frontmatter only (no full content load for efficiency)."""
         content = path.read_text(encoding='utf-8')
-        
+
         if not content.startswith('---'):
             print(f"[!] No YAML frontmatter in {path}")
             return None
-            
+
         # Extract frontmatter
         match = re.match(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
         if not match:
             print(f"[!] Invalid YAML frontmatter in {path}")
             return None
-            
+
         try:
             if HAS_YAML:
                 data = yaml.safe_load(match.group(1))
@@ -196,7 +196,7 @@ class SkillManager:
         except Exception as e:
             print(f"[!] YAML parse error in {path}: {e}")
             return None
-            
+
         return SkillMetadata(
             name=data.get('name', path.parent.name),
             description=data.get('description', ''),
@@ -205,21 +205,21 @@ class SkillManager:
             path=path,
             light_feedback=data.get('light_feedback', {})
         )
-    
+
     def _load_legacy_skills(self):
         """Load legacy Python-based skills for backward compatibility."""
         # Only load if no filesystem skills found
         if self.filesystem_skills:
             return
-            
+
         print("[*] No filesystem skills found, loading legacy skills...")
-        
+
         try:
             from kaedra.skills.universe import UniverseSkill
             self.legacy_skills.append(UniverseSkill())
         except ImportError:
             pass
-    
+
     async def update_context(self, transcription: str) -> SkillMetadata:
         """
         Select skill based on keyword matching.
@@ -230,7 +230,7 @@ class SkillManager:
             if skill.matches(transcription):
                 self.current_skill = skill
                 return skill
-        
+
         # Check legacy skills
         context = SkillContext(user_transcription=transcription)
         for skill in self.legacy_skills:
@@ -245,25 +245,25 @@ class SkillManager:
                     _instructions=skill.system_prompt_extension
                 )
                 return self.current_skill
-        
+
         # Fallback to default
         if self._default_skill:
             self.current_skill = self._default_skill
-        
+
         return self.current_skill
-    
+
     def get_skill_prompt(self) -> str:
         """Get full instructions for current skill (lazy loaded)."""
         if self.current_skill:
             return self.current_skill.instructions
         return ""
-    
+
     def get_light_feedback(self, feedback_type: str) -> Optional[str]:
         """Get light feedback color for current skill."""
         if self.current_skill and self.current_skill.light_feedback:
             return self.current_skill.light_feedback.get(feedback_type)
         return None
-    
+
     def list_skills(self) -> List[Dict[str, Any]]:
         """List all available skills with their metadata."""
         skills = []

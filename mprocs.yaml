@@ -1,0 +1,51 @@
+# mprocs.yaml - P-Thread Configuration for Kaedra
+# Run multiple agents in parallel using mprocs
+# Usage: mprocs (in project root)
+# 
+# Based on thread-based engineering patterns:
+# - P-Thread: Parallel execution of multiple agents
+# - Ralph Wiggum: while :; do cat PROMPT.md | agent ; done
+
+procs:
+  # Agent 1: Primary work thread
+  agent1:
+    shell: "echo 'Agent 1 ready - add your agent command here'"
+    # For Ralph pattern: while :; do cat .agent/PROMPT.md | claude-code; done
+    cwd: "."
+    env:
+      AGENT_ID: "1"
+      AGENT_NAME: "primary"
+
+  # Agent 2: Secondary work thread  
+  agent2:
+    shell: "echo 'Agent 2 ready - add your agent command here'"
+    cwd: "."
+    env:
+      AGENT_ID: "2"
+      AGENT_NAME: "secondary"
+
+  # Agent 3: Review/validation thread
+  agent3:
+    shell: "echo 'Agent 3 ready - add your agent command here'"
+    cwd: "."
+    env:
+      AGENT_ID: "3"
+      AGENT_NAME: "reviewer"
+
+  # Pylint watcher (validation hook)
+  pylint:
+    shell: "py -3.12 -m pylint kaedra --score=y"
+    cwd: "."
+    autostart: false  # Manual trigger
+
+  # pytest watcher
+  tests:
+    shell: "py -3.12 -m pytest tests/ -v"
+    cwd: "."
+    autostart: false  # Manual trigger
+
+# Keymap customization (optional)
+keymap:
+  - { key: "q", cmd: { c: "quit" } }
+  - { key: "r", cmd: { c: "restart" } }
+  - { key: "s", cmd: { c: "stop" } }

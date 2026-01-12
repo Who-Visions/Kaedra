@@ -4,15 +4,14 @@ ANSI color codes and theme definitions.
 """
 
 from dataclasses import dataclass
-from typing import Dict
 
 
 class Colors:
     """ANSI color codes."""
-    
+
     # Reset
     RESET = '\033[0m'
-    
+
     # Styles
     BOLD = '\033[1m'
     DIM = '\033[2m'
@@ -22,7 +21,7 @@ class Colors:
     REVERSE = '\033[7m'
     HIDDEN = '\033[8m'
     STRIKETHROUGH = '\033[9m'
-    
+
     # Standard colors
     BLACK = '\033[30m'
     RED = '\033[31m'
@@ -32,7 +31,7 @@ class Colors:
     MAGENTA = '\033[35m'
     CYAN = '\033[36m'
     WHITE = '\033[37m'
-    
+
     # Bright colors
     BRIGHT_BLACK = '\033[90m'
     BRIGHT_RED = '\033[91m'
@@ -42,7 +41,7 @@ class Colors:
     BRIGHT_MAGENTA = '\033[95m'
     BRIGHT_CYAN = '\033[96m'
     BRIGHT_WHITE = '\033[97m'
-    
+
     # 256-color neon palette
     NEON_PINK = '\033[38;5;198m'
     NEON_CYAN = '\033[38;5;51m'
@@ -52,7 +51,7 @@ class Colors:
     NEON_PURPLE = '\033[38;5;129m'
     NEON_RED = '\033[38;5;196m'
     NEON_BLUE = '\033[38;5;33m'
-    
+
     # Special colors
     GOLD = '\033[38;5;220m'
     SILVER = '\033[38;5;250m'
@@ -60,12 +59,12 @@ class Colors:
     LIME = '\033[38;5;154m'
     CORAL = '\033[38;5;209m'
     LAVENDER = '\033[38;5;183m'
-    
+
     @classmethod
     def rgb(cls, r: int, g: int, b: int) -> str:
         """Generate 24-bit true color code."""
         return f'\033[38;2;{r};{g};{b}m'
-    
+
     @classmethod
     def bg_rgb(cls, r: int, g: int, b: int) -> str:
         """Generate 24-bit true color background."""
@@ -75,14 +74,14 @@ class Colors:
 @dataclass
 class Theme:
     """Color theme for KAEDRA interface."""
-    
+
     name: str
-    
+
     # Agent colors
     kaedra: str
     blade: str
     nyx: str
-    
+
     # UI colors
     system: str
     user: str
@@ -91,12 +90,12 @@ class Theme:
     warning: str
     success: str
     info: str
-    
+
     # Content colors
     memory: str
     thinking: str
     highlight: str
-    
+
     @classmethod
     def cyberpunk(cls) -> "Theme":
         """Default cyberpunk theme."""
@@ -116,7 +115,7 @@ class Theme:
             thinking=Colors.DIM,
             highlight=Colors.NEON_YELLOW
         )
-    
+
     @classmethod
     def minimal(cls) -> "Theme":
         """Minimal theme with less color."""
@@ -136,7 +135,7 @@ class Theme:
             thinking=Colors.DIM,
             highlight=Colors.BOLD
         )
-    
+
     @classmethod
     def matrix(cls) -> "Theme":
         """Matrix-inspired green theme."""
@@ -156,11 +155,11 @@ class Theme:
             thinking=Colors.DIM,
             highlight=Colors.BOLD + Colors.NEON_GREEN
         )
-    
+
     def colorize(self, text: str, color: str) -> str:
         """Apply color to text."""
         return f"{color}{text}{Colors.RESET}"
-    
+
     def agent(self, name: str) -> str:
         """Get color for an agent."""
         return {

@@ -8,7 +8,6 @@ from rich.console import Console
 from rich.highlighter import RegexHighlighter
 from rich.theme import Theme
 from rich.logging import RichHandler
-from rich.panel import Panel
 
 # === STORY HIGHLIGHTER (ELITE) ===
 class StoryHighlighter(RegexHighlighter):
@@ -74,30 +73,30 @@ def render_hud(mode: str, scene: int, pov: str, tension: float, emotions: dict, 
     filled = int(tension * bar_width)
     pulse = "!" if (time.time() % 1.0 > 0.5 and tension > 0.8) else "░"
     bar = "█" * filled + pulse * (bar_width - filled)
-    
+
     # Dom Emotion
     if emotions:
         dom_emo = max(emotions, key=emotions.get).upper()
         dom_val = emotions[dom_emo.lower()]
     else:
         dom_emo, dom_val = "NULL", 0.0
-        
+
     # Service Icons
     icons = []
     if statuses:
         if statuses.get("notion"): icons.append("[green]📓[/]")
         else: icons.append("[red]📓[/]")
-        
+
         if statuses.get("lifx"): icons.append("[green]💡[/]")
         else: icons.append("[yellow]💡[/]")
-        
+
         if statuses.get("razer"): icons.append("[green]⌨[/]")
         else: icons.append("[red]⌨[/]")
-        
+
         if statuses.get("gemini"): icons.append("[green]🧠[/]")
         else: icons.append("[red]🧠[/]")
 
     status_line = " ".join(icons)
     hud_line = f" [bold cyan]{mode}[/] | [bold white]SCENE {scene}[/] | [bold magenta]{pov}[/] | [bold yellow]TENSION:[/] [red]{bar}[/] [bold yellow]{tension:.2f}[/] | [dim]{dom_emo} {dom_val:.2f}[/] | {status_line}"
-    
+
     return Text.from_markup(hud_line)

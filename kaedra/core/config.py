@@ -38,7 +38,7 @@ def get_gemini_client():
     return _SHARED_CLIENT
 AGENT_RESOURCE_NAME = os.getenv(
     "KAEDRA_AGENT_RESOURCE",
-    "projects/69017097813/locations/us-central1/reasoningEngines/9098403744265011200"
+    "projects/69017097813/locations/us-central1/reasoningEngines/5808320806819725312"
 )
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -54,13 +54,13 @@ def validate_config():
     status = []
     if NOTION_TOKEN: status.append("[green]📓 Notion[/]")
     else: status.append("[red]📓 Notion (Missing)[/]")
-    
+
     if LIFX_TOKEN: status.append("[green]💡 LIFX[/]")
     else: status.append("[yellow]💡 LIFX (Missing)[/]")
-    
+
     if PROJECT_ID: status.append("[green]🧠 Gemini[/]")
     else: status.append("[red]🧠 Gemini (Check GCP Project)[/]")
-    
+
     log.info(f"System Check: {' | '.join(status)}")
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -152,41 +152,41 @@ class Colors:
     DIM = '\033[2m'
     ITALIC = '\033[3m'
     UNDERLINE = '\033[4m'
-    
+
     NEON_PINK = '\033[38;5;213m'
     SUNSET_PINK = '\033[38;5;205m'
     DEEP_PINK = '\033[38;5;198m'
     SUNSET_ORANGE = '\033[38;5;208m'
-    
+
     GRAD_PURPLE = '\033[38;5;93m'
     GRAD_PINK = '\033[38;5;205m'
     GRAD_BLUE = '\033[38;5;39m'
     GRAD_GOLD = '\033[38;5;220m'
-    
+
     NEON_CYAN = '\033[38;5;51m'
     NEON_GREEN = '\033[38;5;46m'
     NEON_YELLOW = '\033[38;5;226m'
     NEON_ORANGE = '\033[38;5;208m'
     NEON_PURPLE = '\033[38;5;129m'
     NEON_RED = '\033[38;5;196m'
-    
+
     GOLD = '\033[38;5;220m'
     SILVER = '\033[38;5;250m'
     SKY_BLUE = '\033[38;5;39m'
     LIME = '\033[38;5;154m'
-    
+
     @classmethod
     def kaedra_tag(cls) -> str:
         return f"{cls.NEON_PINK}[KAEDRA]{cls.RESET}"
-    
+
     @classmethod
     def blade_tag(cls) -> str:
         return f"{cls.NEON_RED}[BLADE]{cls.RESET}"
-    
+
     @classmethod
     def nyx_tag(cls) -> str:
         return f"{cls.SKY_BLUE}[NYX]{cls.RESET}"
-    
+
     @classmethod
     def system_tag(cls) -> str:
         return f"{cls.GOLD}[SYSTEM]{cls.RESET}"

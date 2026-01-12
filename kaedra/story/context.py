@@ -233,16 +233,16 @@ class ContextManager:
         # 1. Check eligibility (Min 32,768 tokens)
         current_tokens = self._estimate_tokens()
         MIN_CACHE_TOKENS = 32_768
-        
+
         if current_tokens < MIN_CACHE_TOKENS:
-             self.cached_content_name = None
-             return None
+            self.cached_content_name = None
+            return None
 
         # 2. Stable Past Strategy
         # We cache history[:-1] so the current turn is always fresh input.
         # This allows multiple forks/retries of the current turn against the same cache.
         cache_contents = self.history[:-1] if len(self.history) > 1 else self.history
-        
+
         try:
             config = types.CreateCachedContentConfig(
                 model=model_name,
@@ -250,13 +250,13 @@ class ContextManager:
                 ttl="3600s", # 1 hour
                 system_instruction=system_instruction
             )
-            
+
             # Note: client.caches.create typically returns a resource with .name
             cache = self.client.caches.create(config=config)
             self.cached_content_name = cache.name
             self.last_cache_time = time.time()
             return self.cached_content_name
-            
+
         except Exception:
             self.cached_content_name = None
             return None

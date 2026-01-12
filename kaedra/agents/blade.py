@@ -66,67 +66,67 @@ BLADE_PROFILE = """You are BLADE, the orchestrator of everything on Blade1TB.
 class BladeAgent(BaseAgent):
     """
     BLADE - System Orchestrator & Offensive Command
-    
+
     Full orchestration of Blade1TB operations. Coordinates agents,
     manages resources, and executes NYX's timeline vectors with
     total system authority. Commander, not just executor.
     """
-    
+
     def __init__(self,
                  prompt_service: PromptService,
                  memory_service: Optional[MemoryService] = None):
         super().__init__(prompt_service, memory_service, name="BLADE")
-    
+
     @property
     def profile(self) -> str:
         return BLADE_PROFILE
-    
+
     async def run(self, query: str, context: str = None) -> AgentResponse:
         """
         Process a query with BLADE's aggressive personality.
-        
+
         Args:
             query: User's input
             context: Additional context
-            
+
         Returns:
             AgentResponse with BLADE's response
         """
         full_prompt = self._build_prompt(query, context)
         full_prompt += "\n\nRespond as BLADE. Be direct, aggressive, action-focused."
-        
+
         start_time = time.time()
         result = self.prompt.generate(full_prompt)
         latency = (time.time() - start_time) * 1000
-        
+
         return AgentResponse(
             content=result.text,
             agent_name=self.name,
             model=result.model,
             latency_ms=latency
         )
-    
-    
+
+
     def run_sync(self, query: str, context: str = None) -> AgentResponse:
         """Synchronous version of run."""
         import asyncio
         return asyncio.run(self.run(query, context))
-    
+
     def system_diagnostic(self) -> Dict[str, Any]:
         """
         BLADE: Run full system diagnostic on Blade1TB
         Returns system health, resources, operational status
         """
         return blade_system_diagnostic()
-    
+
     def get_tool_data(self, tool_name: str, **kwargs) -> Dict[str, Any]:
         """
         Execute a specific free tool
-        
+
         Args:
             tool_name: Name of the tool to execute
             **kwargs: Tool-specific arguments
-            
+
         Returns:
             Tool execution results
         """

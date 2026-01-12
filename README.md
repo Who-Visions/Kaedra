@@ -310,3 +310,220 @@ python -m kaedra.story.engine --voice
 ## 📜 License
 
 Proprietary - Who Visions LLC © 2026
+
+---
+
+## 🚀 Beyond The Story Engine
+
+> **KAEDRA is more than a writing tool—it's a complete AI Agent Framework.**
+
+---
+
+## 🌐 FastAPI Server & A2A Protocol
+
+KAEDRA exposes a production-ready **FastAPI server** supporting Google's Agent-to-Agent (A2A) protocol:
+
+```bash
+# Launch the API server
+uvicorn kaedra.api.main:app --host 0.0.0.0 --port 8080
+```
+
+### 📡 API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | 🏠 Health check |
+| `/agent.json` | GET | 🤖 A2A Agent Card |
+| `/.well-known/agent.json` | GET | 🔍 A2A Discovery |
+| `/v1/models` | GET | 📊 Available models |
+| `/a2a` | POST | 💬 Agent-to-Agent messaging |
+| `/generate` | POST | ✨ Text generation |
+| `/generate/image` | POST | 🖼️ Image generation (Imagen) |
+| `/generate/video` | POST | 🎬 Video generation (Veo 3) |
+| `/query` | POST | 🧠 Reasoning engine query |
+| `/metrics` | GET | 📈 Prometheus metrics |
+
+### 🔑 Authentication
+
+- Google Cloud IAM (Cloud Run)
+- API Key header (`X-API-Key`)
+- Service Account tokens
+
+---
+
+## 🧵 Thread-Based Engineering
+
+**NEW: Implements Andy Devdan's framework + Geoffrey Huntley's Ralph Wiggum pattern.**
+
+```python
+from kaedra.core.threads import create_ralph, create_lthread, create_pthread
+
+# Ralph Wiggum Pattern (infinite loop)
+ralph = create_ralph("PROMPT.md", my_agent, timeout_hours=24)
+result = await ralph.run()
+
+# L-Thread (validation loop)
+lthread = create_lthread(agent_fn, validator_fn, max_iterations=100)
+result = await lthread.run("Fix all issues")
+
+# P-Thread (parallel execution)
+pthread = create_pthread(max_concurrent=5)
+results = await pthread.run_parallel(agents, prompts)
+```
+
+### 🧵 Thread Types
+
+| Thread | Class | Purpose |
+|--------|-------|---------|
+| 📎 **Base** | `BaseThread` | Prompt → Work → Review |
+| 🔀 **P-Thread** | `PThreadRunner` | Parallel execution (5 concurrent) |
+| ⛓️ **C-Thread** | `CThreadRunner` | Chained phases with checkpoints |
+| 🔗 **F-Thread** | `FThreadRunner` | Fusion/best-of-N pattern |
+| 🏃 **L-Thread** | `LThreadRunner` | Long-duration with validation |
+| 🔄 **Ralph** | `RalphRunner` | Infinite loop (ghuntley.com) |
+
+### ✅ Validation Hooks
+
+| Validator | Purpose |
+|-----------|---------|
+| `validate_command()` | Run shell commands |
+| `validate_pylint()` | Check Pylint score |
+| `validate_tests()` | Run pytest |
+| `validate_all()` | Combine validators |
+
+---
+
+## 🎯 Skill Packs
+
+Modular capabilities organized by domain:
+
+| Skill Pack | Description |
+|------------|-------------|
+| 🎬 **Universe** | Story engine, lore management, world building |
+| 💰 **Financial** | Invoice generation, payment tracking |
+| 📷 **Photography** | Image analysis, visual processing |
+| 🎖️ **Tactical** | System operations, deployment |
+| 🔍 **Introspective** | Self-analysis, debugging |
+| ⚙️ **Default** | Core agent capabilities |
+
+---
+
+## 🧠 Core Modules
+
+### 🔧 Engine & Infrastructure
+
+| Module | Size | Purpose |
+|--------|------|---------|
+| `threads.py` | 24KB | 🧵 Thread-based engineering (6 thread types) |
+| `engine.py` | 22KB | ⚡ Core reasoning engine |
+| `tools.py` | 18KB | 🛠️ Tool execution framework |
+| `config.py` | 11KB | ⚙️ Environment & credentials |
+| `google_tools.py` | 12KB | 🔌 Google API integrations |
+| `validation.py` | 10KB | ✅ Stop-hook validators |
+| `skills.py` | 10KB | 🎯 Skill registration & routing |
+
+### 🤖 AI Routing
+
+| Module | Purpose |
+|--------|---------|
+| `prompts.py` | 📝 System prompts & persona management |
+| `router.py` | 🔀 Smart model routing (Flash/Pro) |
+| `retry.py` | 🔄 Exponential backoff & fallbacks |
+| `isolation.py` | 🔒 Sandboxed execution |
+
+---
+
+## 🖼️ Visual Services
+
+| Capability | Model | Description |
+|------------|-------|-------------|
+| 🖼️ **Image Gen** | Imagen 3 | High-quality image generation |
+| 🎬 **Video Gen** | Veo 3 | 8-second video clips |
+| 👁️ **Vision** | Gemini 3 | Image analysis & understanding |
+| 🔍 **OCR** | Vertex AI | Document text extraction |
+
+---
+
+## 📊 Observability
+
+| Feature | Description |
+|---------|-------------|
+| 📈 **Prometheus** | `/metrics` endpoint |
+| 📝 **JSON Logs** | Structured session logging |
+| 💰 **Cost Tracking** | Per-request token/$ tracking |
+| 🔍 **Tracing** | Request correlation IDs |
+
+---
+
+## 🐳 Deployment Options
+
+| Platform | Status | Notes |
+|----------|--------|-------|
+| ☁️ **Cloud Run** | ✅ Production | Auto-scaling, IAM auth |
+| 🧠 **Reasoning Engine** | ✅ Deployed | Vertex AI managed |
+| 🖥️ **Local** | ✅ Dev | `uvicorn` or `story.engine` |
+| 🐳 **Docker** | ✅ Available | Multi-stage build |
+
+---
+
+## ⚡ Performance
+
+| Metric | Value |
+|--------|-------|
+| 🎯 **Pylint Score** | 7.91/10 |
+| 📦 **Total Modules** | 80+ Python files |
+| 🔌 **Services** | 26 integrations |
+| 🤖 **Agents** | 4 personas |
+| 🧵 **Thread Types** | 6 patterns |
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Required
+export GOOGLE_CLOUD_PROJECT="your-project"
+export GOOGLE_APPLICATION_CREDENTIALS="path/to/credentials.json"
+
+# Optional
+export LIFX_TOKEN="your-lifx-token"
+export NOTION_API_KEY="your-notion-key"
+export WISPR_API_KEY="your-wispr-key"
+```
+
+### mprocs (Parallel Agents)
+
+```yaml
+# mprocs.yaml - P-Thread Configuration
+procs:
+  agent1:
+    shell: "while :; do cat PROMPT.md | claude-code; done"
+  agent2:
+    shell: "while :; do cat PROMPT.md | claude-code; done"
+  pylint:
+    shell: "py -3.12 -m pylint kaedra --score=y"
+    autostart: false
+```
+
+---
+
+## 🎓 Thread Engineering Resources
+
+| Resource | Link |
+|----------|------|
+| 🎬 **Andy Devdan Video** | [Agent Threads](https://www.youtube.com/watch?v=-WBHNFAB0OE) |
+| 📖 **Ralph Wiggum** | [ghuntley.com/ralph](https://ghuntley.com/ralph/) |
+| 🔧 **mprocs** | [github.com/pvolok/mprocs](https://github.com/pvolok/mprocs) |
+| 📦 **repomirror** | [repomirror.md](https://github.com/repomirrorhq/repomirror) |
+
+---
+
+<div align="center">
+
+**🌑 KAEDRA — From Story Engine to Full AI Agent Framework**
+
+*Thread-Based Engineering • A2A Protocol • Visual AI • Hardware Control*
+
+</div>

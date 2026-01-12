@@ -82,7 +82,7 @@ def invoice_action(
 ) -> Dict[str, Any]:
     """
     Execute invoice operations.
-    
+
     Actions:
         - list: List invoices (status, limit)
         - get: Get single invoice (invoice_id)
@@ -94,31 +94,31 @@ def invoice_action(
         - generate: Generate local invoice HTML (customer_name, customer_email, items)
         - extract: Extract data from PDF (pdf_path)
         - clear_cache: Clear cached data
-    
+
     Args:
         action: Operation to perform
         provider: 'stripe', 'square', or 'both'
         **kwargs: Action-specific parameters
-        
+
     Returns:
         Dict with results or error
     """
     # Handle cache clear action
     if action == "clear_cache":
         return clear_invoice_cache()
-    
+
     # Check cache for read operations
     cacheable_actions = {"list", "revenue", "status", "search"}
     cache_key = None
-    
+
     if action in cacheable_actions:
         cache_key = _get_cache_key(action, provider, **kwargs)
         cached = _get_cached(cache_key)
         if cached:
             return cached
-    
+
     service = _get_service()
-    
+
     try:
         if action == "list":
             invoices = service.list_invoices(
@@ -135,46 +135,46 @@ def invoice_action(
             if cache_key:
                 _set_cache(cache_key, result)
             return result
-        
+
         elif action == "get":
             invoice_id = kwargs.get("invoice_id")
             if not invoice_id:
                 return {"error": "invoice_id is required"}
-            
+
             invoice = service.get_invoice(provider, invoice_id)
             return {
                 "action": "get",
                 "invoice": _invoice_to_dict(invoice)
             }
-        
+
         elif action == "create":
             customer_id = kwargs.get("customer_id")
             items = kwargs.get("items", [])
-            
+
             if not customer_id:
                 return {"error": "customer_id is required"}
             if not items:
                 return {"error": "items list is required"}
-            
+
             invoice = service.create_invoice(provider, customer_id, items)
             return {
                 "action": "create",
                 "invoice": _invoice_to_dict(invoice),
                 "message": f"Invoice {invoice.id} created successfully"
             }
-        
+
         elif action == "send":
             invoice_id = kwargs.get("invoice_id")
             if not invoice_id:
                 return {"error": "invoice_id is required"}
-            
+
             invoice = service.send_invoice(provider, invoice_id)
             return {
                 "action": "send",
                 "invoice": _invoice_to_dict(invoice),
                 "message": f"Invoice {invoice.id} sent to {invoice.customer_email}"
             }
-        
+
         elif action == "revenue":
             days = kwargs.get("days", 30)
             rev_result = service.get_revenue(provider=provider, days=days)
@@ -185,12 +185,12 @@ def invoice_action(
             if cache_key:
                 _set_cache(cache_key, result)
             return result
-        
+
         elif action == "search":
             query = kwargs.get("query")
             if not query:
                 return {"error": "query is required"}
-            
+
             invoices = service.search_invoices(query, limit=kwargs.get("limit", 25))
             result = {
                 "action": "search",
@@ -201,7 +201,7 @@ def invoice_action(
             if cache_key:
                 _set_cache(cache_key, result)
             return result
-        
+
         elif action == "status":
             result = {
                 "action": "status",
@@ -210,26 +210,26 @@ def invoice_action(
             if cache_key:
                 _set_cache(cache_key, result)
             return result
-        
+
         elif action == "generate":
             # Generate local invoice without provider
             generator = InvoiceGenerator(
                 company_name=kwargs.get("company_name", "Who Visions LLC")
             )
-            
+
             customer_name = kwargs.get("customer_name")
             customer_email = kwargs.get("customer_email", "")
             items = kwargs.get("items", [])
-            
+
             if not customer_name:
                 return {"error": "customer_name is required"}
             if not items:
                 return {"error": "items list is required"}
-            
+
             # Generate unique invoice number
             from datetime import datetime
             invoice_number = f"INV-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            
+
             html = generator.generate_html(
                 invoice_number=invoice_number,
                 customer_name=customer_name,
@@ -238,7 +238,7 @@ def invoice_action(
                 date=kwargs.get("date"),
                 due_date=kwargs.get("due_date")
             )
-            
+
             # Optionally save
             output_path = kwargs.get("output_path")
             if output_path:
@@ -259,21 +259,21 @@ def invoice_action(
                     "invoice_number": invoice_number,
                     "saved_to": path
                 }
-            
+
             return {
                 "action": "generate",
                 "invoice_number": invoice_number,
                 "html": html[:500] + "..." if len(html) > 500 else html
             }
-        
+
         elif action == "extract":
             pdf_path = kwargs.get("pdf_path")
             if not pdf_path:
                 return {"error": "pdf_path is required"}
-            
+
             extractor = InvoiceExtractor()
             result = extractor.extract(pdf_path)
-            
+
             return {
                 "action": "extract",
                 "invoice_number": result.invoice_number,
@@ -283,10 +283,10 @@ def invoice_action(
                 "currency": result.currency,
                 "lines": result.lines
             }
-        
+
         else:
             return {"error": f"Unknown action: {action}"}
-    
+
     except Exception as e:
         return {"error": str(e)}
 

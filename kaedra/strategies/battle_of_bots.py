@@ -23,32 +23,32 @@ class BattleResult:
 class BattleOfBotsStrategy:
     """
     Battle of Bots adversarial validation.
-    
+
     Generates competing perspectives:
     - BLADE VERSION: Aggressive, action-focused
     - NYX VERSION: Strategic, risk-aware
     - CRITIQUE: Brutal honest review
     - GOLDEN VERSION: Synthesized best of both
     """
-    
+
     def __init__(self, prompt_service: PromptService, num_bots: int = 2):
         self.prompt = prompt_service
         self.num_bots = num_bots
-    
+
     def execute(self, task: str, model_key: str = None) -> str:
         """
         Run the Battle of Bots.
-        
+
         Args:
             task: The task or content to battle-test
             model_key: Override model key
-            
+
         Returns:
             Full battle analysis text
         """
         print(f"\n{Colors.GOLD}[⚔️  BATTLE OF THE BOTS]{Colors.RESET}")
         print(f"{Colors.DIM}Task: {task}{Colors.RESET}\n")
-        
+
         battle_prompt = f"""Adversarial Validation Protocol - Battle of the Bots:
 
 TASK: {task}
@@ -92,11 +92,11 @@ Create ONE final [GOLDEN VERSION]:
 
 Show all three rounds with clear separation.
 """
-        
+
         print(f"{Colors.NEON_RED}[ROUND 1]{Colors.RESET} Generating competing drafts...\n")
-        
+
         result = self.prompt.generate(battle_prompt, model_key)
         print(f"{result.text}\n")
         print(f"{Colors.GOLD}[⚔️  BATTLE CONCLUDED]{Colors.RESET}\n")
-        
+
         return result.text

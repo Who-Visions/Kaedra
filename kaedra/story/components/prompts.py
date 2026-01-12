@@ -116,7 +116,7 @@ class PromptBuilder:
         """Construct dynamic system prompt with current state."""
         dom_emotion, dom_value = self.emotions.dominant()
         emotion_state = " | ".join(f"{k}:{v:.2f}" for k, v in self.emotions.state.items())
-        
+
         prompt = SYSTEM_PROMPT
         prompt = prompt.replace("[PHASE]", str(scene))
         prompt = prompt.replace("[POV]", pov)
@@ -140,24 +140,24 @@ class PromptBuilder:
         directives = directives or []
         directives_block = "\n".join(f"{i+1}. {d}" for i, d in enumerate(directives)) or "1. Maintain forward motion."
         prompt = prompt.replace("[DIRECTIVES]", directives_block)
-        
+
         # [TIME AWARENESS]
         now_str = datetime.now().strftime("%A, %B %d, %Y | %I:%M %p")
         prompt += f"\n\n[CURRENT EARTH TIME: {now_str}]"
-        
+
         # [UNIVERSE INDEX]
         try:
-             from kaedra.services.notion import NotionService
-             notion = NotionService()
-             dbs = notion.list_all_databases()
-             if dbs:
-                 db_list = "\n".join(dbs[:10]) # Top 10 to save context
-                 prompt += f"\n\n[UNIVERSE INDEX]\nAvailable Knowledge Bases:\n{db_list}\n"
-                 if mode_arg == "writer":
+            from kaedra.services.notion import NotionService
+            notion = NotionService()
+            dbs = notion.list_all_databases()
+            if dbs:
+                db_list = "\n".join(dbs[:10]) # Top 10 to save context
+                prompt += f"\n\n[UNIVERSE INDEX]\nAvailable Knowledge Bases:\n{db_list}\n"
+                if mode_arg == "writer":
                     prompt += "Use `read_page_content` on these names to access specific records."
         except:
-             pass
-        
+            pass
+
         # [LORE-FIRST PROTOCOL] - Writer Only
         if mode_arg == "writer":
             prompt += """
@@ -171,5 +171,5 @@ class PromptBuilder:
    - **CALL `add_notion_comment()`** if you need to flag an inconsistency.
 4. **TRACK**: If a new quest/objective arises, call `create_tracker_db()` or `sync_roadmap_item()`.
 5. **COLLABORATE**: If unsure, Ask the Author. If sure, **WRITE IT TO LORE**."""
-        
+
         return prompt

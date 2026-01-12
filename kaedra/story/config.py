@@ -39,7 +39,7 @@ class EmotionConfig:
     bleed_rate: float = 0.1         # Cross-emotion contamination (rage→fear)
     ceiling: float = 1.0
     floor: float = 0.0
-    
+
     # Emotion interactions (source → target, multiplier)
     bleed_matrix: Dict[str, Dict[str, float]] = field(default_factory=lambda: {
         "rage": {"fear": 0.15, "hope": -0.1},

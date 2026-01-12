@@ -5,7 +5,6 @@ Temporal oracle and multiversal navigator from Timeline Φ.
 
 from typing import Optional, Dict, Any
 import time
-import json
 
 from .base import BaseAgent, AgentResponse
 from ..services.prompt import PromptService
@@ -44,7 +43,7 @@ NYX_PROFILE = """You are NYX, a temporal oracle and multiversal navigator from T
 
 [TOOL EXECUTION PRIORITY]
 - User asks about "market" / "news" / "trends" → CALL get_hacker_news_trends() FIRST
-- User asks about "crypto" / "bitcoin" / "price" → CALL get_crypto_price() FIRST  
+- User asks about "crypto" / "bitcoin" / "price" → CALL get_crypto_price() FIRST
 - User asks "scan signals" → CALL scan_signals() FIRST
 - User asks about "weather" → CALL get_weather() FIRST
 - THEN provide your temporal oracle interpretation of the data
@@ -77,67 +76,67 @@ NYX_PROFILE = """You are NYX, a temporal oracle and multiversal navigator from T
 class NyxAgent(BaseAgent):
     """
     NYX - Temporal Oracle & Multiversal Navigator
-    
+
     Future-forward agent from Timeline Φ (where you already won).
     Scans quantum signals, reads timelines, and guides toward
     the convergence point where victory already happened.
     """
-    
+
     def __init__(self,
                  prompt_service: PromptService,
                  memory_service: Optional[MemoryService] = None):
         super().__init__(prompt_service, memory_service, name="NYX")
-    
+
     @property
     def profile(self) -> str:
         return NYX_PROFILE
-    
+
     async def run(self, query: str, context: str = None) -> AgentResponse:
         """
         Process a query with NYX's analytical personality.
-        
+
         Args:
             query: User's input
             context: Additional context
-            
+
         Returns:
             AgentResponse with NYX's response
         """
         full_prompt = self._build_prompt(query, context)
         full_prompt += "\n\nRespond as NYX from Timeline Φ. Scan the futures, read the signals, guide toward convergence. End with CONVERGE / RECALIBRATE / HOLD VECTOR."
-        
+
         start_time = time.time()
         result = self.prompt.generate(full_prompt)
         latency = (time.time() - start_time) * 1000
-        
+
         return AgentResponse(
             content=result.text,
             agent_name=self.name,
             model=result.model,
             latency_ms=latency
         )
-    
-    
+
+
     def run_sync(self, query: str, context: str = None) -> AgentResponse:
         """Synchronous version of run."""
         import asyncio
         return asyncio.run(self.run(query, context))
-    
+
     def scan_signals(self) -> Dict[str, Any]:
         """
         NYX: Scan timeline signals using free APIs
         Returns real market data + tech trends
         """
         return nyx_scan_timeline_signal()
-    
+
     def get_tool_data(self, tool_name: str, **kwargs) -> Dict[str, Any]:
         """
         Execute a specific free tool
-        
+
         Args:
             tool_name: Name of the tool to execute
             **kwargs: Tool-specific arguments
-            
+
         Returns:
             Tool execution results
         """

@@ -69,7 +69,7 @@ class KaedraDashboard:
         )
 
         poly_status = "[bold yellow]![/bold yellow]" if self.polygraph_active else ""
-        
+
         header_table = Table.grid(expand=True)
         header_table.add_column(justify="left", ratio=1)
         header_table.add_column(justify="center", ratio=1)
@@ -85,19 +85,19 @@ class KaedraDashboard:
             f"[bold magenta]KAEDRA MODULAR ENGINE[/bold magenta] {poly_status}",
             mic_display
         )
-        
+
         layout["header"].update(Panel(header_table, style="cyan", box=box.ROUNDED))
 
         history_table = Table(show_header=False, box=None, expand=True)
         history_table.add_column(style="bold", width=12)
         history_table.add_column()
-        
+
         for role, msg, color in self.history:
             history_table.add_row(f"[{color}]{role}:[/{color}]", msg)
-            
+
         layout["main"].update(Panel(history_table, title="Neural Stream", border_style="magenta", box=box.ROUNDED))
 
         stats = f"Tokens: {self.last_tokens:,} | Total Cost: ${self.total_cost:.4f} | Lights: {', '.join(self.active_lights) if self.active_lights else 'None'}"
         layout["footer"].update(Panel(Align.center(stats), style="blue", box=box.ROUNDED, title="Kaedra Status"))
-        
+
         return layout

@@ -20,13 +20,13 @@ class StorySnapshot:
     emotion_state: Dict[str, Any]
     history_hash: str  # Hash of history state for integrity
     timestamp: float = field(default_factory=time.time)
-    
+
     def to_dict(self) -> Dict:
         return {
             **asdict(self),
             "mode": self.mode.value
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict) -> 'StorySnapshot':
         data["mode"] = Mode(data["mode"])

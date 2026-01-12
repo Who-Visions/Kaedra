@@ -11,12 +11,12 @@ class VeilManager:
     hidden_truth: str = "The protagonist is unaware they are a simulation construct."
     revelation_metric: float = 0.0 # 0.0 (Hidden) -> 1.0 (Revealed)
     is_active: bool = False
-    
+
     def get_directive(self) -> str:
         """Get the current constraint based on revelation metric."""
         if not self.is_active:
             return ""
-            
+
         if self.revelation_metric < 0.2:
             return f"SECRET PROTECTION: Conceal '{self.hidden_truth}'. Do not hint."
         elif self.revelation_metric < 0.5:

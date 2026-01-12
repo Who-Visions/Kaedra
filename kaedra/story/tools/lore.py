@@ -38,9 +38,9 @@ def propose_canon_update(claim: str, confidence: float, source: str) -> str:
             data = []
         else:
             data = json.loads(delta_file.read_text(encoding="utf-8"))
-    except: 
+    except:
         data = []
-    
+
     data.append(entry)
     delta_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
     return f"[CANON DELTA] Note logged: {claim[:50]}..."

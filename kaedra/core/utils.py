@@ -34,14 +34,12 @@ def extract_all_metadata(response: str) -> dict:
         'transcription': "",
         'light_simple': None,
         'light_json': None,
-        'light_json': None,
         'notion_log': None,
         'notion_action': None,
         'exec_cmd': None,
-        'exec_cmd': None,
         'clean_text': response
     }
-    
+
     # 1. Extract [Heard: "..."]
     heard_match = re.search(r'\[Heard:\s*(.*?)\]', result['clean_text'], re.IGNORECASE | re.DOTALL)
     if heard_match:
@@ -60,29 +58,27 @@ def extract_all_metadata(response: str) -> dict:
     json_match = re.search(r'```json\s*(\{.*?\})\s*```', result['clean_text'], re.DOTALL)
     if not json_match:
         # Fallback for bare JSON
-    if not json_match:
-        # Fallback for bare JSON
         json_match = re.search(r'(\{(?:"actions"|"notion_log"|"notion_action"):\s*.*?\})', result['clean_text'], re.DOTALL)
-    
+
     if json_match:
         try:
             data = json.loads(json_match.group(1))
-            
+
             # Handle Light Actions
             if "actions" in data:
-                 # Reuse existing validation logic, just need to import or reimplement helper call
-                 # Since extract_light_command parses JSON internally, we can either refactor or just call it 
-                 # for the "actions" part. But simpler to just validate here if possible or call helper.
-                 # Let's rely on extract_light_command logic being refactored or just use it as is? 
-                 # Wait, extract_light_command does regex matching again. That's inefficient but safe.
-                 pass
+                # Reuse existing validation logic, just need to import or reimplement helper call
+                # Since extract_light_command parses JSON internally, we can either refactor or just call it
+                # for the "actions" part. But simpler to just validate here if possible or call helper.
+                # Let's rely on extract_light_command logic being refactored or just use it as is?
+                # Wait, extract_light_command does regex matching again. That's inefficient but safe.
+                pass
 
             # Handle Notion
             if "notion_log" in data:
                 result['notion_log'] = data["notion_log"]
             elif "notion_action" in data:
                 result['notion_action'] = data["notion_action"]
-            
+
             # Remove JSON from clean text
             result['clean_text'] = re.sub(r'```json\s*\{.*?\}\s*```', '', result['clean_text'], flags=re.DOTALL)
             # Remove bare JSON if matched that way
@@ -101,7 +97,7 @@ def extract_all_metadata(response: str) -> dict:
     result['clean_text'] = re.sub(r'```.*?```', '', result['clean_text'], flags=re.DOTALL)
     result['clean_text'] = re.sub(r'\[.*?\]', '', result['clean_text'], flags=re.DOTALL)
     result['clean_text'] = result['clean_text'].strip()
-    
+
     return result
 
 def extract_light_command(response: str) -> tuple[Optional[str], Optional[list], str]:
@@ -112,44 +108,44 @@ def extract_light_command(response: str) -> tuple[Optional[str], Optional[list],
     # Device name to selector map
     DEVICE_MAP = {
         "eve": "label:Eve",
-        "adam": "label:Adam", 
+        "adam": "label:Adam",
         "eden": "label:Eden",
         "all": "all",
         "bedroom": "label:Eve",
         "living room": "group:Living Room",
         "living_room": "group:Living Room"
     }
-    
+
     cleaned = response
-    
+
     # Try to extract JSON actions first
     json_match = re.search(r'```json\s*(\{.*?\})\s*```', response, re.DOTALL)
     if not json_match:
         json_match = re.search(r'(\{"actions":\s*\[.*?\]\})', response, re.DOTALL)
-    
+
     if json_match:
         try:
             data = json.loads(json_match.group(1))
             actions = data.get("actions", [])
-            
+
             # Note: validate_light_action needs to be defined or imported
             # For this utility we'll leave it as a placeholder or import it
             from kaedra.core.google_tools import validate_light_action # Assuming it exists there
-            
+
             validated_actions = []
             for action in actions:
                 validated = validate_light_action(action, DEVICE_MAP)
                 if validated:
                     validated_actions.append(validated)
-            
+
             # Clean JSON from response
             cleaned = re.sub(r'```json\s*\{.*?\}\s*```', '', response, flags=re.DOTALL).strip()
             cleaned = re.sub(r'\{"actions":\s*\[.*?\]\}', '', cleaned, flags=re.DOTALL).strip()
-            
+
             if validated_actions:
                 return None, validated_actions, cleaned
         except Exception:
-            pass  
+            pass
 
     # Try simple [LIGHT: ...] tags
     simple_match = re.search(r'\[LIGHT:\s*(.*?)\]', response, re.IGNORECASE)
@@ -157,7 +153,7 @@ def extract_light_command(response: str) -> tuple[Optional[str], Optional[list],
         action = simple_match.group(1).strip()
         cleaned = re.sub(r'\[LIGHT:.*?\]', '', cleaned, flags=re.DOTALL).strip()
         return action, None, cleaned
-        
+
     return None, None, cleaned
 
 
@@ -167,22 +163,22 @@ def validate_light_action(action: dict, device_map: dict) -> Optional[dict]:
     Returns validated action dict or None if invalid.
     """
     validated = {}
-    
+
     # Resolve device name to selector
     device = action.get("device", "").lower()
     selector = action.get("selector", "")
-    
+
     if device in device_map:
         validated["selector"] = device_map[device]
     elif selector:
         validated["selector"] = selector
     else:
         validated["selector"] = "all"
-    
+
     # Power
     if "power" in action:
         validated["power"] = "on" if action["power"] in ["on", True, 1] else "off"
-    
+
     # Brightness: clamp 0-100, normalize to 0-1 if needed
     if "brightness" in action:
         bri = action["brightness"]
@@ -192,21 +188,21 @@ def validate_light_action(action: dict, device_map: dict) -> Optional[dict]:
             else:
                 bri = max(0.0, min(1.0, bri))
             validated["brightness"] = bri
-    
+
     # Kelvin: clamp 1500-9000
     if "kelvin" in action:
         kelvin = action["kelvin"]
         if isinstance(kelvin, (int, float)):
             validated["kelvin"] = max(1500, min(9000, int(kelvin)))
-    
+
     # Color (string passthrough)
     if "color" in action:
         validated["color"] = str(action["color"])
-    
+
     # Effects (string passthrough)
     if "fx" in action:
         validated["fx"] = str(action["fx"])
-    
+
     return validated if validated else None
 
 
@@ -219,7 +215,7 @@ def execute_light_command(lifx, action: str) -> bool:
         parts = action.split()
         cmd = parts[0] if parts else ""
         args = parts[1:] if len(parts) > 1 else []
-        
+
         if cmd in ["on", "turn on"]:
             lifx.turn_on()
         elif cmd in ["off", "turn off"]:

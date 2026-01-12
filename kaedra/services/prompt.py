@@ -6,8 +6,8 @@ Integrates GeminiSmartRouter for dual-brain (Flash + Pro) orchestration.
 
 import time
 import asyncio
-from typing import Optional, Generator, Dict, Any, List, Union
-from dataclasses import dataclass, field
+from typing import Optional, Generator, Dict, Any, List
+from dataclasses import dataclass
 
 try:
     from google import genai
@@ -16,7 +16,7 @@ except ImportError:
     genai = None
     types = None
 
-from kaedra.core.config import MODELS, PROJECT_ID, LOCATION, MODEL_LOCATION, DEFAULT_MODEL
+from kaedra.core.config import MODELS, PROJECT_ID, DEFAULT_MODEL
 
 @dataclass
 class PromptResult:
@@ -31,21 +31,21 @@ class PromptResult:
 class PromptService:
     """
     Manages LLM prompt generation with Smart Routing.
-    
+
     Features:
     - Dual-Brain Architecture (Flash fast, Pro deep)
     - Automatic scaling based on query complexity (Smart Router)
     - Thinking Level Support (Minimal, High)
     - Google Search grounding integration
     """
-    
+
     DEEP_THINKING_KEYWORDS = [
         "research", "analyze", "deep dive", "review", "debug",
         "check this code", "plan", "strategy", "step by step",
         "break down", "compare", "evaluate", "investigate", "explain why"
     ]
-    
-    def __init__(self, 
+
+    def __init__(self,
                  model_key: str = DEFAULT_MODEL,
                  project: str = PROJECT_ID,
                  location: str = "global", # Gemini 3 requires global endpoint for dynamic routing
@@ -56,14 +56,15 @@ class PromptService:
         self.enable_grounding = enable_grounding
         self._default_model_key = model_key
         self._client = None
-        
-        # Initialize Client (Lazy init via property is preferred for pickling, but we do it here too)
-        self._ensure_client()
+
+        # Initialize Client (Lazy)
+        self._client = None
+        # Removed eager _ensure_client() to ensure 100% pickle safety by default
 
     def _ensure_client(self):
         """Idempotent client initialization."""
         if self._client: return
-        
+
         if genai:
             try:
                 self._client = genai.Client(vertexai=True, project=self.project, location=self.location)
@@ -102,15 +103,15 @@ class PromptService:
         tools = []
         if self.enable_grounding:
             tools.append(types.Tool(google_search=types.GoogleSearch()))
-            
+
         return types.GenerateContentConfig(
             temperature=1.0, # Recommended for Gemini 3
             tools=tools if tools else None,
             thinking_config=types.ThinkingConfig(thinking_level=thinking_level, include_thoughts=True)
         )
 
-    def generate(self, 
-                 prompt: str, 
+    def generate(self,
+                 prompt: str,
                  model_key: str = None,
                  system_instruction: str = None,
                  temperature: float = 1.0,
@@ -121,7 +122,7 @@ class PromptService:
         Synchronous generation with Smart Routing.
         """
         return asyncio.run(self.generate_async(
-            prompt, model_key, system_instruction, 
+            prompt, model_key, system_instruction,
             temperature, max_tokens, response_schema, response_mime_type
         ))
 
@@ -142,24 +143,24 @@ class PromptService:
         # 1. Smart Routing Logic
         target_model_key = model_key or self._default_model_key
         thinking_level = "low" # Standard Flash speed
-        
+
         # Automatic Scale-up
         if not model_key and self.needs_deep_thinking(prompt):
             target_model_key = "pro"
             thinking_level = "high"
             print(f"[*] Smart Router: Escalating to Pro (High Thinking)")
         elif target_model_key == "flash" and not self.needs_deep_thinking(prompt):
-             # For ultra fast simple tasks on flash
-             thinking_level = "minimal"
+            # For ultra fast simple tasks on flash
+            thinking_level = "minimal"
 
         model_id = MODELS.get(target_model_key, MODELS[DEFAULT_MODEL])
-        
+
         # 2. Build Config
         gen_config = self._get_config(thinking_level)
         gen_config.temperature = 1.0 # Force 1.0 as per best practices
         gen_config.max_output_tokens = max_tokens
         gen_config.system_instruction = system_instruction
-        
+
         if response_schema:
             gen_config.response_schema = response_schema
             gen_config.response_mime_type = "application/json"
@@ -175,20 +176,20 @@ class PromptService:
                 contents=prompt,
                 config=gen_config
             )
-            
+
             latency = (time.time() - start_time) * 1000
-            
+
             # Extract content and thoughts
             final_text = ""
             thoughts = ""
-            
+
             if response.candidates and response.candidates[0].content:
                 for part in response.candidates[0].content.parts:
                     if part.thought:
                         thoughts += part.text
                     elif part.text:
                         final_text += part.text
-            
+
             return PromptResult(
                 text=final_text or response.text,
                 model=model_id,
@@ -201,7 +202,7 @@ class PromptService:
             print(f"[!] Generation failed: {e}")
             return PromptResult(f"[ERROR] {e}", model_id, latency, metadata={"error": str(e)})
 
-    def generate_stream(self, 
+    def generate_stream(self,
                         prompt: str,
                         model_key: str = None,
                         system_instruction: str = None) -> Generator[str, None, None]:
@@ -212,7 +213,7 @@ class PromptService:
             config = self._get_config("minimal")
             config.system_instruction = system_instruction
             model_id = MODELS.get(model_key or self._default_model_key, MODELS[DEFAULT_MODEL])
-            
+
             stream = await self.client.aio.models.generate_content_stream(
                 model=model_id,
                 contents=prompt,
@@ -227,33 +228,33 @@ class PromptService:
         raise NotImplementedError("Use generate_async_stream instead.")
 
     async def generate_async_stream(self, prompt: str, model_key: str = None, system_instruction: str = None):
-         """True async stream handling."""
-         target_model_key = model_key or self._default_model_key
-         thinking_level = "minimal"
-         if not model_key and self.needs_deep_thinking(prompt):
+        """True async stream handling."""
+        target_model_key = model_key or self._default_model_key
+        thinking_level = "minimal"
+        if not model_key and self.needs_deep_thinking(prompt):
             target_model_key = "pro"
             thinking_level = "high"
 
-         model_id = MODELS.get(target_model_key, MODELS[DEFAULT_MODEL])
-         config = self._get_config(thinking_level)
-         config.system_instruction = system_instruction
-         
-         return await self.client.aio.models.generate_content_stream(
-             model=model_id,
-             contents=prompt,
-             config=config
-         )
+        model_id = MODELS.get(target_model_key, MODELS[DEFAULT_MODEL])
+        config = self._get_config(thinking_level)
+        config.system_instruction = system_instruction
+
+        return await self.client.aio.models.generate_content_stream(
+            model=model_id,
+            contents=prompt,
+            config=config
+        )
 
     def embed(self, text: str, model: str = "text-embedding-004") -> List[float]:
         """Generate embeddings using the modern client."""
         if not self.client: return []
         try:
-             # Simplified sync call for embeddings usually okay
-             response = self.client.models.embed_content(
-                 model=model,
-                 contents=text
-             )
-             return response.embeddings[0].values
+            # Simplified sync call for embeddings usually okay
+            response = self.client.models.embed_content(
+                model=model,
+                contents=text
+            )
+            return response.embeddings[0].values
         except Exception as e:
             print(f"[!] Embedding error: {e}")
             return []

@@ -37,17 +37,17 @@ class StreamWorker:
         self.stream.start()
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
-    
+
     def _run(self):
         while True:
             try:
                 item = self.q.get(timeout=0.1)
                 if item is None:
                     break
-                
+
                 self.playing = True
                 self._stop_flag.clear()
-                
+
                 # Chunk playback for responsive stopping
                 chunk_size = self.sample_rate // 10  # 100ms chunks
                 for i in range(0, len(item), chunk_size):
@@ -55,7 +55,7 @@ class StreamWorker:
                         break
                     chunk = item[i:i + chunk_size]
                     self.stream.write(chunk)
-                
+
                 self.playing = False
                 self.q.task_done()
             except queue.Empty:
@@ -71,7 +71,7 @@ class StreamWorker:
             if audio_data.dtype != np.float32:
                 audio_data = audio_data.astype(np.float32)
             self.q.put(audio_data)
-        
+
     def stop_all(self):
         """Stop current playback and clear queue."""
         self._stop_flag.set()
@@ -88,8 +88,8 @@ class ChatterboxTTSService:
     """
     Chatterbox Turbo TTS Service (Optimized).
     """
-    
-    def __init__(self, 
+
+    def __init__(self,
                  reference_audio: Optional[str] = None,
                  device: str = "cuda",
                  use_compile: bool = True):
@@ -98,18 +98,18 @@ class ChatterboxTTSService:
         """
         if not CHATTERBOX_AVAILABLE:
             raise RuntimeError("Chatterbox TTS not installed.")
-        
+
         print(f"[*] Loading Chatterbox Turbo on {device}...")
         self.model = ChatterboxTurboTTS.from_pretrained(device=device)
         self.reference_audio = reference_audio
         self.device = device
-        
+
         # Performance Upgrade: One-time conditioning
         if reference_audio and Path(reference_audio).exists():
             print(f"[*] Pre-conditioning voice reference: {reference_audio}")
             self.model.prepare_conditionals(reference_audio)
             self.reference_audio = None # Set to None so .generate() uses cached conds
-        
+
         # Performance Upgrade: torch.compile (Inference Boost)
         if use_compile and device == "cuda":
             print("[*] Compiling model for speed (this takes a minute on first run)...")
@@ -124,7 +124,7 @@ class ChatterboxTTSService:
         # Initialize audio worker
         self.worker = StreamWorker(sample_rate=self.model.sr)
         print(f"[*] ChatterboxTTSService ready (SR: {self.model.sr})")
-    
+
     def speak(self, text: str, blocking: bool = False):
         """
         Generate and play speech using sentence-level streaming.
@@ -133,37 +133,37 @@ class ChatterboxTTSService:
             # Performance Upgrade: Sentence-level streaming
             # Split by punctuation but keep the punctuation attached
             sentences = re.split(r'(?<=[.!?])\s+', text.strip())
-            
+
             for sentence in sentences:
                 if not sentence.strip():
                     continue
-                
+
                 # Generate audio for this sentence
                 # Using cached conditioning (audio_prompt_path=None)
                 wav = self.model.generate(
-                    sentence, 
+                    sentence,
                     audio_prompt_path=None
                 )
-                
+
                 # Convert to numpy
                 if isinstance(wav, torch.Tensor):
                     audio_np = wav.squeeze().cpu().numpy()
                 else:
                     audio_np = np.array(wav).squeeze()
-                
+
                 # Immediately push to playback queue while next sentence generates
                 self.worker.add(audio_np)
-            
+
             if blocking:
                 self.worker.q.join()
-                
+
         except Exception as e:
             print(f"[!] TTS Error: {e}")
-    
+
     def stop(self):
         """Stop all playback immediately."""
         self.worker.stop_all()
-    
+
     def is_speaking(self) -> bool:
         """Check if currently speaking."""
         return self.worker.is_busy()
@@ -172,11 +172,11 @@ class ChatterboxTTSService:
 def create_tts_service(backend: str = "chatterbox", **kwargs):
     """
     Factory function to create TTS service.
-    
+
     Args:
         backend: "chatterbox" or "cloud" (Google Cloud TTS)
         **kwargs: Backend-specific arguments
-        
+
     Returns:
         TTS service instance
     """

@@ -9,7 +9,6 @@ import threading
 from datetime import datetime
 from typing import Callable, Optional
 
-from kaedra.core.config import LIFX_TOKEN
 from kaedra.services.lifx import LIFXService
 from kaedra.services.razer import RazerService
 
@@ -19,7 +18,7 @@ from .ui import log
 
 class LifxGate:
     """Rate limiter and deduplicator for LIFX calls."""
-    
+
     def __init__(self, cfg: RateLimitConfig | None = None):
         self.cfg = cfg or RateLimitConfig()
         self._lock = threading.Lock()
@@ -61,7 +60,7 @@ class LifxGate:
 
 class LightsController:
     """Manages LIFX lights with background worker thread."""
-    
+
     def __init__(self, razer_service=None, lifx_service=None):
         self.razer = razer_service
         self.lifx = lifx_service
@@ -84,7 +83,7 @@ class LightsController:
                     sig=f"pulse:{color}"
                 )
             self.request_update(do_pulse)
-        
+
         # Razer Pulse (quick flash)
         if self.razer:
             threading.Thread(target=self._fire_pulse, args=(color, 1.0, period / 2), daemon=True).start()
@@ -96,9 +95,9 @@ class LightsController:
         bgr = self.razer._bgr_int_from_hsv(hue, 1.0, brightness)
         # Use our new public method
         self.razer.broadcast_static(bgr)
-        
+
         time.sleep(duration)
-        
+
         # 2. Flash OFF (or reset?)
         # Ideally we'd restore previous state, but statutory lighting is complex.
         # For now, just black out to emphasize the beat staccato.
@@ -114,19 +113,19 @@ class LightsController:
                 log.info("Razer Chroma linked.")
             else:
                 log.warning("Razer Synapse not found (Hardware skipped)")
-            
+
             # 2. Init LIFX Service (Silent if disabled)
             self.lifx = LIFXService()
             if not self.lifx.enabled:
-                 log.info("LIFX: Service disabled (Token missing)")
-                 return False
+                log.info("LIFX: Service disabled (Token missing)")
+                return False
 
             lights = self.lifx.list_lights()
             if not lights:
                 log.warning("LIFX: No lights found on account")
                 self.lifx.enabled = False
                 return False
-                
+
             # Baseline reference
             first_light = lights[0]
             self._initial_state = {
@@ -134,12 +133,12 @@ class LightsController:
                 "power": first_light.power,
                 "brightness": first_light.brightness
             }
-            
+
             # Start background worker
             self._running = True
             self._lifx_thread = threading.Thread(target=self._worker, daemon=True)
             self._lifx_thread.start()
-            
+
             # Startup Mood
             self.set_color(hue=280, saturation=1.0, brightness=0.35)
             log.info(f"LIFX connected: {len(lights)} light(s)")
@@ -152,14 +151,14 @@ class LightsController:
         """Set LIFX color by name (Convenience wrapper)."""
         if not self.lifx or not self.lifx.enabled:
             return
-            
+
         def do_set():
             self.gate.call(
                 lambda: self.lifx.set_color("group:Living Room", color=color_name, brightness=brightness),
                 sig=f"named:{color_name}:{brightness}"
             )
         self.request_update(do_set)
-    
+
     def _worker(self):
         """Background worker for LIFX updates."""
         while self._running:
@@ -172,7 +171,7 @@ class LightsController:
                 continue
             except Exception as e:
                 log.debug(f"LIFX worker error: {e}")
-    
+
     def request_update(self, update_fn: Callable):
         """Queue a non-blocking LIFX update."""
         if not self.lifx or not self._running:
@@ -189,14 +188,14 @@ class LightsController:
             self.pulse_count += 1
         except queue.Full:
             pass
-    
+
     def fire_mode(self, brightness: float = 0.25):
         """Set Fire Atmosphere: Warm base + Flame effect. Targets Living Room (Eve Safe)."""
         if not self.lifx:
             return
 
         selector = "group:Living Room"
-        
+
         def do_fire():
             # 1. Base State: Warm Orange @ 25%
             self.gate.call(
@@ -208,14 +207,14 @@ class LightsController:
                 lambda: self.lifx.flame(selector, period=5.0),
                 sig="fire_fx"
             )
-            
+
             # 3. Razer Broadcast (Animation)
             if self.razer:
                 self.razer.start_fire_effect()
                 self.razer.set_chromalink_fire()  # Also set 3rd party devices (LIFX Connector)
-        
+
         self.request_update(do_fire)
-    
+
     @property
     def is_night_mode(self) -> bool:
         """Check if currently in Night Mode (11PM - 8AM)."""
@@ -232,15 +231,15 @@ class LightsController:
             if brightness > 0.60:
                 log.info(f"[Night Mode] Capping brightness {brightness:.2f} -> 0.60")
                 brightness = 0.60
-            
+
         # Construct color string for LIFX API
         # hue:0-360 saturation:0.0-1.0
         color_str = f"hue:{hue} saturation:{saturation} kelvin:{kelvin}"
         sig = f"{color_str}:{brightness:.2f}"
-        
+
         # Selector that avoids Eve (Bedroom)
         selector = "group:Living Room"
-        
+
         def do_set():
             self.gate.call(
                 lambda: self.lifx.set_color(selector, color=color_str, brightness=brightness, duration=1.0),
@@ -251,41 +250,41 @@ class LightsController:
             if self.razer:
                 # Basic mapping: "red" -> set_static("red")
                 # Strip LIFX params to get color name if possible
-                base_color = color_str.split()[0].split(":")[0] 
+                base_color = color_str.split()[0].split(":")[0]
                 if "hue" in base_color: # Handle HSB
                     # TODO: Convert Hue to RGB for Razer
-                    pass 
+                    pass
                 else:
                     self.razer.set_static(base_color)
-        
+
         self.request_update(do_set)
-    
+
     def breathe(self, color: str = "red", cycles: int = 1, period: float = 2.0, peak: float = 0.5):
         """Trigger breathe effect (non-blocking). Targets Living Room (Eve Safe)."""
         if not self.lifx:
             return
-            
+
         selector = "group:Living Room"
-            
+
         def do_breathe():
             self.gate.call(
                 lambda: self.lifx.breathe(selector, color=color, cycles=cycles, period=period, peak=peak),
                 sig=f"breathe:{color}"
             )
-        
+
         self.request_update(do_breathe)
-        
+
         # Razer Broadcast
         if self.razer:
             self.razer.breathe(color)
-    
+
     def restore(self):
         """Restore lights to baseline. Night Mode (11pm-6am) = Red 35%, else Day = 4500k 60%."""
         if not self.lifx:
             return
-            
+
         selector = "group:Living Room"
-        
+
         try:
             # Night Mode: 11 PM (23) to 6 AM (6)
             if self.is_night_mode:
@@ -300,13 +299,13 @@ class LightsController:
                     lambda: self.lifx.set_color(selector, color="kelvin:4500", brightness=0.6, duration=2.0)
                 )
                 log.info("LIFX Restore: Standard Mode (4500k 60%)")
-            
+
             if self.razer:
                 self.razer.restore()
-                
+
         except Exception as e:
             log.debug(f"LIFX restore failed: {e}")
-    
+
     def stop(self):
         """Stop all active effects."""
         if self.razer:
@@ -335,6 +334,6 @@ class LightsController:
         self._running = False
         if self._lifx_thread and self._lifx_thread.is_alive():
             self._lifx_thread.join(timeout=2.0)
-        
+
         if self.razer:
             self.razer.close()

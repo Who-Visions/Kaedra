@@ -120,27 +120,27 @@ state = AppState()
 async def handle_voice_command(command_text: str):
     """Callback for when Wispr detects a wake word."""
     print(f"\n[MIC] Detected Command: {command_text}")
-    
+
     if state.agent:
         # Send to agent as if it were a chat message (but marked as voice)
         print(f"[*] Processing voice command with Kaedra...")
-        
+
         # Add voice context
         context = f"[VOICE COMMAND] User said: '{command_text}' via Wispr Flow."
-        
+
         # Run agent
         response = await state.agent.run(query=command_text, context=context)
-        
+
         # Log response
-        print(f"\nKaedra: {response.content}\n") 
-        
+        print(f"\nKaedra: {response.content}\n")
+
         # Speak response if TTS is available
         if state.tts_service:
             # Run in thread pool to avoid blocking async loop with synchronous playback
             import asyncio
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, state.tts_service.speak, response.content)
-            
+
     else:
         print("[!] Agent not initialized yet.")
 
@@ -152,29 +152,29 @@ async def startup_event():
         # Initialize services
         prompt_service = PromptService(project=PROJECT_ID, location=MODEL_LOCATION)
         memory_service = MemoryService() # Assumes default init is fine
-        
+
         # Initialize Services
         state.web_service = WebService()
         state.research_service = ResearchService(prompt_service)
-        
+
         # Visual Service (New)
         try:
             state.visual_service = VisualService()
             print("[+] Visual Service initialized.")
         except Exception as ve:
-             print(f"[!] Visual Service failed to initialize: {ve}")
-        
+            print(f"[!] Visual Service failed to initialize: {ve}")
+
         # TTS only works on local machines with audio output (not Cloud Run)
         try:
             state.tts_service = TTSService()
         except Exception as tts_err:
             print(f"[!] TTS unavailable (normal for Cloud Run): {tts_err}")
             state.tts_service = None
-        
+
         # Initialize Agent
         state.agent = KaedraAgent(prompt_service, memory_service)
         print("[+] Kaedra Agent initialized successfully.")
-        
+
         # Initialize Wispr Monitor
         # Only start if on local Windows machine or appropriately configured environment
         user_home = os.environ.get("USERPROFILE", "")
@@ -182,7 +182,7 @@ async def startup_event():
             print("[*] Starting Wispr Listener...")
             state.wispr_monitor = WisprMonitor(callback=handle_voice_command)
             await state.wispr_monitor.start()
-            
+
     except Exception as e:
         print(f"[!] Failed to initialize Kaedra Agent: {e}")
         # We don't raise here to allow the server to start, but agent endpoints will fail
@@ -312,13 +312,13 @@ async def chat_endpoint(request: ChatRequest):
     """
     if not state.agent:
         raise HTTPException(status_code=503, detail="Agent not initialized")
-    
+
     try:
-        # Use run_sync logic but inside an async wrapper if needed, 
+        # Use run_sync logic but inside an async wrapper if needed,
         # but KaedraAgent.run is async, so we await it.
         # Note: KaedraAgent.run returns AgentResponse object
         result = await state.agent.run(request.message, request.context)
-        
+
         return ChatResponse(
             response=result.content,
             agent_name=result.agent_name,
@@ -337,7 +337,7 @@ def _extract_text(content: Union[str, List[Any]]) -> str:
     if isinstance(content, list):
         # Extract all text parts
         text_parts = [
-            part["text"] for part in content 
+            part["text"] for part in content
             if isinstance(part, dict) and part.get("type") == "text" and "text" in part
         ]
         return "\n".join(text_parts)
@@ -350,12 +350,12 @@ async def openai_chat_endpoint(request: OpenAIChatCompletionRequest):
     """
     if not state.agent:
         raise HTTPException(status_code=503, detail="Agent not initialized")
-    
+
     try:
         # Extract last message as the prompt
         last_content = request.messages[-1].content
         last_message = _extract_text(last_content)
-        
+
         # Build context from previous messages if any
         context_str = ""
         if len(request.messages) > 1:
@@ -367,7 +367,7 @@ async def openai_chat_endpoint(request: OpenAIChatCompletionRequest):
 
         # Run agent
         result = await state.agent.run(last_message, context_str)
-        
+
         return OpenAIChatCompletionResponse(
             id=f"chatcmpl-{int(time.time())}",
             created=int(time.time()),
@@ -399,7 +399,7 @@ async def fleet_generate(request: GenerateRequest):
     """
     if not state.agent:
         raise HTTPException(status_code=503, detail="Agent not initialized")
-    
+
     result = await state.agent.prompt_service.generate_async(
         prompt=request.prompt,
         model_key=request.model or "flash" # Default to Flash for speed
@@ -421,24 +421,24 @@ async def generate_image(request: ImageRequest):
             state.visual_service = VisualService()
         except Exception as e:
             raise HTTPException(status_code=503, detail=f"Visual Service unavailable: {e}")
-            
+
     try:
         # We run the synchronous call in an async executor to avoid blocking
         import asyncio
         loop = asyncio.get_event_loop()
-        
+
         # This returns a PIL Image object
         image_obj = await loop.run_in_executor(None, state.visual_service.generate_image, request.prompt)
-        
-        # For API, we need to return bytes or a signed URL. 
+
+        # For API, we need to return bytes or a signed URL.
         # Since this is a simple setup, we'll convert to base64 for direct return
         import io
         import base64
-        
+
         buffered = io.BytesIO()
         image_obj.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        
+
         return {
             "status": "success",
             "image_type": "png",
@@ -446,7 +446,7 @@ async def generate_image(request: ImageRequest):
             "prompt": request.prompt
         }
     except Exception as e:
-         raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/generate/video")
 async def generate_video(request: VideoGenerationRequest):
@@ -456,17 +456,17 @@ async def generate_video(request: VideoGenerationRequest):
     """
     if not state.visual_service:
         try:
-           state.visual_service = VisualService()
+            state.visual_service = VisualService()
         except Exception as e:
             raise HTTPException(status_code=503, detail=f"Visual Service unavailable: {e}")
-            
+
     try:
         # Run in executor (this can take 60s+)
         import asyncio
         loop = asyncio.get_event_loop()
-        
+
         result = await loop.run_in_executor(
-            None, 
+            None,
             lambda: state.visual_service.generate_video(
                 prompt=request.prompt,
                 resolution=request.resolution,
@@ -474,7 +474,7 @@ async def generate_video(request: VideoGenerationRequest):
                 number_of_videos=request.number_of_videos
             )
         )
-        
+
         return {
             "status": "success",
             "file_path": str(result.file_path), # In Cloud Run this is local ephemeral
@@ -527,7 +527,7 @@ async def fleet_analyze_url(request: AnalyzeUrlRequest):
     """
     if not state.web_service:
         state.web_service = WebService()
-    
+
     metadata = state.web_service.extract_metadata(request.url)
     return metadata
 
@@ -551,7 +551,7 @@ async def start_research(request: ResearchRequest):
     """
     if not state.research_service:
         raise HTTPException(status_code=503, detail="Research Service not initialized")
-    
+
     task_id = state.research_service.create_task(request.query)
     return {"task_id": task_id, "status": "pending", "message": "Research task started"}
 
@@ -562,7 +562,7 @@ async def get_research_status(task_id: str):
     """
     if not state.research_service:
         raise HTTPException(status_code=503, detail="Research Service not initialized")
-    
+
     task = state.research_service.get_task(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -575,7 +575,7 @@ async def create_embeddings(request: EmbeddingRequest):
     """
     if not state.agent:
         raise HTTPException(status_code=503, detail="Agent not initialized")
-    
+
     vector = state.agent.prompt_service.embed(request.text, request.model)
     return {
         "object": "list",
@@ -665,27 +665,27 @@ async def notion_webhook(payload: NotionWebhookPayload = Body(...)):
     """
     Receive Notion database change events.
     Triggers sync when Ingestion Queue items are updated.
-    
+
     POST https://kaedra-69017097813.us-central1.run.app/webhook/notion
     """
     import sys
     sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    
+
     try:
         from tools.sync_notion import NotionBridge
-        
+
         print(f"📥 Received Notion webhook: {payload.type}")
-        
+
         # Default world ID
         world_id = "world_bee9d6ac"
-        
+
         bridge = NotionBridge(world_id)
         if bridge.check_connection():
             bridge.pull_ingestion_queue()
             return {"status": "synced", "world_id": world_id}
         else:
             raise HTTPException(status_code=500, detail="Notion connection failed")
-            
+
     except Exception as e:
         print(f"❌ Webhook error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -694,16 +694,16 @@ async def notion_webhook(payload: NotionWebhookPayload = Body(...)):
 async def manual_sync(request: SyncRequest):
     """
     Manually trigger a full Notion sync for a world.
-    
+
     POST https://kaedra-69017097813.us-central1.run.app/sync
     Body: {"world_id": "world_bee9d6ac"}
     """
     import sys
     sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    
+
     try:
         from tools.sync_notion import NotionBridge
-        
+
         bridge = NotionBridge(request.world_id)
         if bridge.check_connection():
             bridge.sync_all()
@@ -718,32 +718,32 @@ async def sync_status(world_id: str):
     """Check sync status for a world."""
     from pathlib import Path
     import json
-    
+
     worlds_root = Path(__file__).parent.parent.parent / "lore" / "worlds"
     world_path = worlds_root / world_id
-    
+
     if not world_path.exists():
         raise HTTPException(status_code=404, detail=f"World {world_id} not found")
-    
+
     ingestion_path = world_path / "ingestion.json"
     bible_path = world_path / "world_bible.json"
-    
+
     status = {
         "world_id": world_id,
         "ingestion_items": 0,
         "bible_entries": 0
     }
-    
+
     if ingestion_path.exists():
         data = json.loads(ingestion_path.read_text())
         status["ingestion_items"] = len(data.get("items", []))
-    
+
     if bible_path.exists():
         data = json.loads(bible_path.read_text())
         sections = data.get("sections", {})
         for entries in sections.values():
             status["bible_entries"] += len(entries)
-    
+
     return status
 
 # -------------------------------------------------------------------------
@@ -758,7 +758,7 @@ async def list_available_worlds():
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     if root not in sys.path:
         sys.path.insert(0, root)
-        
+
     from kaedra.worlds.store import list_worlds
     worlds = list_worlds()
     return {"worlds": [w.__dict__ for w in worlds]}
@@ -768,18 +768,18 @@ async def get_lore_feed(world_id: str = "world_bee9d6ac"):
     """Get the Ingestion Feed (New Lore) for a specific world."""
     from pathlib import Path
     import json
-    
+
     # Locate World
     worlds_root = Path(__file__).parent.parent.parent / "lore" / "worlds"
     world_path = worlds_root / world_id
-    
+
     if not world_path.exists():
         raise HTTPException(status_code=404, detail=f"World {world_id} not found")
-        
+
     ingestion_path = world_path / "ingestion.json"
     if not ingestion_path.exists():
         return {"items": []}
-        
+
     try:
         data = json.loads(ingestion_path.read_text(encoding="utf-8"))
         return data # Returns {"items": [...]}
@@ -791,18 +791,18 @@ async def get_world_bible(world_id: str = "world_bee9d6ac"):
     """Get the World Bible (Canon Lore) for a specific world."""
     from pathlib import Path
     import json
-    
+
     # Locate World
     worlds_root = Path(__file__).parent.parent.parent / "lore" / "worlds"
     world_path = worlds_root / world_id
-    
+
     if not world_path.exists():
         raise HTTPException(status_code=404, detail=f"World {world_id} not found")
-        
+
     bible_path = world_path / "world_bible.json"
     if not bible_path.exists():
         return {"sections": {}}
-        
+
     try:
         data = json.loads(bible_path.read_text(encoding="utf-8"))
         return data # Returns {"sections": {...}}

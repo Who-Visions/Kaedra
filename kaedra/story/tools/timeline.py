@@ -16,11 +16,11 @@ def event_sort_key(e: dict):
 
 def normalize_timeline(events: list) -> list:
     """Clean, sort, and merge timeline events."""
-    if not isinstance(events, list): 
+    if not isinstance(events, list):
         return []
     by_date = defaultdict(list)
     for e in events:
-        if not isinstance(e, dict): 
+        if not isinstance(e, dict):
             continue
         e = dict(e)
         if "event" in e:

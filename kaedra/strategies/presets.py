@@ -63,24 +63,24 @@ class PromptOptimizer:
     """
     Optimizes user prompts using meta-prompting.
     """
-    
+
     def __init__(self, prompt_service: PromptService):
         self.prompt = prompt_service
-    
+
     def optimize(self, raw_prompt: str, model_key: str = None) -> str:
         """
         Transform a rough prompt into an optimized one.
-        
+
         Args:
             raw_prompt: The user's rough prompt idea
             model_key: Override model key
-            
+
         Returns:
             Optimized prompt with explanation
         """
         print(f"\n{Colors.NEON_CYAN}[PROMPT OPTIMIZER]{Colors.RESET}")
         print(f"{Colors.DIM}Enhancing your prompt...{Colors.RESET}\n")
-        
+
         optimizer_prompt = f"""You are an expert prompt engineer. Transform this rough prompt into a highly effective one.
 
 ROUGH PROMPT: "{raw_prompt}"
@@ -106,12 +106,12 @@ EXPLANATION:
 
 [Brief explanation of what you improved and why]
 """
-        
+
         result = self.prompt.generate(optimizer_prompt, model_key)
         print(f"{Colors.NEON_GREEN}{result.text}{Colors.RESET}\n")
-        
+
         return result.text
-    
+
     def get_preset(self, name: str) -> Optional[Preset]:
         """Get a preset by name."""
         # Check user presets first
@@ -121,7 +121,7 @@ EXPLANATION:
         if name in BUILTIN_PRESETS:
             return BUILTIN_PRESETS[name]
         return None
-    
+
     def list_presets(self) -> Dict[str, str]:
         """List all available presets."""
         all_presets = {}

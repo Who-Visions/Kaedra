@@ -32,7 +32,7 @@ class EngineUI:
         table = Table(title="StoryEngine Commands", box=None)
         table.add_column("Command", style="cyan")
         table.add_column("Description")
-        
+
         cmds = [
             (":plan [prompt]", "Force PLANNER mode (Build steps)"),
             (":scene [prompt]", "Force SCENE mode (Write narrative)"),
@@ -71,7 +71,7 @@ class EngineUI:
             title="[bold yellow]Debug: Current State[/]",
             border_style="yellow"
         ))
-        
+
         self.console.print(
             f"\n[cyan]Context Budget:[/] {context_budget['current']:,} / {context_budget['capacity']:,} tokens ({context_budget['usage_percent']:.1f}%)"
         )
@@ -89,11 +89,11 @@ class EngineUI:
             return input()
 
         if ">>" in prompt_markup:
-            sys.stdout.write("\n>> ") 
+            sys.stdout.write("\n>> ")
         else:
             sys.stdout.write("\n> ")
         sys.stdout.flush()
-        
+
         buffer = []
         while True:
             # Batch read loop
@@ -103,17 +103,17 @@ class EngineUI:
                 batch.append(char)
                 if len(batch) > 5000:
                     break
-            
+
             if not batch:
                 time.sleep(0.001)
                 continue
 
             echo_chunk = []
-            
+
             for i, char in enumerate(batch):
                 if char == '\x03': # Ctrl+C
                     raise KeyboardInterrupt
-                    
+
                 if char == '\x08': # Backspace
                     if buffer:
                         buffer.pop()
@@ -121,22 +121,22 @@ class EngineUI:
                             sys.stdout.write("".join(echo_chunk))
                             echo_chunk = []
                         sys.stdout.flush()
-                        
+
                         sys.stdout.write('\b \b')
                         sys.stdout.flush()
                     continue
-                    
+
                 if char == '\r': # Enter
                     remaining_in_batch = (i < len(batch) - 1)
                     is_paste = remaining_in_batch
-                    
+
                     if not is_paste:
                         start = time.perf_counter()
                         while (time.perf_counter() - start) < 0.15:
                             if msvcrt.kbhit():
                                 is_paste = True
                                 break
-                    
+
                     if is_paste:
                         buffer.append('\n')
                         echo_chunk.append('\n')
@@ -150,7 +150,7 @@ class EngineUI:
 
                 buffer.append(char)
                 echo_chunk.append(char)
-            
+
             if echo_chunk:
                 sys.stdout.write("".join(echo_chunk))
                 sys.stdout.flush()

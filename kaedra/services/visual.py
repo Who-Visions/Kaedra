@@ -16,7 +16,7 @@ except ImportError:
     genai = None
     types = None
 
-from kaedra.core.config import VIDEO_DIR, VEO_MODELS, DEFAULT_VEO_MODEL, PROJECT_ID, LOCATION
+from kaedra.core.config import VIDEO_DIR, VEO_MODELS, DEFAULT_VEO_MODEL, PROJECT_ID
 
 
 @dataclass
@@ -33,7 +33,7 @@ class VisualResult:
 class VisualService:
     """
     Manages visual generation via Google Veo / Gemini models.
-    
+
     Features:
     - Multiple Veo model support (3.1, 3.0, 2.0)
     - Image generation (Gemini 3)
@@ -45,13 +45,13 @@ class VisualService:
     - Async operation polling
     - Automatic file management
     """
-    
-    def __init__(self, 
+
+    def __init__(self,
                  api_key: Optional[str] = None,
                  model_key: str = DEFAULT_VEO_MODEL):
         """
         Initialize the visual service.
-        
+
         Args:
             api_key: Google AI API key (defaults to env var)
             model_key: Veo model key from VEO_MODELS dict
@@ -61,35 +61,61 @@ class VisualService:
                 "google-genai package not installed. "
                 "Install with: pip install google-genai"
             )
-        
-        # User Policy: Vertex Auth should always be first and foremost.
-        # As a developer, keys should not be required to make services work.
-        
-        # 1. Prefer Vertex AI (ADC) - Using Shared Singleton
-        if PROJECT_ID and not api_key:
-             from kaedra.core.config import get_gemini_client
-             self.client = get_gemini_client()
-        
-        # 2. Fallback to API Keys (Legacy/Override)
-        elif api_key := (api_key or os.getenv("GOOGLE_AI_API_KEY") or os.getenv("GEMINI_API_KEY")):
-            self.client = genai.Client(api_key=api_key)
-            
-        else:
-            raise ValueError(
-                "Authentication failed: No Project ID configured for Vertex AI "
-                "and no Google AI API key found."
-            )
-            
+
         self.model = VEO_MODELS.get(model_key, VEO_MODELS[DEFAULT_VEO_MODEL])
         self.model_key = model_key
-    
+
+        self._client = None
+        self._api_key = api_key
+        # Lazy init to allow pickling
+
+    @property
+    def client(self):
+        """Lazy-loaded GenAI Client."""
+        if self._client is None:
+            if genai is None:
+                raise ImportError("google-genai package not installed.")
+
+            # 1. Prefer Vertex AI (ADC)
+            if PROJECT_ID and not self._api_key:
+                from kaedra.core.config import get_gemini_client
+                self._client = get_gemini_client()
+
+            # 2. Fallback to API Keys
+            elif self._api_key:
+                self._client = genai.Client(api_key=self._api_key)
+
+            else:
+                # Try env vars late
+                key = os.getenv("GOOGLE_AI_API_KEY") or os.getenv("GEMINI_API_KEY")
+                if key:
+                    self._client = genai.Client(api_key=key)
+                else:
+                    raise ValueError("Authentication failed: No Project ID or API Key.")
+
+        return self._client
+
+    @client.setter
+    def client(self, value):
+        self._client = value
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if "_client" in state:
+            del state["_client"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._client = None
+
     def generate_image(self, prompt: str) -> Any:
         """
         Generate an image using Gemini 3 Pro Image Preview.
-        
+
         Args:
             prompt: Text description of the image
-            
+
         Returns:
             Generated image object
         """
@@ -102,7 +128,7 @@ class VisualService:
             return result.parts[0].as_image()
         except Exception as e:
             raise RuntimeError(f"Failed to generate image: {e}")
-    
+
     def generate_video(self,
                       prompt: str,
                       image: Optional[Any] = None,
@@ -119,7 +145,7 @@ class VisualService:
                       output_filename: Optional[str] = None) -> VisualResult:
         """
         Generate a video using Veo.
-        
+
         Args:
             prompt: Text description of the video (max 1024 tokens)
             image: Optional starting image (generated separately)
@@ -135,24 +161,24 @@ class VisualService:
             number_of_videos: Number of videos to generate (default 1)
             poll_interval: Seconds between status checks (default 10)
             output_filename: Optional custom filename (auto-generated if None)
-            
+
         Returns:
             VisualResult with file path and metadata
         """
         start_time = time.time()
-        
+
         # Build config
         config_params = {
             "number_of_videos": number_of_videos,
             "resolution": resolution,
             "aspect_ratio": aspect_ratio
         }
-        
+
         if negative_prompt:
             config_params["negative_prompt"] = negative_prompt
-            
+
         if person_generation:
-             config_params["person_generation"] = person_generation
+            config_params["person_generation"] = person_generation
 
         # Add reference images if provided
         if reference_images:
@@ -167,20 +193,20 @@ class VisualService:
                 config_params["reference_images"] = ref_images
             else:
                 config_params["reference_images"] = reference_images
-        
+
         # Handle interpolation frames
         # 'image' and 'first_frame' are synonymous for the starting frame
         start_image = image or first_frame
-        
+
         if last_frame:
             config_params["last_frame"] = last_frame
-        
+
         # Build config object if types module available
         if types:
             config = types.GenerateVideosConfig(**config_params)
         else:
             config = config_params
-        
+
         # Start generation
         try:
             if input_video:
@@ -216,37 +242,37 @@ class VisualService:
                 )
         except Exception as e:
             raise RuntimeError(f"Failed to start video generation: {e}")
-        
+
         # Poll for completion
         operation_id = getattr(operation, 'name', None)
-        
+
         while not operation.done:
             time.sleep(poll_interval)
             try:
                 operation = self.client.operations.get(operation)
             except Exception as e:
                 raise RuntimeError(f"Failed to check operation status: {e}")
-        
+
         # Download video
         try:
             if not operation.result or not operation.result.generated_videos:
-                 raise RuntimeError("Operation completed but no videos returned.")
+                raise RuntimeError("Operation completed but no videos returned.")
 
             video = operation.result.generated_videos[0]
             self.client.files.download(file=video.video)
-            
+
             # Generate filename if not provided
             if not output_filename:
                 timestamp = int(time.time())
                 output_filename = f"veo_{self.model_key}_{timestamp}.mp4"
-            
+
             output_path = VIDEO_DIR / output_filename
-            
+
             # Save video
             video.video.save(str(output_path))
-            
+
             duration = time.time() - start_time
-            
+
             return VisualResult(
                 file_path=output_path,
                 model=self.model,
@@ -261,38 +287,38 @@ class VisualService:
             )
         except Exception as e:
             raise RuntimeError(f"Failed to download/save video: {e}")
-    
+
     def generate_video_with_image(self,
                                   prompt: str,
                                   image_prompt: Optional[str] = None,
                                   output_filename: Optional[str] = None) -> VisualResult:
         """
         Convenience method: Generate image first, then video.
-        
+
         Args:
             prompt: Video description
             image_prompt: Optional separate image description (uses video prompt if None)
             output_filename: Optional custom filename
-            
+
         Returns:
             VideoResult
         """
         image_prompt = image_prompt or prompt
         image = self.generate_image(image_prompt)
         return self.generate_video(prompt, image=image, output_filename=output_filename)
-    
+
     def extend_video(self,
                     video_path: Union[str, Path],
                     prompt: str,
                     output_filename: Optional[str] = None) -> VisualResult:
         """
         Extend an existing video.
-        
+
         Args:
             video_path: Path to existing video file
             prompt: Description of the extension
             output_filename: Optional custom filename
-            
+
         Returns:
             VisualResult
         """
@@ -300,19 +326,19 @@ class VisualService:
         video_path = Path(video_path)
         if not video_path.exists():
             raise FileNotFoundError(f"Video file not found: {video_path}")
-        
+
         # Upload video (simplified - may need adjustment based on API)
         try:
             video_file = self.client.files.upload(path=str(video_path))
         except Exception as e:
             raise RuntimeError(f"Failed to upload video: {e}")
-        
+
         return self.generate_video(
             prompt=prompt,
             input_video=video_file,
             output_filename=output_filename
         )
-    
+
     def set_model(self, model_key: str):
         """Change the Veo model."""
         if model_key not in VEO_MODELS:

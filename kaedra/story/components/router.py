@@ -12,7 +12,7 @@ class EngineRouter:
     def route(self, user_input: str) -> Dict[str, Any]:
         """Classify task and plan generation strategy."""
         text = user_input or ""
-        
+
         router_prompt = f"""
 Return JSON only.
 
@@ -95,15 +95,15 @@ User input:
             max_output_tokens=1200,
             thinking_config=types.ThinkingConfig(thinking_level="low", include_thoughts=False),
         )
-        
+
         # Async wrap if needed, though client.models.generate_content is actually sync in some versions.
-        # But engine.py treated it as sync-in-async. 
+        # But engine.py treated it as sync-in-async.
         # Wait, in engine.py: `resp = self.client.models.generate_content(...)` was mocked as sync call primarily.
         # But `_fleet_review` used `await asyncio.to_thread`.
         # `_planner_response` in current engine.py is defined as `async` but calls `self.client` synchronously without await.
         # This blocks the event loop! Good thing I'm refactoring.
         # I should use `asyncio.to_thread` here to be safe.
-        
+
         import asyncio
         resp = await asyncio.to_thread(
              self.client.models.generate_content,

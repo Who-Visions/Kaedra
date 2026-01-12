@@ -2,8 +2,6 @@
 Kaedra Storage Utilities
 Handles GCS bucket operations for ingestion pipelines.
 """
-import os
-from pathlib import Path
 from google.cloud import storage
 from kaedra.core.config import PROJECT_ID
 

@@ -45,29 +45,29 @@ class UniverseAutomations:
         count = 0
         # Iterate over Bible entries (assuming Flattened list or Sections)
         # Structure: bible['sections']['Characters'] = [ {name:..., props:...} ]
-        
+
         for section, entries in self.bible.get("sections", {}).items():
             for entry in entries:
                 props = entry.get("properties", {})
-                
+
                 if props.get("Canon Status") == "Canon":
                     changes = False
-                    
+
                     # Auto-promote Production Status
                     if props.get("Production Status") == "Concept":
                         props["Production Status"] = "In Development"
                         self.log(f"✅ Promoted '{entry['name']}' to In Development")
                         changes = True
-                    
+
                     # Update Timestamp
                     today = datetime.now().strftime("%Y-%m-%d")
                     if props.get("Last Updated") != today:
                         props["Last Updated"] = today
                         changes = True
-                        
+
                     if changes:
                         count += 1
-                        
+
         if count > 0:
             self.log(f"Processed canon promotion for {count} entries.")
 
@@ -80,10 +80,10 @@ class UniverseAutomations:
         for section, entries in self.bible.get("sections", {}).items():
             for entry in entries:
                 props = entry.get("properties", {})
-                
+
                 if props.get("Canon Status") == "Retconned":
                     name = entry.get("name", "Unknown")
-                    
+
                     if not name.startswith("[RETCONNED]"):
                         entry["name"] = f"[RETCONNED] {name}"
                         props["Status"] = "Inactive"
@@ -101,11 +101,11 @@ class UniverseAutomations:
             year_val = event.get("year")
             if year_val is None:
                 continue
-                
+
             try:
                 year = int(str(year_val).replace("AD", "").replace("CE", "").strip())
                 era = "Unknown"
-                
+
                 if year < 0:
                     era = "Ancient Era"
                 elif 0 <= year <= 2000:
@@ -114,7 +114,7 @@ class UniverseAutomations:
                     era = "Modern Era" # VeilVerse Core
                 elif year > 2100:
                     era = "Future Era"
-                    
+
                 if event.get("era") != era:
                     event["era"] = era
                     self.log(f"⏳ Timeline Fix: {event.get('name')} ({year}) -> {era}")
@@ -132,7 +132,7 @@ class UniverseAutomations:
         for char in chars:
             props = char.get("properties", {})
             power = props.get("Power Level", "").lower()
-            
+
             score = 0
             if "god" in power or "cosmic" in power or "planetesimal" in power:
                 score = 95
@@ -142,7 +142,7 @@ class UniverseAutomations:
                 score = 60
             elif "low" in power or "street" in power:
                 score = 40
-                
+
             if score > 0 and props.get("Importance Score") != score:
                 props["Importance Score"] = score
                 self.log(f"⚡ Power Calc: {char['name']} ({power}) -> Score {score}")
@@ -156,14 +156,14 @@ class UniverseAutomations:
                     if props.get("Status") != "Completed":
                         props["Status"] = "Completed"
                         props["Last Updated"] = datetime.now().strftime("%Y-%m-%d")
-                        
+
                         # Add Phase 1 tag
                         appears = props.get("Appears In", [])
                         if isinstance(appears, str): appears = [appears] # normalize
                         if "Phase 1" not in appears:
                             appears.append("Phase 1")
                             props["Appears In"] = appears
-                            
+
                         self.log(f"🎬 Production Release: '{entry['name']}' -> Completed & Phase 1")
 
     # 4. Weekly Concept Review
@@ -171,40 +171,40 @@ class UniverseAutomations:
         # Trigger: Every Monday 9am (Simulated: Just run check and notify if day matches)
         now = datetime.now()
         if now.weekday() == 0: # Monday
-             concepts = []
-             for section, entries in self.bible.get("sections", {}).items():
+            concepts = []
+            for section, entries in self.bible.get("sections", {}).items():
                 for entry in entries:
                     props = entry.get("properties", {})
                     if props.get("Production Status") == "Concept" and props.get("Canon Status") == "Canon":
                         concepts.append(entry["name"])
-             
-             if concepts:
-                 self.notify(f"📋 Weekly Concept Review: {len(concepts)} items need dev work ({', '.join(concepts[:3])}...)")
+
+            if concepts:
+                self.notify(f"📋 Weekly Concept Review: {len(concepts)} items need dev work ({', '.join(concepts[:3])}...)")
 
     # 7. Auto Link Major Characters
     def auto_link_major_characters(self):
         chars = self.bible.get("sections", {}).get("Characters", [])
         major_chars = [c for c in chars if c.get("properties", {}).get("Importance") == "Major"]
-        
+
         for char in major_chars:
             # Setup connections list if missing
             if "Connections" not in char:
                 char["Connections"] = []
-                
+
             # If newly Major (we don't track state change perfectly here without a delta log, but we can checks empty connections)
             if not char["Connections"] and len(major_chars) > 1:
                 # Naive suggestion: just notify to review
-                 self.notify(f"🔗 Major Character '{char['name']}': Review connections to existing Majors.")
+                self.notify(f"🔗 Major Character '{char['name']}': Review connections to existing Majors.")
 
     # 8. Event to Character Linking
     def queue_event_links(self):
         events = self.bible.get("sections", {}).get("Events", [])
         pending = self.bible.get("sections", {}).get("Pending Links", [])
-        
+
         for evt in events:
             # logic: if event exists but has no character links?
             # User trigger: Category=Event.
-            # We just ensure it's tracked in pending if brand new? 
+            # We just ensure it's tracked in pending if brand new?
             # Or simplified: Check if linked.
             pass # Implementation ambiguous without specific property, skipping to avoid noise.
 
@@ -218,7 +218,7 @@ class UniverseAutomations:
                 if not props.get("_meta_release_notified"):
                     self.notify(f"🚀 Media Release: '{item['name']}'. Social scheduler pinged.")
                     props["_meta_release_notified"] = True
-                    
+
                     if props.get("Canon Status") == "Semi-Canon":
                         props["Canon Status"] = "Canon"
                         self.log(f"  -> Upgraded '{item['name']}' to Canon")
@@ -230,11 +230,11 @@ class UniverseAutomations:
                 props = entry.get("properties", {})
                 franchise = props.get("Series/Franchise", [])
                 if isinstance(franchise, str): franchise = [franchise]
-                
+
                 if any("Shadow Dweller" in f for f in franchise):
                     appears = props.get("Appears In", [])
                     if isinstance(appears, str): appears = [appears]
-                    
+
                     changes = False
                     if "Shadow Dweller" not in appears:
                         appears.append("Shadow Dweller")
@@ -242,7 +242,7 @@ class UniverseAutomations:
                     if "Phase 1" not in appears:
                         appears.append("Phase 1")
                         changes = True
-                        
+
                     if changes:
                         props["Appears In"] = appears
                         self.log(f"🌑 Shadow Dweller tagged: '{entry['name']}'")
@@ -252,10 +252,10 @@ class UniverseAutomations:
         ingest_path = self.path / "ingestion.json"
         if not ingest_path.exists():
             return
-            
+
         ingestion = json.loads(ingest_path.read_text("utf-8"))
         items = ingestion.get("items", [])
-        
+
         processed_count = 0
         for item in items:
             if item.get("status") == "Approved":
@@ -263,19 +263,19 @@ class UniverseAutomations:
                 section = item.get("category", "General")
                 if "sections" not in self.bible: self.bible["sections"] = {}
                 if section not in self.bible["sections"]: self.bible["sections"][section] = []
-                
+
                 new_entry = {
                     "name": item.get("title", "Untitled"),
                     "properties": item.get("properties", {})
                 }
                 # Copy relevant props...
-                
+
                 self.bible["sections"][section].append(new_entry)
-                
+
                 item["status"] = "Imported"
                 processed_count += 1
                 self.log(f"📥 Ingested: '{new_entry['name']}' from Approved queue.")
-                
+
         if processed_count > 0:
             ingestion["items"] = items
             ingest_path.write_text(json.dumps(ingestion, indent=2), "utf-8")
@@ -294,7 +294,7 @@ class UniverseAutomations:
         self.check_retcons()
         self.validate_timeline()
         self.calculate_power_scores()
-        
+
         # New Automations
         self.run_production_advancement()
         self.run_concept_review()
@@ -302,7 +302,7 @@ class UniverseAutomations:
         self.notify_media_release()
         self.track_shadow_dweller()
         self.ingest_approved_items()
-        
+
         self._save_data()
         return self.logs
 

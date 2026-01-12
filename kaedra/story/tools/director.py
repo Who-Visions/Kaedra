@@ -39,7 +39,7 @@ def consult_director(topic: str) -> str:
         "pet_the_dog": "pet_the_dog",
         "kindness": "pet_the_dog",
     }
-    
+
     # Resolve alias if present
     topic_norm = ALIASES.get(topic_norm, topic_norm)
 
@@ -273,7 +273,7 @@ Ensure decisions and behavior (not just dialogue) prove this statement.""",
 
         "acting_muscles": """[DIRECTOR: THE FOUR MUSCLES]
 - **Muscles**: Childlike Innocence, Limitless Imagination, Vulnerability, Concentration.
-- **Childlike Innocence**: Play pretend without adult cynicism. 
+- **Childlike Innocence**: Play pretend without adult cynicism.
 - **Concentration**: Focus the character's mind on the story, not the result.
 - **The Cancers**: Cut out concern for 'approval' or 'subjective results' from the character's thought process.""",
 
@@ -289,12 +289,12 @@ Ensure decisions and behavior (not just dialogue) prove this statement.""",
 
         "story_alignment": """[DIRECTOR: STORY ALIGNMENT]
 - **Service**: How does this performance/moment serve the larger conversation of the story?
-- **Restraint**: Where can restraint be more effective than preaching? 
+- **Restraint**: Where can restraint be more effective than preaching?
 - **Artistic Will**: Leverage creative joy to share human truth without 'drowning' in the darkness.""",
 
         "identity_vs_essence": """[DIRECTOR: IDENTITY VS. ESSENCE]
 - **Identity**: The protective mask/shell built around a wound.
-- **Essence**: The truthful self waiting to be revealed. 
+- **Essence**: The truthful self waiting to be revealed.
 - **The Shift**: Move the character from living in Identity to living in Essence by the aftermath.""",
 
         "pet_the_dog": """[DIRECTOR: PET THE DOG]
@@ -344,18 +344,18 @@ Ensure decisions and behavior (not just dialogue) prove this statement.""",
 
     # [2] FUZZY MATCHING: Find all keys that are substrings of the topic
     matches = [k for k in frameworks.keys() if k in topic_norm]
-    
+
     if not matches:
         return json.dumps({
             "tool": "consult_director",
-            "topic": topic_norm, 
+            "topic": topic_norm,
             "status": "not_found",
             "message": "Topic recognized. No specific framework found. Try 'structure', 'character', or 'world'."
         })
 
     # [3] LONGEST MATCH WINS: Fix collision bug (e.g. 'edson_structure' matching 'structure' first)
     best_key = max(matches, key=len)
-    
+
     # [4] STRUCTURED JSON OUTPUT
     content_lines = frameworks[best_key].split("\n")
     title = content_lines[0] if content_lines else "UNKNOWN"
@@ -372,7 +372,7 @@ Ensure decisions and behavior (not just dialogue) prove this statement.""",
 if __name__ == "__main__":
     # Tiny Test Suite
     print("Running Director Tests...")
-    
+
     # Test 1: Substring Collision
     res1 = json.loads(consult_director("edson_structure"))
     assert res1["topic_matched"] == "edson_structure", f"Fail: {res1['topic_matched']}"
@@ -385,7 +385,7 @@ if __name__ == "__main__":
 
     # Test 3: Standard Match
     res3 = json.loads(consult_director("structure"))
-    assert res3["topic_matched"] == "structure", f"Fail: {res3['topic_matched']}" 
+    assert res3["topic_matched"] == "structure", f"Fail: {res3['topic_matched']}"
     # Note: 'structure' key is generic 3-act
     print("PASS: structure -> structure")
 

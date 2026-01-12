@@ -26,12 +26,12 @@ class DoctrineState:
     mice_stack: List[MiceThread] = field(default_factory=list)
     promises: PromiseLedger = field(default_factory=PromiseLedger)
     progress_markers: List[str] = field(default_factory=list)
-    
+
     # Metrics
     red_marks: float = 0.0
     green_marks: float = 0.0
     abstraction_debt: int = 0
-    
+
     # Recent history
     last_try_fail: Optional[TryFailType] = None
     last_fresh_news: str = ""
@@ -54,11 +54,11 @@ class MiceManager:
             return False
 
         top = self.state.mice_stack[-1]
-        
+
         # Strict LIFO check
         if top.kind != kind:
             return False
-            
+
         if label and top.label != label:
             return False
 
@@ -76,12 +76,12 @@ class MiceManager:
         return blockers
 
 ABSTRACT_WORDS = {
-    "destiny", "meaning", "ideology", "myth", "essence", "spirit", 
+    "destiny", "meaning", "ideology", "myth", "essence", "spirit",
     "power", "truth", "fear", "love", "soul", "purpose", "void", "chaos",
     "identity"
 }
 SENSORY_WORDS = {
-    "smell", "metal", "dust", "heat", "cold", "breath", "blood", "rust", 
+    "smell", "metal", "dust", "heat", "cold", "breath", "blood", "rust",
     "ozone", "grit", "shadow", "light", "sweat", "taste", "shiver", "click",
     "pressure"
 }
@@ -89,7 +89,7 @@ SENSORY_WORDS = {
 def score_output(text: str) -> Dict[str, float]:
     """Audit the output text and update debt metrics."""
     t = (text or "").lower()
-    
+
     # Count occurrences
     abs_count = sum(t.count(w) for w in ABSTRACT_WORDS)
     sen_count = sum(t.count(w) for w in SENSORY_WORDS)
@@ -98,7 +98,7 @@ def score_output(text: str) -> Dict[str, float]:
     turn_debt = 0
     if abs_count > sen_count:
         turn_debt = abs_count - sen_count
-        
+
     # Green Marks (Good Habits)
     turn_green = 0.0
     if any(k in t for k in ["fresh news", "suddenly", "but then", "until"]):
@@ -110,10 +110,10 @@ def score_output(text: str) -> Dict[str, float]:
     turn_red = 0.0
     if turn_debt > 6:
         turn_red += 1.0
-    
+
     return {
-        "debt": float(turn_debt), 
-        "red": turn_red, 
+        "debt": float(turn_debt),
+        "red": turn_red,
         "green": turn_green
     }
 
@@ -139,7 +139,7 @@ def doctrine_directives(state: DoctrineState) -> List[str]:
     # 4. Progress Markers
     if not state.progress_markers:
         directives.append("STRUCTURE: Add one visible progress marker toward the umbrella goal.")
-        
+
     # 5. Try/Fail defaults
     if not state.last_try_fail:
         directives.append("ACTION: Use a try fail outcome: yes_but or no_and.")

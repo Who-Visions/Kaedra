@@ -15,18 +15,18 @@ class SmartVadManager:
     def should_end_turn(self, audio_bytes: bytes, sample_rate: int = 16000) -> bool:
         if not self.enabled:
             return False
-            
+
         # The analyzer expects a specific window (usually ~4-8s).
         # Let's slice the last 4 seconds to keep it snappy.
         # 16000 samples/sec * 4 sec = 64000 samples
         audio_int16 = np.frombuffer(audio_bytes, dtype=np.int16)
         if len(audio_int16) > 64000:
             audio_int16 = audio_int16[-64000:]
-            
+
         audio_float32 = audio_int16.astype(np.float32) / 32768.0
-        
+
         try:
-             result = self.analyzer._predict_endpoint(audio_float32)
-             return result.get("prediction", 0) == 1
+            result = self.analyzer._predict_endpoint(audio_float32)
+            return result.get("prediction", 0) == 1
         except Exception as e:
-             return False
+            return False

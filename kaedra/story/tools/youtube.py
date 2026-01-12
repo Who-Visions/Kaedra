@@ -16,7 +16,7 @@ from ..ui import console
 
 def extract_youtube_id(url: str) -> str:
     """Tries to extract a stable video id from common YouTube URL formats. Falls back to a short hash if no id found."""
-    if not url: 
+    if not url:
         return "unknown"
     patterns = [
         r"(?:v=)([A-Za-z0-9_-]{11})",
@@ -27,7 +27,7 @@ def extract_youtube_id(url: str) -> str:
     ]
     for p in patterns:
         m = re.search(p, url)
-        if m: 
+        if m:
             return m.group(1)
     return hashlib.sha256(url.encode("utf-8")).hexdigest()[:12]
 
@@ -41,14 +41,14 @@ def safe_slug(s: str, max_len: int = 60) -> str:
 
 def ensure_dict_result(result: Any) -> Dict[str, Any]:
     """Normalizes IngestionManager result into a dict."""
-    if isinstance(result, dict): 
+    if isinstance(result, dict):
         return result
     if isinstance(result, str):
         txt = result.strip()
         if (txt.startswith("{") and txt.endswith("}")) or (txt.startswith("[") and txt.endswith("]")):
-            try: 
+            try:
                 return json.loads(txt)
-            except Exception: 
+            except Exception:
                 return {"raw_text": result}
         return {"raw_text": result}
     return {"raw": str(result)}
@@ -64,7 +64,7 @@ def save_youtube_evidence_packet(packet: Dict[str, Any], url: str, out_root: str
     title = ""
     # Try common fields from IngestionManager or raw
     meta = packet.get("metadata") or packet.get("source") or {}
-    if isinstance(meta, dict): 
+    if isinstance(meta, dict):
         title = meta.get("title") or ""
 
     slug = safe_slug(title) if title else "video"
@@ -116,10 +116,10 @@ def ingest_youtube_content(url: str) -> str:
     try:
         # Get active world from environment (set by StoryEngine)
         world_id = os.getenv("KAEDRA_ACTIVE_WORLD", "world_bee9d6ac")
-        
+
         # Trigger the pipeline
         ingest_single_video(url, world_id)
-        
+
         return (
             "[INGEST OK]\n"
             f"Video pushed to Notion Ingestion Queue.\n"

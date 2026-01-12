@@ -46,7 +46,7 @@ class InvoiceItem:
     description: str
     amount: float  # In dollars
     quantity: int = 1
-    
+
     @property
     def total(self) -> float:
         return self.amount * self.quantity
@@ -68,17 +68,17 @@ class Invoice:
     items: List[InvoiceItem] = field(default_factory=list)
     url: Optional[str] = None
     raw_data: Dict[str, Any] = field(default_factory=dict)
-    
+
     @property
     def is_paid(self) -> bool:
         return self.status == "paid"
-    
+
     @property
     def is_overdue(self) -> bool:
         if self.due_date and not self.is_paid:
             return datetime.now() > self.due_date
         return False
-    
+
     def to_markdown(self) -> str:
         """Generate a clean Markdown representation of the invoice."""
         lines = []
@@ -87,29 +87,29 @@ class Invoice:
         if self.due_date:
             lines.append(f"**Due:** {self.due_date.strftime('%Y-%m-%d')}")
         lines.append(f"**Status:** {self.status.upper()}")
-        
+
         lines.append("\n---")
-        
+
         lines.append(f"\n**Bill To:**")
         lines.append(f"{self.customer_name}")
         if self.customer_email:
             lines.append(f"{self.customer_email}")
-            
+
         lines.append("\n## Items")
         lines.append("| Description | Qty | Price | Total |")
         lines.append("| :--- | :---: | :---: | :---: |")
-        
+
         for item in self.items:
             total = item.amount * item.quantity
             lines.append(f"| {item.description} | {item.quantity} | ${item.amount:.2f} | ${total:.2f} |")
-            
+
         lines.append("\n---")
         lines.append(f"**Total Due: ${self.amount_due:.2f}**")
         lines.append(f"**Amount Paid: ${self.amount_paid:.2f}**")
-        
+
         if self.url:
             lines.append(f"\n[View Online Invoice]({self.url})")
-            
+
         return "\n".join(lines)
 
 
@@ -119,11 +119,11 @@ class Invoice:
 
 class StripeProvider:
     """Stripe invoice operations."""
-    
+
     def __init__(self, api_key: str):
         self.api_key = api_key
         self._stripe = None
-    
+
     @property
     def stripe(self):
         if self._stripe is None:
@@ -134,20 +134,20 @@ class StripeProvider:
             except ImportError:
                 raise ImportError("stripe package not installed. Run: pip install stripe")
         return self._stripe
-    
+
     def list_invoices(self, status: str = None, limit: int = 25) -> List[Invoice]:
         """List Stripe invoices."""
         params = {"limit": limit}
         if status:
             params["status"] = status
-        
+
         try:
             result = self.stripe.Invoice.list(**params)
             return [self._parse_invoice(inv) for inv in result.data]
         except Exception as e:
             logger.error(f"Stripe list_invoices error: {e}")
             raise
-    
+
     def get_invoice(self, invoice_id: str) -> Invoice:
         """Get single Stripe invoice."""
         try:
@@ -156,8 +156,8 @@ class StripeProvider:
         except Exception as e:
             logger.error(f"Stripe get_invoice error: {e}")
             raise
-    
-    def create_invoice(self, customer_id: str, items: List[Dict[str, Any]], 
+
+    def create_invoice(self, customer_id: str, items: List[Dict[str, Any]],
                        auto_send: bool = False) -> Invoice:
         """Create a Stripe invoice."""
         try:
@@ -166,7 +166,7 @@ class StripeProvider:
                 customer=customer_id,
                 auto_advance=auto_send,
             )
-            
+
             # Add line items
             for item in items:
                 self.stripe.InvoiceItem.create(
@@ -176,14 +176,14 @@ class StripeProvider:
                     amount=int(item.get("amount", 0) * 100),  # Convert to cents
                     currency=item.get("currency", "usd"),
                 )
-            
+
             # Refresh invoice
             inv = self.stripe.Invoice.retrieve(inv.id)
             return self._parse_invoice(inv)
         except Exception as e:
             logger.error(f"Stripe create_invoice error: {e}")
             raise
-    
+
     def send_invoice(self, invoice_id: str) -> Invoice:
         """Finalize and send a Stripe invoice."""
         try:
@@ -193,22 +193,22 @@ class StripeProvider:
         except Exception as e:
             logger.error(f"Stripe send_invoice error: {e}")
             raise
-    
+
     def get_revenue(self, days: int = 30) -> Dict[str, Any]:
         """Get revenue summary for period."""
         try:
             since = datetime.now() - timedelta(days=days)
             since_ts = int(since.timestamp())
-            
+
             invoices = self.stripe.Invoice.list(
                 status="paid",
                 created={"gte": since_ts},
                 limit=100
             )
-            
+
             total = sum(inv.amount_paid for inv in invoices.data) / 100
             count = len(invoices.data)
-            
+
             return {
                 "provider": "stripe",
                 "period_days": days,
@@ -219,7 +219,7 @@ class StripeProvider:
         except Exception as e:
             logger.error(f"Stripe get_revenue error: {e}")
             raise
-    
+
     def _parse_invoice(self, inv) -> Invoice:
         """Convert Stripe invoice to unified format."""
         # Get customer info
@@ -232,7 +232,7 @@ class StripeProvider:
                 customer_email = cust.email
             except:
                 pass
-        
+
         # Parse items
         items = []
         if hasattr(inv, 'lines') and inv.lines:
@@ -242,7 +242,7 @@ class StripeProvider:
                     amount=line.amount / 100,
                     quantity=line.quantity or 1
                 ))
-        
+
         return Invoice(
             id=inv.id,
             provider="stripe",
@@ -266,12 +266,12 @@ class StripeProvider:
 
 class SquareProvider:
     """Square invoice operations."""
-    
+
     def __init__(self, access_token: str, environment: str = "sandbox"):
         self.access_token = access_token
         self.environment = environment
         self._client = None
-    
+
     @property
     def client(self):
         if self._client is None:
@@ -290,11 +290,11 @@ class SquareProvider:
                 except ImportError:
                     raise ImportError("square package not installed. Run: pip install squareup")
         return self._client
-    
+
     def _is_new_sdk(self) -> bool:
         """Check if using new Square SDK (v43+)."""
         return hasattr(self.client, 'locations') and not hasattr(self.client.locations, 'list_locations')
-    
+
     def list_invoices(self, status: str = None, limit: int = 25) -> List[Invoice]:
         """List Square invoices."""
         try:
@@ -316,12 +316,12 @@ class SquareProvider:
                         locations = locations_result.body.get("locations", [])
                 except:
                     pass
-            
+
             if not locations:
                 return []
-            
+
             location_id = locations[0].id if hasattr(locations[0], 'id') else locations[0].get("id")
-            
+
             # Get invoices - v43+ SDK returns SyncPager
             invoices = []
             try:
@@ -333,7 +333,7 @@ class SquareProvider:
                 else:
                     # It has .invoices attribute
                     raw_invoices = result.invoices or []
-                
+
                 # Convert to dicts for compatibility
                 for inv in raw_invoices:
                     if hasattr(inv, 'model_dump'):
@@ -353,7 +353,7 @@ class SquareProvider:
                         invoices = result.body.get("invoices", [])
                 except:
                     pass
-            
+
             # Filter by status if specified
             if status:
                 status_map = {
@@ -364,12 +364,12 @@ class SquareProvider:
                 }
                 target_statuses = status_map.get(status, [status.upper()])
                 invoices = [inv for inv in invoices if inv.get("status") in target_statuses]
-            
+
             return [self._parse_invoice(inv) for inv in invoices]
         except Exception as e:
             logger.error(f"Square list_invoices error: {e}")
             raise
-    
+
     def get_invoice(self, invoice_id: str) -> Invoice:
         """Get single Square invoice."""
         try:
@@ -382,13 +382,13 @@ class SquareProvider:
                 if not result.is_success():
                     raise Exception(f"Square error: {result.errors}")
                 invoice_data = result.body["invoice"]
-            
+
             return self._parse_invoice(invoice_data)
         except Exception as e:
             logger.error(f"Square get_invoice error: {e}")
             raise
-    
-    def create_invoice(self, customer_id: str, items: List[Dict[str, Any]], 
+
+    def create_invoice(self, customer_id: str, items: List[Dict[str, Any]],
                        location_id: str = None) -> Invoice:
         """Create a Square invoice."""
         try:
@@ -401,9 +401,9 @@ class SquareProvider:
                 except AttributeError:
                     locations_result = self.client.locations.list_locations()
                     location_id = locations_result.body["locations"][0]["id"]
-            
+
             import uuid
-            
+
             # Build line items
             line_items = []
             for item in items:
@@ -416,7 +416,7 @@ class SquareProvider:
                         "currency": item.get("currency", "USD").upper()
                     }
                 })
-            
+
             body = {
                 "invoice": {
                     "location_id": location_id,
@@ -432,7 +432,7 @@ class SquareProvider:
                 },
                 "idempotency_key": str(uuid.uuid4())
             }
-            
+
             # v43+ SDK uses .create() not .create_invoice()
             try:
                 result = self.client.invoices.create(body=body)
@@ -442,17 +442,17 @@ class SquareProvider:
                 if not result.is_success():
                     raise Exception(f"Square error: {result.errors}")
                 invoice_data = result.body["invoice"]
-            
+
             return self._parse_invoice(invoice_data)
         except Exception as e:
             logger.error(f"Square create_invoice error: {e}")
             raise
-    
+
     def send_invoice(self, invoice_id: str) -> Invoice:
         """Publish and send a Square invoice."""
         try:
             import uuid
-            
+
             # First get current version
             try:
                 inv_result = self.client.invoices.get(invoice_id=invoice_id)
@@ -460,7 +460,7 @@ class SquareProvider:
             except AttributeError:
                 inv_result = self.client.invoices.get_invoice(invoice_id=invoice_id)
                 version = inv_result.body["invoice"]["version"]
-            
+
             # v43+ SDK uses .publish() not .publish_invoice()
             try:
                 result = self.client.invoices.publish(
@@ -482,22 +482,22 @@ class SquareProvider:
                 if not result.is_success():
                     raise Exception(f"Square error: {result.errors}")
                 invoice_data = result.body["invoice"]
-            
+
             return self._parse_invoice(invoice_data)
         except Exception as e:
             logger.error(f"Square send_invoice error: {e}")
             raise
-    
+
     def get_revenue(self, days: int = 30) -> Dict[str, Any]:
         """Get revenue summary for period."""
         try:
             invoices = self.list_invoices(status="paid", limit=100)
             since = datetime.now() - timedelta(days=days)
-            
+
             # Filter by date
             recent = [inv for inv in invoices if inv.created_at >= since]
             total = sum(inv.amount_paid for inv in recent)
-            
+
             return {
                 "provider": "square",
                 "period_days": days,
@@ -508,7 +508,7 @@ class SquareProvider:
         except Exception as e:
             logger.error(f"Square get_revenue error: {e}")
             raise
-    
+
     def _parse_invoice(self, inv: Dict[str, Any]) -> Invoice:
         """Convert Square invoice to unified format."""
         # Status mapping
@@ -520,15 +520,15 @@ class SquareProvider:
             "PAID": "paid",
             "CANCELED": "void"
         }
-        
+
         # Get amounts
         payment_requests = inv.get("payment_requests", [{}])
         amount_money = payment_requests[0].get("computed_amount_money", {}) if payment_requests else {}
         total_money = payment_requests[0].get("total_completed_amount_money", {}) if payment_requests else {}
-        
+
         amount_due = amount_money.get("amount", 0) / 100
         amount_paid = total_money.get("amount", 0) / 100
-        
+
         # Parse due date
         due_date = None
         if payment_requests and payment_requests[0].get("due_date"):
@@ -536,7 +536,7 @@ class SquareProvider:
                 due_date = datetime.strptime(payment_requests[0]["due_date"], "%Y-%m-%d")
             except:
                 pass
-        
+
         # Get customer name
         customer_name = "Unknown"
         customer_email = None
@@ -545,7 +545,7 @@ class SquareProvider:
             customer_name = f"{primary.get('given_name', '')} {primary.get('family_name', '')}".strip()
         if primary.get("email_address"):
             customer_email = primary["email_address"]
-        
+
         return Invoice(
             id=inv["id"],
             provider="square",
@@ -569,10 +569,10 @@ class SquareProvider:
 class InvoiceService:
     """
     Unified invoice service for Stripe and Square.
-    
+
     Provides a single interface to manage invoices across both providers.
     """
-    
+
     def __init__(
         self,
         stripe_key: str = None,
@@ -582,22 +582,22 @@ class InvoiceService:
         self.stripe_key = stripe_key or os.getenv("STRIPE_SECRET_KEY", "")
         self.square_token = square_token or os.getenv("SQUARE_ACCESS_TOKEN", "")
         self.square_environment = square_environment or os.getenv("SQUARE_ENVIRONMENT", "sandbox")
-        
+
         self._stripe = None
         self._square = None
-    
+
     @property
     def stripe(self) -> Optional[StripeProvider]:
         if self._stripe is None and self.stripe_key:
             self._stripe = StripeProvider(self.stripe_key)
         return self._stripe
-    
+
     @property
     def square(self) -> Optional[SquareProvider]:
         if self._square is None and self.square_token:
             self._square = SquareProvider(self.square_token, self.square_environment)
         return self._square
-    
+
     def _get_provider(self, provider: str):
         """Get provider instance by name."""
         if provider == "stripe":
@@ -610,12 +610,12 @@ class InvoiceService:
             return self.square
         else:
             raise ValueError(f"Unknown provider: {provider}")
-    
-    def list_invoices(self, provider: str = "stripe", status: str = None, 
+
+    def list_invoices(self, provider: str = "stripe", status: str = None,
                       limit: int = 25) -> List[Invoice]:
         """
         List invoices from a provider.
-        
+
         Args:
             provider: 'stripe', 'square', or 'both'
             status: 'open', 'paid', 'draft', 'void'
@@ -634,33 +634,33 @@ class InvoiceService:
                 except Exception as e:
                     logger.warning(f"Square list failed: {e}")
             return sorted(results, key=lambda x: x.created_at, reverse=True)
-        
+
         return self._get_provider(provider).list_invoices(status, limit)
-    
+
     def get_invoice(self, provider: str, invoice_id: str) -> Invoice:
         """Get a single invoice by ID."""
         return self._get_provider(provider).get_invoice(invoice_id)
-    
-    def create_invoice(self, provider: str, customer_id: str, 
+
+    def create_invoice(self, provider: str, customer_id: str,
                        items: List[Dict[str, Any]]) -> Invoice:
         """
         Create an invoice.
-        
+
         Args:
             provider: 'stripe' or 'square'
             customer_id: Customer ID in that provider
             items: List of dicts with 'description', 'amount', 'quantity'
         """
         return self._get_provider(provider).create_invoice(customer_id, items)
-    
+
     def send_invoice(self, provider: str, invoice_id: str) -> Invoice:
         """Send/publish an invoice to the customer."""
         return self._get_provider(provider).send_invoice(invoice_id)
-    
+
     def get_revenue(self, provider: str = "both", days: int = 30) -> Dict[str, Any]:
         """
         Get revenue summary.
-        
+
         Args:
             provider: 'stripe', 'square', or 'both'
             days: Number of days to look back
@@ -672,7 +672,7 @@ class InvoiceService:
                 "invoice_count": 0,
                 "by_provider": {}
             }
-            
+
             if self.stripe:
                 try:
                     stripe_rev = self.stripe.get_revenue(days)
@@ -681,7 +681,7 @@ class InvoiceService:
                     combined["invoice_count"] += stripe_rev["invoice_count"]
                 except Exception as e:
                     logger.warning(f"Stripe revenue failed: {e}")
-            
+
             if self.square:
                 try:
                     square_rev = self.square.get_revenue(days)
@@ -690,44 +690,44 @@ class InvoiceService:
                     combined["invoice_count"] += square_rev["invoice_count"]
                 except Exception as e:
                     logger.warning(f"Square revenue failed: {e}")
-            
+
             return combined
-        
+
         return self._get_provider(provider).get_revenue(days)
-    
+
     def search_invoices(self, query: str, limit: int = 25) -> List[Invoice]:
         """
         Search invoices across all providers by customer name/email.
-        
+
         Args:
             query: Search term (matches customer name or email)
             limit: Max results
         """
         all_invoices = self.list_invoices(provider="both", limit=100)
         query_lower = query.lower()
-        
+
         matches = [
             inv for inv in all_invoices
             if query_lower in inv.customer_name.lower() or
                (inv.customer_email and query_lower in inv.customer_email.lower())
         ]
-        
+
         return matches[:limit]
-    
+
     def get_status(self) -> Dict[str, Any]:
         """Get connection status for configured providers."""
         status = {
             "stripe": {"configured": bool(self.stripe_key), "connected": False},
             "square": {"configured": bool(self.square_token), "connected": False}
         }
-        
+
         if self.stripe_key:
             try:
                 self.stripe.stripe.Customer.list(limit=1)
                 status["stripe"]["connected"] = True
             except Exception as e:
                 status["stripe"]["error"] = str(e)
-        
+
         if self.square_token:
             try:
                 # Try modern SDK first
@@ -738,7 +738,7 @@ class InvoiceService:
                 status["square"]["connected"] = True
             except Exception as e:
                 status["square"]["error"] = str(e)
-        
+
         return status
 
 
@@ -762,15 +762,15 @@ class ExtractedInvoice:
 class InvoiceExtractor:
     """
     Extract structured data from invoice PDFs using invoice2data.
-    
+
     Requires: pip install invoice2data
     Optional: poppler-utils for pdftotext, tesseract for OCR
     """
-    
+
     def __init__(self, templates_dir: str = None):
         self.templates_dir = templates_dir
         self._invoice2data = None
-    
+
     @property
     def invoice2data(self):
         if self._invoice2data is None:
@@ -782,14 +782,14 @@ class InvoiceExtractor:
             except ImportError:
                 raise ImportError("invoice2data not installed. Run: pip install invoice2data")
         return self._invoice2data
-    
+
     def extract(self, pdf_path: str) -> ExtractedInvoice:
         """
         Extract invoice data from a PDF file.
-        
+
         Args:
             pdf_path: Path to the PDF file
-            
+
         Returns:
             ExtractedInvoice with parsed data
         """
@@ -798,13 +798,13 @@ class InvoiceExtractor:
             templates = None
             if self.templates_dir:
                 templates = self._read_templates(self.templates_dir)
-            
+
             # Extract data
             result = self.invoice2data(pdf_path, templates=templates)
-            
+
             if not result:
                 return ExtractedInvoice(raw_data={"error": "No data extracted"})
-            
+
             return ExtractedInvoice(
                 invoice_number=result.get("invoice_number"),
                 date=str(result.get("date")) if result.get("date") else None,
@@ -818,7 +818,7 @@ class InvoiceExtractor:
         except Exception as e:
             logger.error(f"Invoice extraction error: {e}")
             return ExtractedInvoice(raw_data={"error": str(e)})
-    
+
     def extract_batch(self, pdf_paths: List[str]) -> List[ExtractedInvoice]:
         """Extract data from multiple PDFs."""
         return [self.extract(path) for path in pdf_paths]
@@ -954,10 +954,10 @@ INVOICE_HTML_TEMPLATE = '''<!DOCTYPE html>
 class InvoiceGenerator:
     """
     Generate professional HTML/PDF invoices.
-    
+
     Based on sparksuite/simple-html-invoice-template.
     """
-    
+
     def __init__(
         self,
         company_name: str = "Who Visions LLC",
@@ -965,7 +965,7 @@ class InvoiceGenerator:
     ):
         self.company_name = company_name
         self.company_address = company_address
-    
+
     def generate_html(
         self,
         invoice_number: str,
@@ -978,7 +978,7 @@ class InvoiceGenerator:
     ) -> str:
         """
         Generate an HTML invoice.
-        
+
         Args:
             invoice_number: Unique invoice ID
             customer_name: Customer's name
@@ -987,17 +987,17 @@ class InvoiceGenerator:
             date: Invoice date (defaults to today)
             due_date: Payment due date
             currency: Currency symbol
-            
+
         Returns:
             HTML string
         """
         from datetime import datetime
-        
+
         if not date:
             date = datetime.now().strftime("%B %d, %Y")
         if not due_date:
             due_date = (datetime.now() + timedelta(days=30)).strftime("%B %d, %Y")
-        
+
         # Build items HTML
         items_html = []
         total = 0
@@ -1006,14 +1006,14 @@ class InvoiceGenerator:
             qty = int(item.get("quantity", 1))
             line_total = amount * qty
             total += line_total
-            
+
             is_last = "last" if i == len(items) - 1 else ""
             items_html.append(f'''
             <tr class="item {is_last}">
                 <td>{item.get("description", "Item")}</td>
                 <td>{currency}{line_total:.2f}</td>
             </tr>''')
-        
+
         # Render template
         html = INVOICE_HTML_TEMPLATE.format(
             invoice_number=invoice_number,
@@ -1027,16 +1027,16 @@ class InvoiceGenerator:
             currency=currency,
             total=f"{total:.2f}"
         )
-        
+
         return html
-    
+
     def save_html(self, html: str, output_path: str) -> str:
         """Save HTML invoice to file."""
         from pathlib import Path
         Path(output_path).write_text(html, encoding="utf-8")
         logger.info(f"Invoice saved to {output_path}")
         return output_path
-    
+
     def generate_pdf(
         self,
         invoice_number: str,
@@ -1048,7 +1048,7 @@ class InvoiceGenerator:
     ) -> str:
         """
         Generate a PDF invoice.
-        
+
         Requires: pip install weasyprint (or pdfkit + wkhtmltopdf)
         """
         html = self.generate_html(
@@ -1058,7 +1058,7 @@ class InvoiceGenerator:
             items=items,
             **kwargs
         )
-        
+
         # Try weasyprint first, then pdfkit
         try:
             from weasyprint import HTML
@@ -1067,7 +1067,7 @@ class InvoiceGenerator:
             return output_path
         except ImportError:
             pass
-        
+
         try:
             import pdfkit
             pdfkit.from_string(html, output_path)
@@ -1075,15 +1075,15 @@ class InvoiceGenerator:
             return output_path
         except ImportError:
             raise ImportError("Install weasyprint or pdfkit for PDF generation")
-    
+
     def from_invoice(self, invoice: Invoice, output_path: str = None) -> str:
         """
         Generate HTML from an existing Invoice object.
-        
+
         Args:
             invoice: Invoice dataclass instance
             output_path: If provided, saves to file
-            
+
         Returns:
             HTML string (or file path if output_path provided)
         """
@@ -1091,7 +1091,7 @@ class InvoiceGenerator:
             {"description": item.description, "amount": item.amount, "quantity": item.quantity}
             for item in invoice.items
         ] if invoice.items else [{"description": "Service", "amount": invoice.amount_due}]
-        
+
         html = self.generate_html(
             invoice_number=invoice.id,
             customer_name=invoice.customer_name,
@@ -1101,7 +1101,7 @@ class InvoiceGenerator:
             due_date=invoice.due_date.strftime("%B %d, %Y") if invoice.due_date else None,
             currency="$" if invoice.currency == "usd" else invoice.currency.upper() + " "
         )
-        
+
         if output_path:
             return self.save_html(html, output_path)
         return html

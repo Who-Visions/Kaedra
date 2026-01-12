@@ -17,21 +17,21 @@ class WisprCloudService:
     Stream raw audio -> Received Transcribed Text.
     """
     ENDPOINT = "wss://platform-api.wisprflow.ai/api/v1/dash/ws"
-    
+
     def __init__(self, api_key: str = None):
         self.api_key = api_key or os.getenv("WISPR_FLOW_API_KEY")
         if not self.api_key:
             logger.error("WISPR_FLOW_API_KEY not found!")
-            
+
         self.running = False
         self.ws = None
         self.packet_counter = 0
         self.audio_buffer = bytearray()
-        
+
         # Callbacks
         self.on_commit = None
         self.on_partial = None
-        
+
         # Audio Config (Required by Wispr: 16kHz, 16bit PCM)
         self.target_rate = 16000
         self.chunk_size_bytes = 32000 # ~1 second of 16k/16bit/mono
@@ -56,28 +56,28 @@ class WisprCloudService:
         """
         # 1. Convert float32 [-1, 1] to int16
         audio_int16 = (audio_chunk * 32767).astype(np.int16)
-        
+
         # 2. Append bytes
         self.audio_buffer.extend(audio_int16.tobytes())
 
     async def _process_loop(self):
         url = f"{self.ENDPOINT}?api_key=Bearer%20{self.api_key}"
-        
+
         while self.running:
             try:
                 async with websockets.connect(url) as ws:
                     self.ws = ws
                     logger.info("Connected to Wispr Cloud.")
-                    
+
                     # 1. Send START message
                     await ws.send(json.dumps({"type": "start"}))
-                    
+
                     # 2. Parallel Tasks: Send Audio & Receive Text
                     send_task = asyncio.create_task(self._sender(ws))
                     recv_task = asyncio.create_task(self._receiver(ws))
-                    
+
                     await asyncio.gather(send_task, recv_task)
-                    
+
             except websockets.exceptions.ConnectionClosed:
                 logger.warning("Wispr Connection Closed. Reconnecting...")
                 await asyncio.sleep(1)
@@ -92,10 +92,10 @@ class WisprCloudService:
                 # Pop chunk
                 chunk = self.audio_buffer[:self.chunk_size_bytes]
                 self.audio_buffer = self.audio_buffer[self.chunk_size_bytes:]
-                
+
                 # Base64 Encode
                 b64_audio = base64.b64encode(chunk).decode('utf-8')
-                
+
                 # Send 'append'
                 msg = {
                     "type": "append",
@@ -114,27 +114,27 @@ class WisprCloudService:
                 data = json.loads(message)
                 # Event types might be 'transcript', 'partial', 'final', etc.
                 # Documentation wasn't explicit on response schema, so inferring or logging first.
-                
+
                 # Handling assumed structure based on reverse engineering standard speech APIs
                 # Usually: { type: "transcription", text: "...", is_final: bool }
-                
+
                 msg_type = data.get("type")
                 text = data.get("text", "")
-                
+
                 if msg_type == "transcription":
-                     # Check if final?
-                     # Wispr docs mentioned "streaming response".
-                     # Let's dump the first few to learn the schema if needed.
-                     pass 
-                
+                    # Check if final?
+                    # Wispr docs mentioned "streaming response".
+                    # Let's dump the first few to learn the schema if needed.
+                    pass
+
                 # For now, simplistic handling (assuming 'text' field exists)
                 if text:
                     if self.on_partial: self.on_partial(text)
-                    
+
                     # If this is a final commit (logic depends on API specifics)
                     # Often "is_final": true
                     if data.get("is_final") or data.get("final"):
                         if self.on_commit: self.on_commit(text)
-                        
+
             except Exception as e:
                 logger.error(f"Receiver Error: {e}")

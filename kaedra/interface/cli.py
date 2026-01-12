@@ -9,7 +9,6 @@ import platform
 import warnings
 import subprocess
 from datetime import datetime
-from typing import Optional
 
 import vertexai
 
@@ -25,7 +24,7 @@ from ..core.version import __version__, __codename__
 from ..core.config import (
     Colors, MODELS, MODEL_COSTS, DEFAULT_MODEL,
     VEO_MODELS, DEFAULT_VEO_MODEL,
-    LOCATION, AGENT_RESOURCE_NAME,
+    LOCATION,
     THINKING_MESSAGES, LYRICS_DB, STARTUP_VIBES, RANDOM_FACTS
 )
 from ..services.memory import MemoryService
@@ -139,14 +138,14 @@ def startup_vibe() -> str:
     """Generate a random startup message."""
     roll = random.random()
     hour = datetime.now().hour
-    
+
     if hour < 12:
         time_vibe = "Morning grind."
     elif hour < 18:
         time_vibe = "Afternoon flow."
     else:
         time_vibe = "Late night lab."
-    
+
     if roll < 0.3:
         return f"🎵 {random.choice(LYRICS_DB)} 🎵"
     elif roll < 0.5:
@@ -166,18 +165,18 @@ def run_council(query: str, kaedra: KaedraAgent, blade: BladeAgent, nyx: NyxAgen
     """Run a multi-agent council discussion."""
     print(f"\n{Colors.GOLD}[COUNCIL INITIATED]{Colors.RESET}")
     print(f"{Colors.DIM}Convening: KAEDRA, BLADE, NYX{Colors.RESET}\n")
-    
+
     # BLADE first
     print(f"{Colors.blade_tag()} Analyzing for action...")
     blade_response = blade.run_sync(query)
     print(f"{Colors.blade_tag()} {blade_response.content}\n")
-    
+
     # NYX second
     print(f"{Colors.nyx_tag()} Analyzing for risk...")
     nyx_context = f"BLADE's Analysis: {blade_response.content}"
     nyx_response = nyx.run_sync(query, context=nyx_context)
     print(f"{Colors.nyx_tag()} {nyx_response.content}\n")
-    
+
     # KAEDRA synthesizes
     print(f"{Colors.kaedra_tag()} Synthesizing...")
     synthesis_context = f"""BLADE's Position: {blade_response.content}
@@ -192,11 +191,11 @@ Think through:
 4. What's your final call?
 
 Respond in 3-5 sentences. Acknowledge both perspectives, state your decision, give the final directive."""
-    
+
     kaedra_response = kaedra.run_sync(query, context=synthesis_context)
     print(f"{Colors.kaedra_tag()} {kaedra_response.content}\n")
     print(f"{Colors.GOLD}[COUNCIL CONCLUDED]{Colors.RESET}\n")
-    
+
     return kaedra_response.content
 
 
@@ -232,19 +231,19 @@ def main():
     # Force UTF-8 for Windows
     if sys.platform == "win32":
         sys.stdout.reconfigure(encoding='utf-8')
-    
+
     print_banner()
-    
+
     # Initialize Vertex AI
     print(f"{Colors.DIM}[*] Connecting to {LOCATION}...{Colors.RESET}")
     vertexai.init(location=LOCATION)
-    
+
     # Initialize services
     memory = MemoryService()
     logger = LoggingService()
     prompt = PromptService(model_key=DEFAULT_MODEL)
     web = WebService()
-    
+
     # Initialize visual service (optional)
     visual = None
     if VIDEO_AVAILABLE and VisualService:
@@ -253,60 +252,60 @@ def main():
             print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Visual generation: READY")
         except Exception as e:
             print(f"{Colors.DIM}[!] Visual generation unavailable: {e}{Colors.RESET}")
-    
+
     # Initialize agents
     kaedra = KaedraAgent(prompt, memory)
     blade = BladeAgent(prompt, memory)
     nyx = NyxAgent(prompt, memory)
-    
+
     # Initialize strategies
     tot = TreeOfThoughtsStrategy(prompt)
     battle = BattleOfBotsStrategy(prompt)
     optimizer = PromptOptimizer(prompt)
-    
+
     # Session state
     current_model = DEFAULT_MODEL
     current_veo_model = DEFAULT_VEO_MODEL if VIDEO_AVAILABLE else None
     active_agent = "kaedra"
-    
+
     print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} LINK ESTABLISHED")
     print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} KAEDRA v{__version__} ONLINE")
     print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Location: {LOCATION}")
     print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Model: {MODELS[current_model]}")
     print(f"    Type /help for commands\n")
-    
+
     # Startup vibe
     print(f"{Colors.kaedra_tag()} {startup_vibe()}\n")
-    
+
     try:
         while True:
             try:
                 user_input = input(
                     f"{Colors.NEON_CYAN}[YOU|{Colors.NEON_GREEN}{current_model}{Colors.NEON_CYAN}] >> {Colors.RESET}"
                 ).strip()
-                
+
                 if not user_input:
                     continue
-                
+
                 # Log user input
                 logger.log_message("YOU", user_input, MODELS[current_model])
-                
+
                 cmd = user_input.lower()
-                
+
                 # ══════════════════════════════════════════════════════════
                 # SYSTEM COMMANDS
                 # ══════════════════════════════════════════════════════════
-                
+
                 if cmd == "/exit":
                     if logger.is_session_active:
                         logger.stop_session()
                     print(f"{Colors.kaedra_tag()} Severing link. Until next time, Commander Meralus.")
                     break
-                
+
                 if cmd == "/help":
                     print_help()
                     continue
-                
+
                 # Model switching
                 if cmd == "/flash":
                     current_model = "flash"
@@ -314,21 +313,21 @@ def main():
                     print(f"{Colors.system_tag()} ⚡ Model: {MODELS[current_model]}")
                     print(f"         Cost: ~${MODEL_COSTS[current_model]}/query | Speed: FAST")
                     continue
-                
+
                 if cmd == "/pro":
                     current_model = "pro"
                     prompt.set_model(current_model)
                     print(f"{Colors.system_tag()} 🎯 Model: {MODELS[current_model]}")
                     print(f"         Cost: ~${MODEL_COSTS[current_model]}/query | Balance: OPTIMAL")
                     continue
-                
+
                 if cmd == "/ultra":
                     current_model = "ultra"
                     prompt.set_model(current_model)
                     print(f"{Colors.system_tag()} 🔥 Model: {MODELS[current_model]}")
                     print(f"         Cost: ~${MODEL_COSTS[current_model]}/query | Power: MAXIMUM")
                     continue
-                
+
                 if cmd in ["/models", "/status"]:
                     print(f"\n{Colors.GOLD}[SYSTEM STATUS]{Colors.RESET}")
                     print(f"  Version: v{__version__}")
@@ -342,7 +341,7 @@ def main():
                         print(f"    • {k}: {v}{marker}")
                     print()
                     continue
-                
+
                 if cmd == "/caps":
                     print(f"\n{Colors.GOLD}[KAEDRA v{__version__} CAPABILITIES]{Colors.RESET}")
                     print(f"\n  🧠 AI/ML: Vertex AI, Gemini (Flash/Pro/Ultra), Vision, Speech, TTS")
@@ -354,7 +353,7 @@ def main():
                     print(f"  ☁️  Infrastructure: Compute, Storage, Pub/Sub, Cloud Run")
                     print(f"\n  115+ APIs enabled. Ready for integration.\n")
                     continue
-                
+
                 # Logging
                 if cmd == "/startlog":
                     if not logger.is_session_active:
@@ -363,7 +362,7 @@ def main():
                     else:
                         print(f"{Colors.system_tag()} Logging already active.")
                     continue
-                
+
                 if cmd == "/stoplog":
                     if logger.is_session_active:
                         filepath = logger.stop_session()
@@ -371,17 +370,17 @@ def main():
                     else:
                         print(f"{Colors.system_tag()} No active log session.")
                     continue
-                
+
                 # ══════════════════════════════════════════════════════════
                 # MEMORY COMMANDS
                 # ══════════════════════════════════════════════════════════
-                
+
                 if cmd == "/remember":
                     print(f"\n{Colors.NEON_PURPLE}[MEMORY]{Colors.RESET} Storing context...")
                     topic = input("  Topic: ").strip()
                     content = input("  Content: ").strip()
                     tags_input = input("  Tags (comma-separated): ").strip()
-                    
+
                     if topic and content:
                         tags = [t.strip() for t in tags_input.split(",")] if tags_input else []
                         mem_id = memory.insert(content, topic, tags)
@@ -389,7 +388,7 @@ def main():
                     else:
                         print("  ✗ Aborted: Topic and Content required")
                     continue
-                
+
                 if cmd.startswith("/recall"):
                     query = cmd[7:].strip() or input("  Search: ").strip()
                     if query:
@@ -403,7 +402,7 @@ def main():
                                 print(f"     Tags: {', '.join(res['tags'])}")
                             print()
                     continue
-                
+
                 if cmd == "/context":
                     recent = memory.list_recent()
                     print(f"\n{Colors.NEON_PURPLE}[RECENT MEMORIES]{Colors.RESET}\n")
@@ -412,26 +411,26 @@ def main():
                         print(f"  • {res['topic']} ({date})")
                     print()
                     continue
-                
+
                 # ══════════════════════════════════════════════════════════
                 # WEB COMMANDS
                 # ══════════════════════════════════════════════════════════
-                
+
                 if cmd.startswith("/fetch "):
                     url = user_input[7:].strip()
                     if not url:
                         print(f"{Colors.system_tag()} Usage: /fetch <url>")
                         continue
-                    
+
                     print(f"\n{Colors.NEON_CYAN}[WEB FETCH]{Colors.RESET} Fetching {url}...")
                     page = web.fetch(url)
-                    
+
                     if page.status_code > 0:
                         print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} {page.title}")
                         print(f"{Colors.DIM}Content preview (first 500 chars):{Colors.RESET}\n")
                         print(page.content[:500])
                         print(f"\n{Colors.DIM}...{len(page.content)} total characters{Colors.RESET}")
-                        
+
                         # Feed to KAEDRA for analysis
                         web_context = f"[WEB PAGE: {url}]\nTitle: {page.title}\n\n{page.content[:2000]}"
                         print(f"\n{Colors.kaedra_tag()} Analyzing the page...")
@@ -444,38 +443,38 @@ def main():
                     else:
                         print(f"{Colors.NEON_RED}[ERROR]{Colors.RESET} {page.content}")
                     continue
-                
+
                 if cmd.startswith("/search "):
                     query = user_input[8:].strip()
                     if not query:
                         print(f"{Colors.system_tag()} Usage: /search <query>")
                         continue
-                    
+
                     print(f"\n{Colors.NEON_CYAN}[WEB SEARCH]{Colors.RESET} Searching for: {query}")
                     print(f"{Colors.DIM}Using Vertex AI Google Search grounding...{Colors.RESET}\n")
-                    
+
                     # Use KAEDRA with grounding for search
                     print(f"{Colors.kaedra_tag()} Searching...")
                     response = kaedra.run_sync(f"Search the web and tell me about: {query}")
                     print(f"{Colors.kaedra_tag()} {response.content}\n")
                     logger.log_message("WEB SEARCH", response.content, response.model)
                     continue
-                
+
                 # ══════════════════════════════════════════════════════════
                 # VIDEO GENERATION COMMANDS
                 # ══════════════════════════════════════════════════════════
-                
+
                 if cmd.startswith("/video ") and visual:
                     prompt = user_input[7:].strip()
                     if not prompt:
                         print(f"{Colors.system_tag()} Usage: /video <prompt>")
                         continue
-                    
+
                     print(f"\n{Colors.NEON_PURPLE}[VISUAL GENERATION]{Colors.RESET}")
                     print(f"  Model: {visual.model}")
                     print(f"  Prompt: {prompt[:80]}...")
                     print(f"\n{Colors.DIM}Starting generation (this may take several minutes)...{Colors.RESET}\n")
-                    
+
                     try:
                         result = visual.generate_video(prompt)
                         print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Visual generated!")
@@ -486,18 +485,18 @@ def main():
                     except Exception as e:
                         print(f"{Colors.NEON_RED}[ERROR]{Colors.RESET} {e}\n")
                     continue
-                
+
                 if cmd.startswith("/videoimg ") and visual:
                     prompt = user_input[10:].strip()
                     if not prompt:
                         print(f"{Colors.system_tag()} Usage: /videoimg <prompt>")
                         continue
-                    
+
                     print(f"\n{Colors.NEON_PURPLE}[VISUAL GENERATION - WITH IMAGE]{Colors.RESET}")
                     print(f"  Step 1: Generating image with Nano Banana...")
                     print(f"  Step 2: Generating video with {visual.model}...")
                     print(f"\n{Colors.DIM}This may take several minutes...{Colors.RESET}\n")
-                    
+
                     try:
                         result = visual.generate_video_with_image(prompt)
                         print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Visual generated!")
@@ -508,21 +507,21 @@ def main():
                     except Exception as e:
                         print(f"{Colors.NEON_RED}[ERROR]{Colors.RESET} {e}\n")
                     continue
-                
+
                 if cmd.startswith("/extend ") and visual:
                     parts = user_input[8:].strip().split(" ", 1)
                     if len(parts) < 2:
                         print(f"{Colors.system_tag()} Usage: /extend <video_file> <extension_prompt>")
                         continue
-                    
+
                     video_file = parts[0].strip()
                     extension_prompt = parts[1].strip()
-                    
+
                     print(f"\n{Colors.NEON_PURPLE}[VISUAL EXTENSION]{Colors.RESET}")
                     print(f"  Extending: {video_file}")
                     print(f"  Prompt: {extension_prompt[:80]}...")
                     print(f"\n{Colors.DIM}This may take several minutes...{Colors.RESET}\n")
-                    
+
                     try:
                         result = visual.extend_video(video_file, extension_prompt)
                         print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Visual extended!")
@@ -532,12 +531,12 @@ def main():
                     except Exception as e:
                         print(f"{Colors.NEON_RED}[ERROR]{Colors.RESET} {e}\n")
                     continue
-                
+
                 if cmd == "/veomodel" or cmd.startswith("/veomodel "):
                     if not visual:
                         print(f"{Colors.system_tag()} Visual generation not available.")
                         continue
-                    
+
                     if cmd.startswith("/veomodel "):
                         model_key = user_input[10:].strip().lower()
                         if model_key in VEO_MODELS:
@@ -552,50 +551,50 @@ def main():
                             print(f"  • {key}: {model_name}{marker}")
                         print()
                     continue
-                
+
                 # ══════════════════════════════════════════════════════════
                 # AGENT COMMANDS
                 # ══════════════════════════════════════════════════════════
-                
+
                 if cmd == "/blade" or cmd.startswith("/blade "):
                     if cmd == "/blade":
                         active_agent = "blade"
                         print(f"{Colors.blade_tag()} BLADE active. Awaiting orders.")
                         continue
-                    
+
                     query = user_input[7:].strip()
                     if not query:
                         print(f"{Colors.system_tag()} Usage: /blade <message>")
                         continue
-                    
+
                     print(f"{Colors.blade_tag()} {thinking_message(MODELS[current_model])}")
                     response = blade.run_sync(query)
                     print(f"{Colors.blade_tag()} {response.content}\n")
                     logger.log_message("BLADE", response.content, response.model)
                     continue
-                
+
                 if cmd == "/nyx" or cmd.startswith("/nyx "):
                     if cmd == "/nyx":
                         active_agent = "nyx"
                         print(f"{Colors.nyx_tag()} NYX active. Observing.")
                         continue
-                    
+
                     query = user_input[5:].strip()
                     if not query:
                         print(f"{Colors.system_tag()} Usage: /nyx <message>")
                         continue
-                    
+
                     print(f"{Colors.nyx_tag()} {thinking_message(MODELS[current_model])}")
                     response = nyx.run_sync(query)
                     print(f"{Colors.nyx_tag()} {response.content}\n")
                     logger.log_message("NYX", response.content, response.model)
                     continue
-                
+
                 if cmd == "/kaedra":
                     active_agent = "kaedra"
                     print(f"{Colors.kaedra_tag()} KAEDRA active. Ready.")
                     continue
-                
+
                 if cmd.startswith("/council "):
                     query = user_input[9:].strip()
                     if not query:
@@ -604,11 +603,11 @@ def main():
                     result = run_council(query, kaedra, blade, nyx)
                     logger.log_message("COUNCIL", result, MODELS[current_model])
                     continue
-                
+
                 # ══════════════════════════════════════════════════════════
                 # ADVANCED PROMPTING COMMANDS
                 # ══════════════════════════════════════════════════════════
-                
+
                 if cmd.startswith("/tot "):
                     task = user_input[5:].strip()
                     if task:
@@ -617,7 +616,7 @@ def main():
                     else:
                         print(f"{Colors.system_tag()} Usage: /tot <task>")
                     continue
-                
+
                 if cmd.startswith("/battle "):
                     task = user_input[8:].strip()
                     if task:
@@ -626,7 +625,7 @@ def main():
                     else:
                         print(f"{Colors.system_tag()} Usage: /battle <task>")
                     continue
-                
+
                 if cmd.startswith("/optimize "):
                     raw_prompt = user_input[10:].strip()
                     if raw_prompt:
@@ -635,7 +634,7 @@ def main():
                     else:
                         print(f"{Colors.system_tag()} Usage: /optimize <prompt>")
                     continue
-                
+
                 if cmd == "/presets":
                     presets = optimizer.list_presets()
                     print(f"\n{Colors.GOLD}[AVAILABLE PRESETS]{Colors.RESET}\n")
@@ -643,36 +642,36 @@ def main():
                         print(f"  • {name}: {desc}")
                     print()
                     continue
-                
+
                 # ══════════════════════════════════════════════════════════
                 # NATURAL COUNCIL DETECTION
                 # ══════════════════════════════════════════════════════════
-                
+
                 council_triggers = [
                     "what do blade and nyx think", "ask blade and nyx",
                     "consult the team", "get the team's input",
                     "what does blade think", "what does nyx think",
                     "blade's take", "nyx's take", "bring in the team"
                 ]
-                
+
                 if any(trigger in cmd for trigger in council_triggers):
                     result = run_council(user_input, kaedra, blade, nyx)
                     logger.log_message("COUNCIL", result, MODELS[current_model])
                     continue
-                
+
                 # ══════════════════════════════════════════════════════════
                 # SEND TO ACTIVE AGENT
                 # ══════════════════════════════════════════════════════════
-                
+
                 print(f"{Colors.kaedra_tag()} {thinking_message(MODELS[current_model])}")
-                
+
                 # ══════════════════════════════════════════════════════════
                 # AUTO-EXECUTE TOOLS BEFORE LLM RESPONSE
                 # ══════════════════════════════════════════════════════════
-                
+
                 tool_executed = False
                 tool_result = None
-                
+
                 # BLADE tool triggers
                 if active_agent == "blade":
                     blade_triggers = {
@@ -684,14 +683,14 @@ def main():
                         "processes": lambda: blade.get_tool_data("processes", limit=10),
                         "network": lambda: blade.get_tool_data("network_info"),
                     }
-                    
+
                     for trigger, func in blade_triggers.items():
                         if trigger in cmd:
                             print(f"{Colors.blade_tag()} [AUTO-EXEC] Running {trigger}...")
                             tool_result = func()
                             tool_executed = True
                             break
-                
+
                 # NYX tool triggers
                 if active_agent == "nyx":
                     nyx_triggers = {
@@ -707,24 +706,24 @@ def main():
                         "search": lambda: nyx.get_tool_data("google_search", query=user_input.replace("search", "").strip(), num_results=5) if "google_search" in FREE_TOOLS else nyx.get_tool_data("hacker_news", limit=5),
                         "youtube": lambda: nyx.get_tool_data("youtube_search", query=user_input.replace("youtube", "").strip(), max_results=5) if "youtube_search" in FREE_TOOLS else None,
                     }
-                    
+
                     for trigger, func in nyx_triggers.items():
                         if trigger in cmd:
                             print(f"{Colors.nyx_tag()} [AUTO-EXEC] Scanning {trigger}...")
                             tool_result = func()
                             tool_executed = True
                             break
-                
+
                 # If tool executed, show results and add to context
                 if tool_executed and tool_result:
                     if tool_result.get("status") == "success":
                         print(f"{Colors.NEON_GREEN}[✓]{Colors.RESET} Tool executed successfully\n")
-                        
+
                         # Format tool result for display
                         import json
                         formatted = json.dumps(tool_result, indent=2)
                         print(f"{Colors.DIM}{formatted}{Colors.RESET}\n")
-                        
+
                         # Add tool result to context for agent interpretation
                         tool_context = f"Tool execution result:\n{formatted}\n\nInterpret this data from your perspective."
                         user_input_with_context = f"{user_input}\n\n{tool_context}"
@@ -733,7 +732,7 @@ def main():
                         user_input_with_context = user_input
                 else:
                     user_input_with_context = user_input
-                
+
                 # Route to active agent (with tool context if available)
                 # Vibe Detection (Simple)
                 vibe_context = ""
@@ -759,7 +758,7 @@ def main():
                 else:
                     response = kaedra.run_sync(final_input)
                     print(f"{Colors.kaedra_tag()} {response.content}\n")
-                
+
                 logger.log_message(active_agent.upper(), response.content, response.model)
 
                 # Auto-Memory: Persist turn (Brain Enhancement)
@@ -776,7 +775,7 @@ def main():
                         )
                     except Exception:
                         pass # Silent fail for background memory ops
-                
+
                 # Check for execution triggers
                 if "[EXEC:" in response.content:
                     try:
@@ -794,13 +793,13 @@ def main():
                                 print(f"{Colors.NEON_RED}{result.stderr}{Colors.RESET}")
                     except Exception as e:
                         print(f"{Colors.system_tag()} Execution failed: {e}")
-                
+
             except KeyboardInterrupt:
                 print(f"\n{Colors.kaedra_tag()} Interrupt detected.")
                 if logger.is_session_active:
                     logger.stop_session()
                 break
-    
+
     except Exception as e:
         print(f"\n{Colors.NEON_RED}[!] FATAL ERROR:{Colors.RESET} {e}")
         import traceback

@@ -3,12 +3,9 @@ KAEDRA v0.0.7 - Memory Service (Vertex AI Agent Engine)
 Persistent memory storage using Vertex AI Memory Bank.
 """
 
-import os
 import uuid
-import json
-from pathlib import Path
 from datetime import datetime, timezone
-from typing import List, Dict, Optional, Any
+from typing import List, Dict
 import vertexai
 from vertexai import types
 
@@ -29,7 +26,7 @@ class MemoryService:
     Manages persistent memory using Vertex AI Memory Bank (Agent Engine).
     Wraps the Agent Engine API to provide a simplified interface for Kaedra.
     """
-    
+
     def __init__(self):
         self.project_id = PROJECT_ID
         self.location = LOCATION
@@ -37,20 +34,48 @@ class MemoryService:
         self.user_id = "kaedra-user-main" # Single user mode for now
         self.session_name = None
         self.agent_engine_resource_name = AGENT_RESOURCE_NAME
-        
-        # Initialize Vertex AI
-        vertexai.init(project=self.project_id, location=self.location)
 
-        # Using the High-Level SDK client
-        self.hl_client = vertexai.Client(project=self.project_id, location=self.location)
-        self.client = self.hl_client # Alias for convenience if needed, or just use hl_client
-        
-        if not self.agent_engine_resource_name:
-            self._ensure_agent_engine()
-        else:
-            print(f"[*] Using existing Agent Engine: {self.agent_engine_resource_name}")
-            
-        self._ensure_session()
+        self._hl_client = None
+
+        # We don't initialize client in init to allow pickling
+        # self._ensure_client() # Lazy instead
+
+    @property
+    def hl_client(self):
+        """Lazy-loaded Vertex AI Client."""
+        if self._hl_client is None:
+            # Initialize Vertex AI
+            vertexai.init(project=self.project_id, location=self.location)
+            self._hl_client = vertexai.Client(project=self.project_id, location=self.location)
+
+            # Ensure resources exist when client is first accessed
+            if not self.agent_engine_resource_name:
+                self._ensure_agent_engine()
+            else:
+                 # Minimal log to avoid spam
+                # print(f"[*] Using existing Agent Engine: {self.agent_engine_resource_name}")
+                pass
+
+            self._ensure_session()
+
+        return self._hl_client
+
+    @property
+    def client(self):
+        """Alias for hl_client."""
+        return self.hl_client
+
+    def __getstate__(self):
+        """Exclude client from pickling."""
+        state = self.__dict__.copy()
+        if "_hl_client" in state:
+            del state["_hl_client"]
+        return state
+
+    def __setstate__(self, state):
+        """Restore state."""
+        self.__dict__.update(state)
+        self._hl_client = None
 
     def _get_model_path(self, model_name: str) -> str:
         """
@@ -63,7 +88,7 @@ class MemoryService:
     def _ensure_agent_engine(self):
         """Find or create the Agent Engine."""
         print(f"[*] Ensuring Agent Engine '{self.engine_name}' exists...")
-        
+
         try:
             engines = self.hl_client.agent_engines.list()
             for engine in engines:
@@ -75,9 +100,9 @@ class MemoryService:
             print(f"[!] Error listing agent engines: {e}")
 
         print(f"[*] Creating new Agent Engine '{self.engine_name}'...")
-        
+
         model_name = "gemini-3-flash-preview"
-        
+
         memory_config = types.ReasoningEngineContextSpecMemoryBankConfig(
             similarity_search_config=types.ReasoningEngineContextSpecMemoryBankConfigSimilaritySearchConfig(
                 embedding_model=f"projects/{self.project_id}/locations/{self.location}/publishers/google/models/text-embedding-005"
@@ -87,7 +112,7 @@ class MemoryService:
             ),
             customization_configs=[get_customization_config()]
         )
-        
+
         try:
             op = self.hl_client.agent_engines.create(
                 config={"context_spec": {"memory_bank_config": memory_config}},
@@ -95,7 +120,7 @@ class MemoryService:
             )
             self.agent_engine_resource_name = op.api_resource.name
             print(f"[*] Created Agent Engine: {self.agent_engine_resource_name}")
-            
+
         except Exception as e:
             print(f"[!] Failed to create Agent Engine: {e}")
             raise e
@@ -104,7 +129,7 @@ class MemoryService:
         """Ensure a session exists for the user."""
         # We try to keep a persistent session ID file?
         session_file = MEMORY_DIR / "current_session.txt"
-        
+
         if session_file.exists():
             with open(session_file, 'r') as f:
                 self.session_name = f.read().strip()
@@ -118,14 +143,14 @@ class MemoryService:
                 config={"display_name": f"Main Session for {self.user_id}"}
             )
             self.session_name = session.response.name
-            
+
             # Save persist
             MEMORY_DIR.mkdir(parents=True, exist_ok=True)
             with open(session_file, 'w') as f:
                 f.write(self.session_name)
-                
+
             print(f"[*] Created Session: {self.session_name}")
-            
+
         except Exception as e:
             print(f"[!] Session creation failed: {e}")
             raise e
@@ -133,14 +158,14 @@ class MemoryService:
     def insert(self, content: str, role: str = "user") -> str:
         """
         Add an event to the session memory.
-        Note: This does NOT immediately generate a 'Memory' fact. 
+        Note: This does NOT immediately generate a 'Memory' fact.
         It appends to history. You must call `consolidate()` to trigger extraction.
         """
         try:
             # We use a simple counter for invocation? Or UUID?
             # API requires invocation_id (string)
             inv_id = str(uuid.uuid4())
-            
+
             self.hl_client.agent_engines.sessions.events.append(
                 name=self.session_name,
                 author=self.user_id if role == "user" else "kaedra",
@@ -163,7 +188,7 @@ class MemoryService:
             self.hl_client.agent_engines.memories.generate(
                 name=self.agent_engine_resource_name,
                 vertex_session_source={"session": self.session_name},
-                config={"wait_for_completion": False} 
+                config={"wait_for_completion": False}
             )
         except Exception as e:
             print(f"[!] Consolidation failed: {e}")
@@ -181,7 +206,7 @@ class MemoryService:
                     "top_k": top_k,
                 },
             )
-            
+
             # Convert to dict format expected by KaedraAgent
             memories = []
             for item in results:
@@ -193,7 +218,7 @@ class MemoryService:
                     "score": item.distance if hasattr(item, 'distance') else 0.0
                 })
             return memories
-            
+
         except Exception as e:
             print(f"[!] Recall failed: {e}")
             return []
@@ -210,7 +235,7 @@ class MemoryService:
             # Convert to list and sort
             items = list(results)
             items.sort(key=lambda x: x.memory.create_time, reverse=True)
-            
+
             memories = []
             for item in items[:limit]:
                 mem = item.memory
@@ -222,12 +247,12 @@ class MemoryService:
         except Exception as e:
             print(f"[!] List recent failed: {e}")
             return []
-            
+
     def get_stats(self) -> Dict:
         """Helper to get count."""
         try:
             results = self.hl_client.agent_engines.memories.retrieve(
-                name=self.agent_engine_resource_name, 
+                name=self.agent_engine_resource_name,
                 scope={"user_id": self.user_id}
             )
             return {"total": len(list(results))}

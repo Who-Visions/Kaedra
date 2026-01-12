@@ -14,6 +14,12 @@ All notable changes to this project will be documented in this file.
   - Configured `global` location for Gemini 3 Preview dynamic routing.
   - Added support for `thinking_level` (minimal, low, high) and thought extraction.
   - Resolved 404 NOT_FOUND errors by identifying the active Project ID.
+- **2026-01-11**: [KAEDRA_REMOTE] feat: Full Reasoning Engine Deployment (v0.0.6)
+  - Successfully deployed `KaedraAgent` to Vertex AI Reasoning Engine (us-central1).
+  - Resource ID: `projects/69017097813/locations/us-central1/reasoningEngines/5808320806819725312`.
+  - Fixed `ModuleNotFoundError` by packaging local `kaedra` module.
+  - Fixed `asyncio` loop conflict with `nest_asyncio`.
+  - Restored full dependency chain for production parity.
 - **2026-01-07**: [KAEDRA_REMOTE] fix: remove hardcoded Notion token, use env var instead (94e86255)
 - **2026-01-07**: [KAEDRA_REMOTE] fix: Surgical .gitignore for specific secret files only (1ba1a079)
 - **2026-01-07**: [RHEA] Update memory sync, router, and add stress test (0979b13e)

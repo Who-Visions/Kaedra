@@ -1,7 +1,7 @@
 import sounddevice as sd
 import numpy as np
 import logging
-from typing import Generator, Optional, Tuple
+from typing import Generator, Optional
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class MicrophoneService:
                     logger.info(f"[*] Found Microphone: {device['name']} (Index {i})")
                     print(f"[*] Found Microphone: {device['name']} (Index {i})")
                     return i
-            
+
             logger.warning(f"[!] Device '{name_filter}' not found. Using default.")
             print(f"[!] Device '{name_filter}' not found. Using default.")
             return None # Default
@@ -39,7 +39,7 @@ class MicrophoneService:
         Yields raw audio chunks continuously.
         """
         q = []
-        
+
         def callback(indata, frames, time, status):
             if status:
                 logger.warning(f"Audio status: {status}")
@@ -59,7 +59,7 @@ class MicrophoneService:
                         yield chunk.tobytes()
                     else:
                         sd.sleep(10) # Wait a bit to avoid busy loop
-                        
+
         except Exception as e:
             logger.error(f"[!] Microphone error: {e}")
             raise e
@@ -137,7 +137,7 @@ class MicrophoneService:
         silent_chunks = 0
         chunks_per_second = self.sample_rate / self.block_size
         max_silent_chunks = int(silence_duration * chunks_per_second)
-        
+
         with sd.InputStream(device=self.device_index,
                             samplerate=self.sample_rate,
                             channels=self.channels,
@@ -146,15 +146,15 @@ class MicrophoneService:
             while True:
                 indata, _ = stream.read(self.block_size)
                 buffer.append(indata.tobytes())
-                
+
                 rms = self._calculate_rms(indata)
                 if rms < silence_threshold:
                     silent_chunks += 1
                 else:
                     silent_chunks = 0
-                
+
                 if silent_chunks > max_silent_chunks:
                     print("[*] Silence detected. Stopping.")
                     break
-        
+
         return b"".join(buffer)

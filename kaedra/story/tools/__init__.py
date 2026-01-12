@@ -1,10 +1,10 @@
 # kaedra/story/tools - StoryEngine Tool Functions
 from .notion import (
-    read_page_content, 
-    list_universe_pages, 
-    update_page_content, 
-    run_lore_automations, 
-    search_universe, 
+    read_page_content,
+    list_universe_pages,
+    update_page_content,
+    run_lore_automations,
+    search_universe,
     index_full_universe,
     get_character,
     get_location,
@@ -31,9 +31,9 @@ from .loredb import (
 )
 
 ENGINE_TOOLS = [
-    read_page_content, 
+    read_page_content,
     list_universe_pages,
-    index_full_universe, 
+    index_full_universe,
     update_page_content,
     get_character,
     get_location,
@@ -43,11 +43,11 @@ ENGINE_TOOLS = [
     request_scribe_expansion,
     run_lore_automations,
     search_universe,
-    read_local_lore, 
-    set_engine_mode, 
+    read_local_lore,
+    set_engine_mode,
     consult_director,
-    adjust_emotion, 
-    clean_timeline_data, 
+    adjust_emotion,
+    clean_timeline_data,
     propose_canon_update,
     ingest_youtube_content,
     worldforge_from_youtube,

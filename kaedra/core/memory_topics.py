@@ -10,7 +10,7 @@ CUSTOM_TOPICS = [
             - The core problem being solved.
             - Proposed technologies or stack.
             - User goals or "jobs to be done".
-            
+
             Example: "Project: 'Recall' - a tool to search past dictations using embeddings."
             """
         )
@@ -23,7 +23,7 @@ CUSTOM_TOPICS = [
             - Content themes or pillars (e.g., "AI Tutorials", "Behind the Scenes").
             - Specific hooks, scripts, or caption ideas.
             - Posting schedules or frequency goals.
-            
+
             Example: "Post idea: Show how to use Wispr Flow for coding on Instagram Reels."
             """
         )
@@ -36,7 +36,7 @@ CUSTOM_TOPICS = [
             - Coding style guidelines (e.g., "Use functional components", "Avoid class-based views").
             - Specific solutions to recurring problems ("How to handle auth", "How to structure API routes").
             - Deprecated or banned patterns.
-            
+
             Example: "Use 'npx create-next-app@latest' with TypeScript for all new web projects."
             """
         )
@@ -49,7 +49,7 @@ CUSTOM_TOPICS = [
             - Affected components or files.
             - Steps to reproduce (if mentioned).
             - Proposed or implemented fixes.
-            
+
             Example: "Fix for 'NameError: total not defined' in ingest script."
             """
         )

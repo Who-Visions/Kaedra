@@ -1,9 +1,8 @@
-from typing import Dict, Any, List
 from kaedra.core.skills import BaseSkill, SkillContext
 
 class UniverseSkill(BaseSkill):
     name = "Cinematic Universe Architect"
-    
+
     @property
     def system_prompt_extension(self) -> str:
         return """
@@ -26,8 +25,8 @@ class UniverseSkill(BaseSkill):
 
     async def should_activate(self, context: SkillContext) -> bool:
         keywords = [
-            "universe", "marvel", "big bang", "timeline", "lore", 
-            "character", "script", "plot", "story", "cinematic", 
+            "universe", "marvel", "big bang", "timeline", "lore",
+            "character", "script", "plot", "story", "cinematic",
             "saga", "entity", "power level", "origin", "end of time"
         ]
         return any(kw in context.user_transcription.lower() for kw in keywords)
