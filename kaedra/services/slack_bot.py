@@ -3,14 +3,14 @@ import logging
 import asyncio
 from typing import Optional
 from slack_bolt.app.async_app import AsyncApp
-from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
+from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 
 # Configure logging
 logger = logging.getLogger("kaedra.slack")
 
 class SlackService:
     """
-    Service to handle Slack interactions via Socket Mode.
+    Service to handle Slack interactions via Socket Mode OR HTTP Endpoint.
     Integrates with Kaedra agent to process messages.
     """
     def __init__(self):
@@ -21,6 +21,7 @@ class SlackService:
         
         self.app: Optional[AsyncApp] = None
         self.handler: Optional[AsyncSocketModeHandler] = None
+        self.http_handler: Optional[AsyncSlackRequestHandler] = None
         self.agent = None  # Reference to Kaedra agent
 
     def initialize(self, agent=None):
@@ -37,8 +38,13 @@ class SlackService:
             # Register Event Listeners
             self._register_listeners()
             
-            # Initialize Socket Mode Handler
-            self.handler = AsyncSocketModeHandler(self.app, self.app_token)
+            # Initialize Socket Mode Handler (Optional, if token present)
+            if self.app_token:
+                self.handler = AsyncSocketModeHandler(self.app, self.app_token)
+                
+            # Initialize HTTP Handler (For Cloud Run Request URL)
+            self.http_handler = AsyncSlackRequestHandler(self.app)
+            
             logger.info("✅ SlackService initialized.")
             
         except Exception as e:

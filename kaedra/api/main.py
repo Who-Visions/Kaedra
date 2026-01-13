@@ -1,11 +1,57 @@
 import os
 import time
 from typing import Optional, Dict, Any, List, Union
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import sys
+
+# ... (rest of imports)
+
+# ... (Service metadata)
+
+app = FastAPI(
+    title="Kaedra API",
+    description="Shadow Tactician Agent API",
+    version="0.0.9"
+)
+
+# ... (Routers)
+
+# Initialize Services
+from kaedra.services.slack_bot import SlackService
+slack_service = SlackService()
+
+# ... (Middleware)
+
+# ... (A2A Card)
+
+# ... (State)
+
+# ... (Voice Handler)
+
+# ... (Startup Event)
+
+# ...
+
+# -------------------------------------------------------------------------
+# SLACK ENDPOINT (HTTP Mode)
+# -------------------------------------------------------------------------
+@app.post("/slack/events")
+async def slack_events(req: Request):
+    """
+    Handle Slack Events via HTTP (Cloud Run Request URL).
+    """
+    if not state.slack_service or not state.slack_service.http_handler:
+        # Fallback if service not ready
+        return {"status": "error", "message": "Slack Service unavailable"}
+    
+    return await state.slack_service.http_handler.handle(req)
+
+# -------------------------------------------------------------------------
+# DATA MODELS
+# -------------------------------------------------------------------------
 
 # Add project root to path
 sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
