@@ -49,6 +49,14 @@ async def slack_events(req: Request):
     
     return await state.slack_service.http_handler.handle(req)
 
+@app.get("/slack/oauth")
+async def slack_oauth():
+    """
+    Simple OAuth Redirect Endpoint.
+    Slack requires a valid URL here for the 'Add to Slack' button.
+    """
+    return {"status": "installed", "message": "Kaedra Orchestrator is successfully connected."}
+
 # -------------------------------------------------------------------------
 # DATA MODELS
 # -------------------------------------------------------------------------

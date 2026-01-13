@@ -8,6 +8,11 @@ google-cloud-vision>=3.0.0
 google-cloud-videointelligence>=2.0.0
 yt-dlp>=2025.1.0
 
+# Autonomy Control Plane
+google-cloud-firestore>=2.14.0
+google-cloud-pubsub>=2.19.0
+google-cloud-bigquery>=3.17.0
+
 # Configuration & Environment
 python-dotenv>=1.0.0
 pytz>=2024.1
@@ -29,3 +34,8 @@ typing-extensions>=4.0.0
 # Notion Integration
 notion-client>=2.0.0
 toml>=0.10.2
+
+# Slack Integration
+slack-bolt[async]>=1.18.0
+slack-sdk>=3.27.0
+aiohttp>=3.9.0

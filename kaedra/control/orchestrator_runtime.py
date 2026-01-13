@@ -38,13 +38,22 @@ class OrchestratorRuntime:
              logger.warning("⛔ Kill Switch Active. Rejecting Event.")
              return
 
-        # 1. Budget Check
+        # 1. Budget Check & Context
+        remaining_budget_percent = ((self.budgets["hourly_limit"] - self.budgets["hourly_calls"]) / self.budgets["hourly_limit"]) * 100
+        
         if not self._check_budget():
             logger.warning("⛔ Budget Exceeded. Blocking Event.")
             return
 
-        # 2. Risk Analysis
-        risk: RiskProfile = self.policy.evaluate(event_type, payload)
+        # 2. Risk Analysis (Enriched Payload)
+        risk_payload = payload.copy()
+        risk_payload.update({
+            "remaining_budget_percent": remaining_budget_percent,
+            "loop_count": payload.get("loop_count", 0),
+            "exit_signal": payload.get("exit_signal", False)
+        })
+        
+        risk: RiskProfile = self.policy.evaluate(event_type, risk_payload)
         
         # 3. Create Notion Ops Task
         title = f"Autonomy Event: {event_type} [{event_id[:8]}]"
@@ -54,8 +63,8 @@ class OrchestratorRuntime:
         props = {
             "Risk Score": risk.score,
             "Autonomy Status": "Blocked" if risk.requires_approval else "Running",
-            "Loop Count": 0,
-            "Exit Signal": False
+            "Loop Count": risk_payload["loop_count"],
+            "Exit Signal": risk_payload["exit_signal"]
         }
         
         try:

@@ -64,6 +64,29 @@ class PolicyEngine:
             score += 30
             factors.append(f"High Blast Radius ({items} items)")
 
+        # 4. Recursive Loop Detection (Ralph Mechanics)
+        loop_count = payload.get("loop_count", 0)
+        if loop_count > 3:
+            score += 40
+            factors.append(f"Recursive Loop Warning (Count: {loop_count})")
+        elif loop_count > 0:
+            score += (loop_count * 10)
+            factors.append(f"Incremental Loop Risk (Count: {loop_count})")
+
+        # 5. Budget Proximity
+        remaining_budget = payload.get("remaining_budget_percent", 100)
+        if remaining_budget < 10:
+            score += 25
+            factors.append("Critically Low Hourly Budget")
+        elif remaining_budget < 25:
+            score += 10
+            factors.append("Low Hourly Budget")
+
+        # 6. Exit Signal (Explicit Block)
+        if payload.get("exit_signal", False):
+            score = 100
+            factors.append("Force Kill: Exit Signal Detected")
+
         # Determine if approval needed
         requires_approval = score >= self.APPROVAL_THRESHOLD
         
