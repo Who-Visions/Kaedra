@@ -74,7 +74,7 @@ class SlackService:
             logger.info(f"📥 /kaedra-ingest from {user}: {input_data}")
             
             if self.agent and hasattr(self.agent, "orchestrator"):
-                # await self.agent.orchestrator.ingest_job(input_data, user)
+                await self.agent.orchestrator.ingest_job(input_data, user)
                 await say(f"📥 **Job Ingested**\nSource: `{input_data}`\nStatus: `QUEUED`")
             else:
                 await say(f"⚠️ Orchestrator offline. Cannot ingest `{input_data}`.")
@@ -84,25 +84,37 @@ class SlackService:
             await ack()
             job_id = body.get("text", "").strip()
             logger.info(f"▶️ /kaedra-run: {job_id}")
-            await say(f"▶️ **Starting Job**\nID: `{job_id}`\nStatus: `RUNNING`")
-            
+            # For now, treat run same as ingest or re-trigger
+            if self.agent and hasattr(self.agent, "orchestrator"):
+                 await self.agent.orchestrator.ingest_job(job_id, body.get("user_id"))
+                 await say(f"▶️ **Starting Job**\nID: `{job_id}`\nStatus: `RUNNING`")
+
         @self.app.command("/kaedra-status")
         async def handle_status(ack, body, say):
             await ack()
             job_id = body.get("text", "").strip() or "active"
             logger.info(f"📊 /kaedra-status: {job_id}")
-            await say(f"📊 **Job Status**\nID: `{job_id}`\nState: `PENDING` (Stub)")
+            
+            status = "UNKNOWN"
+            if self.agent and hasattr(self.agent, "orchestrator"):
+                status = self.agent.orchestrator.get_status(job_id)
+            
+            await say(f"📊 **Job Status**\nID: `{job_id}`\nState: `{status}`")
 
         @self.app.command("/kaedra-pause")
         async def handle_pause(ack, body, say):
             await ack()
             logger.info("⏸️ /kaedra-pause called")
+            if self.agent and hasattr(self.agent, "orchestrator"):
+                self.agent.orchestrator.pause_system()
             await say("⏸️ **System Paused**\nKill Switch: `ACTIVE`\nAll jobs suspended.")
 
         @self.app.command("/kaedra-resume")
         async def handle_resume(ack, body, say):
             await ack()
             logger.info("▶️ /kaedra-resume called")
+            if self.agent and hasattr(self.agent, "orchestrator"):
+                self.agent.orchestrator.resume_system()
             await say("▶️ **System Resumed**\nKill Switch: `OFF`\nJobs processing.")
 
         @self.app.command("/kaedra-kill")
@@ -110,6 +122,8 @@ class SlackService:
             await ack()
             job_id = body.get("text", "").strip()
             logger.info(f"💀 /kaedra-kill: {job_id}")
+            if self.agent and hasattr(self.agent, "orchestrator"):
+                await self.agent.orchestrator.kill_task(job_id)
             await say(f"💀 **Job Killed**\nID: `{job_id}`\nStatus: `TERMINATED`")
 
         @self.app.command("/kaedra-approve")
@@ -117,6 +131,8 @@ class SlackService:
             await ack()
             job_id = body.get("text", "").strip()
             logger.info(f"✅ /kaedra-approve: {job_id}")
+            if self.agent and hasattr(self.agent, "orchestrator"):
+                await self.agent.orchestrator.approve_task(job_id)
             await say(f"✅ **Job Approved**\nID: `{job_id}`\nMoving to `EXECUTION` queue.")
 
         @self.app.command("/kaedra-deny")
@@ -124,6 +140,8 @@ class SlackService:
             await ack()
             job_id = body.get("text", "").strip()
             logger.info(f"🚫 /kaedra-deny: {job_id}")
+            if self.agent and hasattr(self.agent, "orchestrator"):
+                await self.agent.orchestrator.deny_task(job_id)
             await say(f"🚫 **Job Denied**\nID: `{job_id}`\nStatus: `REJECTED`")
 
         @self.app.message("")

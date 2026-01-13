@@ -21,6 +21,7 @@ class OrchestratorRuntime:
         
         # In-Memory State (For MVP - Production should use Firestore)
         self.active_tasks = {} 
+        self.kill_switch = False
         self.budgets = {
             "hourly_calls": 0,
             "hourly_limit": 50,
@@ -33,6 +34,10 @@ class OrchestratorRuntime:
         """
         logger.info(f"⚡ Ingesting Event: {event_id} ({event_type})")
         
+        if self.kill_switch:
+             logger.warning("⛔ Kill Switch Active. Rejecting Event.")
+             return
+
         # 1. Budget Check
         if not self._check_budget():
             logger.warning("⛔ Budget Exceeded. Blocking Event.")
@@ -65,6 +70,34 @@ class OrchestratorRuntime:
         except Exception as e:
             logger.error(f"❌ Failed to process event: {e}")
 
+    # --- System Control Methods ---
+
+    def set_kill_switch(self, active: bool):
+        self.kill_switch = active
+        return self.kill_switch
+
+    async def approve_request(self, task_id: str):
+        """Manually approve a blocked task."""
+        # In real impl, fetch task payload from Firestore/Notion
+        logger.info(f"✅ Manually Approving {task_id}")
+        await self._execute_action(task_id, "manual.approval", {})
+        return "APPROVED"
+
+    async def deny_request(self, task_id: str):
+        """Manually deny a task."""
+        logger.info(f"🚫 Manually Denying {task_id}")
+        # Update Notion status
+        return "DENIED"
+
+    async def kill_task(self, task_id: str):
+         logger.info(f"💀 Killing {task_id}")
+         return "KILLED"
+
+    def get_status(self, task_id: str) -> str:
+        if task_id in self.active_tasks:
+            return "RUNNING"
+        return "UNKNOWN (Stub)"
+
     def _check_budget(self) -> bool:
         """Simple Hourly Budget Check."""
         now_hour = datetime.utcnow().hour
@@ -87,6 +120,8 @@ class OrchestratorRuntime:
     async def _execute_action(self, task_id: str, event_type: str, payload: Dict):
         """Execute (Stub)."""
         logger.info(f"🚀 Executing Action for {task_id}...")
+        self.active_tasks[task_id] = "RUNNING"
         # In real impl, this calls Vertex/Tools
         await asyncio.sleep(1)
+        del self.active_tasks[task_id]
         logger.info(f"✅ Action Complete for {task_id}")

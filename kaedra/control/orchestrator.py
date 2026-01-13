@@ -42,3 +42,32 @@ class Orchestrator:
 
     async def _persist_state(self, correlation_id: str, data: Dict[str, Any]):
         pass
+
+    # --- Control Plane Interface (Slack/API) ---
+
+    async def ingest_job(self, input_data: str, user_id: str):
+        """Ingest a job from Slack/CLI."""
+        # Simple wrap as an event
+        await self.runtime.ingest_event(
+            event_id=f"manual-{int(datetime.utcnow().timestamp())}",
+            event_type="manual.ingest",
+            payload={"source": "slack", "input": input_data, "user": user_id}
+        )
+
+    async def approve_task(self, task_id: str) -> str:
+        return await self.runtime.approve_request(task_id)
+
+    async def deny_task(self, task_id: str) -> str:
+        return await self.runtime.deny_request(task_id)
+
+    def pause_system(self):
+        self.runtime.set_kill_switch(True)
+
+    def resume_system(self):
+        self.runtime.set_kill_switch(False)
+
+    async def kill_task(self, task_id: str) -> str:
+        return await self.runtime.kill_task(task_id)
+
+    def get_status(self, task_id: str) -> str:
+        return self.runtime.get_status(task_id)
