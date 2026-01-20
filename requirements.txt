@@ -16,10 +16,12 @@ google-cloud-bigquery>=3.17.0
 # Configuration & Environment
 python-dotenv>=1.0.0
 pytz>=2024.1
+nest-asyncio>=1.6.0
 
 # HTTP & Web Scraping
 requests>=2.31.0
 beautifulsoup4>=4.12.0
+httpx>=0.27.0
 
 # API Server (FastAPI)
 fastapi>=0.109.0

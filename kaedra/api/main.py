@@ -40,9 +40,17 @@ from . import lore, webhooks
 app.include_router(lore.router)
 app.include_router(webhooks.router)
 
-# -------------------------------------------------------------------------
+@app.get("/")
+async def root():
+    """Root endpoint to verify API is alive."""
+    return {
+        "status": "online",
+        "service": SERVICE_NAME,
+        "version": app.version,
+        "timestamp": time.time()
+    }
+
 # CORS MIDDLEWARE - Allow cross-origin requests
-# -------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins (adjust for production if needed)
