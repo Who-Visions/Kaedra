@@ -1514,7 +1514,7 @@ async def run_validation_suite():
         results.append({"test": "agent_init", "status": "fail", "error": "Agent not initialized", "points": 0})
     
     # 3. Prompt Service (10 points)
-    if state.agent and hasattr(state.agent, 'prompt_service'):
+    if state.agent and (hasattr(state.agent, 'prompt') or hasattr(state.agent, 'prompt_service')):
         try:
             # Quick validation call
             results.append({"test": "prompt_service", "status": "pass", "points": 10})
@@ -1522,7 +1522,7 @@ async def run_validation_suite():
         except Exception as e:
             results.append({"test": "prompt_service", "status": "fail", "error": str(e), "points": 0})
     else:
-        results.append({"test": "prompt_service", "status": "skip", "error": "Agent not available", "points": 0})
+        results.append({"test": "prompt_service", "status": "skip", "error": "Agent prompt service not found", "points": 0})
     
     # 4. Visual Service (5 points)
     if state.visual_service:
