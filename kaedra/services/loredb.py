@@ -77,20 +77,40 @@ class LoreDB:
             world_path: Path to the world folder (e.g., lore/worlds/world_abc123/)
         """
         self.world_path = Path(world_path)
-        self.db_path = self.world_path / "lore.db"
         self.world_id = self.world_path.name
+        
+        # Check for writability (Crucial for Cloud Run)
+        try:
+            # Ensure folder exists or can be created
+            self.world_path.mkdir(parents=True, exist_ok=True)
+            # Test write access
+            test_file = self.world_path / ".write_test"
+            test_file.touch()
+            test_file.unlink()
+        except (OSError, PermissionError, IOError):
+            import os
+            import tempfile
+            print(f"⚠️ [LoreDB] Path {self.world_path} is NOT writable. Falling back to /tmp/kaedra/lore.")
+            self.world_path = Path(tempfile.gettempdir()) / "kaedra" / "lore" / "worlds" / self.world_id
+            self.world_path.mkdir(parents=True, exist_ok=True)
 
-        # Cloud Clients
-        self.notion = NotionService() if HAS_NOTION else None
-        self.bq_client = bigquery.Client() if HAS_BIGQUERY else None
+        self.db_path = self.world_path / "lore.db"
 
-        # Ensure world folder exists
-        self.world_path.mkdir(parents=True, exist_ok=True)
+        # Cloud Clients (Lazy or Safe)
+        try:
+            self.notion = NotionService() if HAS_NOTION else None
+        except Exception:
+            self.notion = None
+            
+        try:
+            self.bq_client = bigquery.Client() if HAS_BIGQUERY else None
+        except Exception:
+            self.bq_client = None
 
         # Initialize SQLite
         self._init_db()
 
-        log.info(f"LoreDB initialized: {self.db_path}")
+        print(f"[*] LoreDB initialized at: {self.db_path}")
 
     def _init_db(self):
         """Create SQLite tables if they don't exist."""

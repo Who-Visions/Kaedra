@@ -15,7 +15,12 @@ nest_asyncio.apply()  # Allow nested event loops for sync-in-async compatibility
 # GLOBAL STATE & CONFIG
 # -------------------------------------------------------------------------
 from kaedra.api.app_state import state, AppState
-from kaedra.core.config import PROJECT_ID, LOCATION, MODEL_LOCATION
+from kaedra.core.config import PROJECT_ID, LOCATION, MODEL_LOCATION, AGENT_RESOURCE_NAME
+from kaedra.core.tools import FreeToolsRegistry
+try:
+    from kaedra.core.google_tools import GOOGLE_TOOLS
+except ImportError:
+    GOOGLE_TOOLS = {}
 
 # Service metadata
 SERVICE_NAME = "kaedra-shadow-tactician"
@@ -348,8 +353,13 @@ async def chat_endpoint(request: ChatRequest):
     """
     Chat with Kaedra (Legacy Endpoint).
     """
+    # Wait for background_init if needed
     if not state.agent:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        for _ in range(10):
+            if state.agent: break
+            await asyncio.sleep(1)
+        if not state.agent:
+            raise HTTPException(status_code=503, detail="Agent still warming up in background.")
 
     try:
         # Use run_sync logic but inside an async wrapper if needed,
@@ -386,8 +396,13 @@ async def openai_chat_endpoint(request: OpenAIChatCompletionRequest):
     """
     OpenAI-compatible chat endpoint for Fleet usage.
     """
+    # Wait for background_init if needed
     if not state.agent:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        for _ in range(10):
+            if state.agent: break
+            await asyncio.sleep(1)
+        if not state.agent:
+            raise HTTPException(status_code=503, detail="Agent still warming up in background.")
 
     try:
         # Extract last message as the prompt
@@ -435,8 +450,13 @@ async def fleet_generate(request: GenerateRequest):
     """
     Fleet Generate Endpoint: Direct text generation.
     """
+    # Wait for background_init if needed
     if not state.agent:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        for _ in range(10):
+            if state.agent: break
+            await asyncio.sleep(1)
+        if not state.agent:
+            raise HTTPException(status_code=503, detail="Agent still warming up in background.")
 
     result = await state.agent.prompt_service.generate_async(
         prompt=request.prompt,
@@ -456,6 +476,7 @@ async def generate_image(request: ImageRequest):
     if not state.visual_service:
         # Try lazy init
         try:
+            from kaedra.services.visual import VisualService
             state.visual_service = VisualService()
         except Exception as e:
             raise HTTPException(status_code=503, detail=f"Visual Service unavailable: {e}")
@@ -494,6 +515,7 @@ async def generate_video(request: VideoGenerationRequest):
     """
     if not state.visual_service:
         try:
+            from kaedra.services.visual import VisualService
             state.visual_service = VisualService()
         except Exception as e:
             raise HTTPException(status_code=503, detail=f"Visual Service unavailable: {e}")
@@ -587,6 +609,7 @@ async def list_models_v1():
     """List available models (OpenAI/Fleet compatible) via GLOBAL endpoint."""
     return {
         "object": "list",
+        "data": [
             # Google Models (Global)
             {"id": "gemini-3-flash-preview", "object": "model", "owned_by": "google", "endpoints": ["global"]},
             {"id": "gemini-3-pro-preview", "object": "model", "owned_by": "google", "endpoints": ["global"]},
@@ -611,6 +634,7 @@ async def list_models_v1():
             {"id": "deepseek-r1-0528", "object": "model", "owned_by": "deepseek", "endpoints": ["global"]},
             {"id": "llama-4-maverick-17b-128e-preview", "object": "model", "owned_by": "meta", "endpoints": ["global"]},
             {"id": "qwen3-next-80b-thinking", "object": "model", "owned_by": "alibaba", "endpoints": ["global"]}
+        ]
     }
 
 @app.get("/models")
@@ -685,6 +709,9 @@ async def fleet_search(request: SearchRequest):
     """
     Fleet Search Endpoint: Grounded Google Search.
     """
+    if "google_search" not in GOOGLE_TOOLS:
+        raise HTTPException(status_code=503, detail="Search service not configured.")
+        
     return GOOGLE_TOOLS["google_search"](request.query, request.num_results)
 
 @app.post("/analyze-url")
@@ -693,6 +720,7 @@ async def fleet_analyze_url(request: AnalyzeUrlRequest):
     Fleet Analyze URL Endpoint: Scrape and Metadata.
     """
     if not state.web_service:
+        from kaedra.services.web import WebService
         state.web_service = WebService()
 
     metadata = state.web_service.extract_metadata(request.url)
@@ -704,7 +732,12 @@ async def fleet_execute_code(request: ExecuteCodeRequest):
     Fleet Execute Code Endpoint (Simulation/Prompt-based for now).
     """
     if not state.agent:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        for _ in range(10):
+            if state.agent: break
+            await asyncio.sleep(1)
+            
+        if not state.agent:
+            raise HTTPException(status_code=503, detail="Agent still warming up in background.")
 
     # TODO: Connect to Vertex AI Code Execution Tool if available
     prompt = f"Executing {request.language} code:\n```\n{request.code}\n```\n\nSimulate the output of this code:"
@@ -801,7 +834,12 @@ async def create_embeddings(request: EmbeddingRequest):
     Create Embeddings Endpoint.
     """
     if not state.agent:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        for _ in range(10):
+            if state.agent: break
+            await asyncio.sleep(1)
+            
+        if not state.agent:
+            raise HTTPException(status_code=503, detail="Agent still warming up in background.")
 
     vector = state.agent.prompt_service.embed(request.text, request.model)
     return {
@@ -1183,7 +1221,12 @@ async def get_story_session(session_id: str):
 async def generate_story_content(request: StoryGenerateRequest):
     """Generate story content using StoryEngine."""
     if not state.agent:
-        raise HTTPException(status_code=503, detail="Agent not initialized")
+        for _ in range(10):
+            if state.agent: break
+            await asyncio.sleep(1)
+            
+        if not state.agent:
+            raise HTTPException(status_code=503, detail="Agent still warming up in background.")
     
     try:
         # Use agent's prompt service for story generation

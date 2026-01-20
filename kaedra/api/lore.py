@@ -7,9 +7,12 @@ from ..services.loredb import LoreDB, LoreBlock
 router = APIRouter(prefix="/lore", tags=["Lore"])
 
 # Initialize LoreDB (using a default world for now)
-# In a real app, this might be injected or managed via app state
-LORE_DB_PATH = Path("data/worlds/default")
-lore_db = LoreDB(LORE_DB_PATH)
+LORE_DB_PATH = Path("lore/worlds/world_bee9d6ac")
+try:
+    lore_db = LoreDB(LORE_DB_PATH)
+except Exception as e:
+    print(f"⚠️ [Lore API] Critical failure initializing LoreDB: {e}")
+    lore_db = None
 
 # Request/Response Models
 class LoreItemResponse(BaseModel):
@@ -26,8 +29,10 @@ class LoreItemResponse(BaseModel):
 async def get_lore_feed(limit: int = 50):
     """
     Get a feed of lore items sorted by importance/updates.
-    Currently maps LoreDB blocks to the LoreItem format expected by the frontend.
     """
+    if not lore_db:
+        raise HTTPException(status_code=503, detail="Lore Database unavailable")
+        
     # Simple strategy: get all blocks, mock importance if missing
     # Optimized query would be better, but LoreDB is simple for now
     blocks = lore_db.query("SELECT * FROM blocks ORDER BY updated DESC LIMIT ?", (limit,))
@@ -39,6 +44,9 @@ async def get_weighted_lore(limit: int = 50):
     """
     Get lore items weighted by importance.
     """
+    if not lore_db:
+        raise HTTPException(status_code=503, detail="Lore Database unavailable")
+        
     # Try to find blocks with 'importance' attribute, fall back to recent
     blocks = lore_db.query(
         "SELECT * FROM blocks WHERE json_extract(attrs, '$.importance') IS NOT NULL ORDER BY json_extract(attrs, '$.importance') DESC LIMIT ?", 
@@ -56,6 +64,9 @@ async def search_lore(q: str = Query(..., min_length=1), limit: int = 20):
     """
     Search lore blocks.
     """
+    if not lore_db:
+        raise HTTPException(status_code=503, detail="Lore Database unavailable")
+        
     blocks = lore_db.search(q, limit=limit)
     return [_map_block_to_item(b) for b in blocks]
 
@@ -64,6 +75,9 @@ async def get_lore_item(id: str):
     """
     Get a single lore item by ID.
     """
+    if not lore_db:
+        raise HTTPException(status_code=503, detail="Lore Database unavailable")
+        
     block = lore_db.get_block(id)
     if not block:
         raise HTTPException(status_code=404, detail="Lore item not found")

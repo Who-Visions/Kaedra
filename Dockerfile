@@ -17,4 +17,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Run the web service on container startup.
 # We use Gunicorn with Uvicorn workers for production-grade reliability and performance.
 # Cloud Run sets the PORT env var.
-CMD exec gunicorn --bind :$PORT --workers 1 --worker-class uvicorn.workers.UvicornWorker --threads 8 --timeout 0 kaedra.api.main:app
+CMD exec gunicorn --bind :$PORT --workers 1 --worker-class uvicorn.workers.UvicornWorker --timeout 0 kaedra.api.main:app

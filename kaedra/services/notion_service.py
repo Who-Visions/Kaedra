@@ -46,11 +46,13 @@ class NotionService:
         }
         # We also maintain a httpx client for robust queries as per contract
         self.client = httpx.Client(timeout=30.0, headers=self.headers)
+        self.enabled = self.token != "MISSING_TOKEN"
 
     def _load_token(self) -> str:
         """Load token from environment or toml config."""
         # Priority 1: Env Var
-        env_token = os.environ.get("NOTION_API_KEY")
+        # Support both standard names
+        env_token = os.environ.get("NOTION_API_KEY") or os.environ.get("NOTION_TOKEN")
         if env_token:
             return env_token
             
@@ -62,7 +64,9 @@ class NotionService:
             except Exception as e:
                 print(f"Warning: Failed to load token from config: {e}")
         
-        raise ValueError("No Notion Token found in Environment (NOTION_API_KEY) or config/notion.toml")
+        # Non-lethal fallback for Cloud Run initialization
+        print("⚠️ [NotionService] No Notion Token found. Service will operate in degraded mode.")
+        return "MISSING_TOKEN"
 
     def _query_universe_db_httpx(self, filter_obj: Dict[str, Any] = None, sorts: List[Dict] = None, page_size: int = 100, start_cursor: str = None) -> List[Dict]:
         """
