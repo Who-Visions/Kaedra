@@ -8,8 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import sys
-import nest_asyncio
-nest_asyncio.apply()  # Allow nested event loops for sync-in-async compatibility
+try:
+    import nest_asyncio
+    nest_asyncio.apply()  # Allow nested event loops for sync-in-async compatibility
+except ImportError:
+    print("⚠️ [Kaedra API] nest_asyncio not found. Continuing without nested loop support.")
 
 # -------------------------------------------------------------------------
 # GLOBAL STATE & CONFIG
