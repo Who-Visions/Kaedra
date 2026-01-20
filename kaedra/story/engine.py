@@ -54,6 +54,7 @@ from kaedra.story.components.console_ui import EngineUI
 
 from kaedra.story.components.router import EngineRouter
 from kaedra.story.components.prompts import PromptBuilder
+from kaedra.story.chain import StoryChainer
 # NOTE: LoreEditor, VisualService, AudioService, ingest_youtube moved to lazy imports
 
 
@@ -79,7 +80,7 @@ QUEUE_FILE = LORE_DIR / ".message_queue.json"
 class TierSpec:
     name: str
     model: str
-    thinking_level: str
+    budget: int
     max_tokens: int
     temperature: float
     candidate_count: int
@@ -274,6 +275,17 @@ class StoryEngine:
         # Load World Bible (Context Caching Prep)
         if self.world_config.get("world_id"):
             self.load_world_bible()
+        
+        # --- SYNC MANAGER: Downsync Notion → SQLite on startup ---
+        try:
+            from kaedra.services.sync_manager import get_sync_manager
+            self._sync_manager = get_sync_manager()
+            # Background downsync (non-blocking)
+            import threading
+            threading.Thread(target=self._sync_manager.downsync, daemon=True).start()
+        except Exception as e:
+            log.warning(f"SyncManager unavailable: {e}")
+            self._sync_manager = None
 
     def _init_log(self):
         """Initialize session logging."""
@@ -310,10 +322,30 @@ class StoryEngine:
 
         if bible_content:
             full_bible = "\n\n".join(bible_content)
-            # Inject as a high-priority user message (Simulated System Context)
-            header = f"[SYSTEM] WORLD BIBLE INJECTION ({len(bible_content)} files)"
-            self.context.add_text("user", f"{header}\n\n{full_bible}\n\n[END BIBLE]")
-            self.console.print(f"[dim cyan]>> [BIBLE] Injected {len(full_bible)} chars of context.[/]")
+            
+            # Use Cache Manager for optimization
+            try:
+                from kaedra.services.cache_manager import get_cache_manager
+                cm = get_cache_manager()
+                # Create/Get cache for this bible
+                cache_name = cm.get_or_create_cache(
+                    content=full_bible,
+                    system_instruction=f"You are the Kaedra StoryEngine. Use this World Bible for context in the {self.world_config.get('name', 'current world')}."
+                )
+                if cache_name:
+                    # Point context manager to the cache
+                    self.context.cached_content_name = cache_name
+                    self.console.print(f"[dim cyan]>> [BIBLE] Context Cached: {cache_name}[/]")
+                else:
+                    # Fallback to direct injection
+                    header = f"[SYSTEM] WORLD BIBLE INJECTION ({len(bible_content)} files)"
+                    self.context.add_text("user", f"{header}\n\n{full_bible}\n\n[END BIBLE]")
+                    self.console.print(f"[dim cyan]>> [BIBLE] Injected {len(full_bible)} chars (Cache failed).[/]")
+            except Exception as e:
+                log.warning(f"Caching failed, falling back to injection: {e}")
+                header = f"[SYSTEM] WORLD BIBLE INJECTION ({len(bible_content)} files)"
+                self.context.add_text("user", f"{header}\n\n{full_bible}\n\n[END BIBLE]")
+                self.console.print(f"[dim cyan]>> [BIBLE] Injected {len(full_bible)} chars.[/]")
 
     def set_mode(self, new_mode: Mode):
         """Change mode with transition hooks."""
@@ -498,11 +530,11 @@ User input:
     def _build_tiers(self) -> Dict[str, TierSpec]:
         """Define the thinking tiers."""
         return {
-            "minimal": TierSpec("minimal", FLASH_MODEL, "minimal", 1200, 0.85, 2),
-            "low":     TierSpec("low",     FLASH_MODEL, "low",     1600, 0.80, 2),
-            "medium":  TierSpec("medium",  FLASH_MODEL, "medium",  2200, 0.75, 2),
-            "high":    TierSpec("high",    FLASH_MODEL, "high",    4096, 0.70, 3),  # Flash with High Thinking
-            "ultra":   TierSpec("ultra",   PRO_MODEL,   "high",    8192, 0.90, 3),  # Pro for Deep Reasoning
+            "minimal": TierSpec("minimal", FLASH_MODEL, 0,    1200, 0.85, 2),
+            "low":     TierSpec("low",     FLASH_MODEL, 1024, 1600, 0.80, 2),
+            "medium":  TierSpec("medium",  FLASH_MODEL, 2048, 2200, 0.75, 2),
+            "high":    TierSpec("high",    FLASH_MODEL, 4096, 4096, 0.70, 3),
+            "ultra":   TierSpec("ultra",   PRO_MODEL,   8192, 8192, 0.90, 3),
         }
 
     def _route_tiers(self, user_input: str) -> List[str]:
@@ -535,8 +567,8 @@ User input:
             tools=None, # DISABLE TOOLS FOR VARIANTS
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
             thinking_config=types.ThinkingConfig(
-                thinking_level=tier.thinking_level,
-                include_thoughts=False
+                thinking_budget=tier.budget, # tier.budget is already defined in TierSpec
+                include_thoughts=(self.mode in (Mode.GOD, Mode.DIRECTOR) or self.tension.current > 0.8)
             ),
         )
 
@@ -578,6 +610,54 @@ User input:
                     self.console.print(f"[red]Gen Error ({tier.name} loop): {e}[/]")
                     break
             return outs
+
+    async def _gen_with_tier_async(self, tier: TierSpec, system_prompt: str, history: List[types.Content], count: int = 1) -> List[str]:
+        """Generate candidates for a specific tier asynchronously (NO TOOLS)."""
+        cfg_kwargs = dict(
+            system_instruction=system_prompt,
+            temperature=tier.temperature,
+            max_output_tokens=tier.max_tokens,
+            tools=None,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+            thinking_config=types.ThinkingConfig(
+                thinking_budget=tier.budget,
+                include_thoughts=(self.mode in (Mode.GOD, Mode.DIRECTOR) or self.tension.current > 0.8)
+            ),
+        )
+
+        try:
+            cfg_kwargs["candidate_count"] = count
+            config = types.GenerateContentConfig(**cfg_kwargs)
+        except TypeError:
+            cfg_kwargs.pop("candidate_count", None)
+            config = types.GenerateContentConfig(**cfg_kwargs)
+
+        outs = []
+        for _ in range(count):
+            try:
+                gen_kwargs = {
+                    "model": tier.model,
+                    "config": config,
+                }
+                if self.context.cached_content_name:
+                    gen_kwargs["contents"] = [history[-1]] if history else []
+                    gen_kwargs["cached_content"] = self.context.cached_content_name
+                else:
+                    gen_kwargs["contents"] = history
+
+                response = await self.client.aio.models.generate_content(**gen_kwargs)
+
+                t = ""
+                if response.candidates:
+                    cand = response.candidates[0]
+                    t = getattr(cand, "text", None)
+                    if not t and cand.content and cand.content.parts:
+                        t = cand.content.parts[0].text
+                
+                if t: outs.append(t)
+            except Exception as e:
+                log.error(f"Async Gen Error ({tier.name}): {e}")
+        return outs
 
         try:
             response = self.client.models.generate_content(
@@ -621,7 +701,7 @@ Output:
         judge_config = types.GenerateContentConfig(
             temperature=0.1,
             max_output_tokens=2048,
-            thinking_config=types.ThinkingConfig(thinking_level="low", include_thoughts=False),
+            thinking_config=types.ThinkingConfig(thinking_budget=1024, include_thoughts=True),
             response_mime_type="application/json",
         )
         try:
@@ -707,6 +787,9 @@ Output:
         if cmd == "lore":
             return await self._cmd_lore(args)
 
+        if cmd in ("rhea", "cowriter", "cw"):
+            return await self._cmd_rhea(args)
+
         if cmd in ("screenplay", "sp"):
             return await self._cmd_screenplay(args)
 
@@ -718,6 +801,7 @@ Output:
 
         if cmd in ("youtube", "yt"):
             return await self._cmd_youtube(args)
+
 
         if cmd in ("speak", "tts"):
             return await self._cmd_speak(args)
@@ -732,6 +816,35 @@ Output:
         _elapsed = (time.perf_counter() - _cmd_start) * 1000
         log.debug(f"Command '{cmd}' not found (parse: {_elapsed:.1f}ms)")
         return EngineResponse(text=f"Unknown command: {cmd}")
+
+    async def _cmd_rhea(self, args: List[str]) -> EngineResponse:
+        """Consult Rhea Noir."""
+        if not args:
+            return EngineResponse(text="Usage: /rhea <message or instruction>")
+        
+        prompt = " ".join(args)
+        self.console.print(f"[bold magenta]🌙 Calling Rhea...[/]")
+        
+        cw = self.cowriter
+        if not cw:
+             return EngineResponse(text="[!] CoWriter service unavailable.")
+             
+        response = cw.consult(prompt, context=self.context.get_last_n_tokens(1000))
+        
+        self.console.print(Panel(response, title="🌙 Rhea Noir", border_style="bold magenta"))
+        return EngineResponse(text="")
+
+    @property
+    def cowriter(self):
+        """Lazy-init CoWriter on first access."""
+        if not hasattr(self, "_cowriter") or self._cowriter is None:
+            try:
+                from kaedra.story.components.co_writer import CoWriter
+                self._cowriter = CoWriter()
+            except Exception as e:
+                self.console.print(f"[dim yellow]Warning: CoWriter unavailable ({e})[/]")
+                self._cowriter = False
+        return self._cowriter if self._cowriter else None
 
     async def _cmd_lights(self, args: List[str], kv: Dict[str, str]) -> EngineResponse:
         if not args:
@@ -1016,32 +1129,35 @@ Output:
             transient=True
         ) as progress:
 
-            factory_task = progress.add_task(f"[cyan]Factory: Spinning up {', '.join(requested_tiers)}...", total=len(requested_tiers))
+            factory_task = progress.add_task(f"[cyan]Factory: Spinning up {', '.join(requested_tiers)} (Parallel)...", total=len(requested_tiers))
 
+            # Prepare async tasks
+            tasks = []
             for t_name in requested_tiers:
                 if t_name not in tiers_def:
                     progress.advance(factory_task)
                     continue
                 tier = tiers_def[t_name]
+                
+                # We use the base_fork history for all parallel tasks
+                tasks.append(self._gen_with_tier_async(tier, system_prompt, base_fork["history"], count=per_tier))
 
-                # ISOLATION RESTORE
-                ContextIsolation.restore_fork(self.context, base_fork)
+            # Wait for all generators to complete
+            results = await asyncio.gather(*tasks, return_exceptions=True)
 
-                # Validate clean state before variant generation
-                if not ContextIsolation.validate_clean_state(self.context):
-                    self.console.print("[red]⚠️ Tool contamination detected, skipping stage[/]")
+            for i, result in enumerate(results):
+                t_name = requested_tiers[i]
+                if isinstance(result, Exception):
+                    log.error(f"Tier {t_name} failed: {result}")
                     progress.advance(factory_task)
                     continue
-
-                outs = self._gen_with_tier(tier, system_prompt, count=per_tier)
-
-                for i, txt in enumerate(outs):
+                
+                for idx, txt in enumerate(result):
                     all_candidates.append({
-                        "id": f"{t_name}_{i+1}",
+                        "id": f"{t_name}_{idx+1}",
                         "tier": t_name,
                         "text": txt
                     })
-
                 progress.advance(factory_task)
 
             if not all_candidates:
@@ -1083,6 +1199,10 @@ Output:
         elif text.lower().startswith(":research "):
             text = text[10:].strip()
             force_plan = {"intent": "research", "should_write_scene": False, "needs_tools": True}
+        elif text.lower().startswith(":warp ") or text.lower().startswith(":chain "):
+            prefix_len = 6 if text.lower().startswith(":warp ") else 7
+            text = text[prefix_len:].strip()
+            force_plan = {"intent": "chain", "should_write_scene": True, "needs_tools": False}
 
         # Standard Commands (only if not an intent shortcut)
         if text.startswith(":") and not force_plan:
@@ -1156,8 +1276,14 @@ Output:
         final_text = ""
 
         if not needs_tools:
-            # === CANON FACTORY TRACK (Safe, High Quality, No Tools) ===
-            final_text = await self.generate_canon_pack(eff_input, system_prompt, router_plan)
+            # === CHAINED vs CANON FACTORY ===
+            if router_plan.get("intent") == "chain":
+                self.console.print("[bold cyan]>> [WARP] Engaging Hierarchical Chaining Pipeline...[/]")
+                chainer = StoryChainer(console=self.console)
+                final_text = await chainer.chain_generation(eff_input, system_prompt)
+            else:
+                # === CANON FACTORY TRACK (Safe, High Quality, No Tools) ===
+                final_text = await self.generate_canon_pack(eff_input, system_prompt, router_plan)
 
             # Manually inject winner into context (as model response)
             self.context.add_text("model", final_text)
@@ -1193,7 +1319,7 @@ Output:
                 max_output_tokens=max_tokens,
                 tools=ENGINE_TOOLS,
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-                thinking_config=types.ThinkingConfig(thinking_level=thinking_level, include_thoughts=True)
+                thinking_config=types.ThinkingConfig(thinking_budget=1024, include_thoughts=True)
             )
 
             # Use helper method

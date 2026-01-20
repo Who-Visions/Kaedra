@@ -12,6 +12,7 @@ class AppState:
     visual_service: Optional[Any] = None
     orchestrator: Optional[Any] = None
     slack_service: Optional[Any] = None
+    lore_service: Optional[Any] = None
 
 # Global state instance
 state = AppState()

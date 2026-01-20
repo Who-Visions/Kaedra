@@ -1,0 +1,2962 @@
+STITCH & SLAY
+A Screenplay by Kaedra + Rhea Noir
+
+==================================================
+
+INT. JADA'S WORKSHOP - NIGHT
+
+**INT. JADA'S WORKSHOP - NIGHT**
+
+**MACRO CLOSE-UP:**
+
+A thick, industrial needle PIERCES through iridescent EVA foam with a wet, rhythmic *THWACK*. The thread—heavy-duty nylon—creaks under the tension. 
+
+JADA (24, sharp eyes, skin the color of dark roast coffee) has charcoal dust under her fingernails and silver paint smeared across the cheekbone of her tired but focused face. 
+
+She wears an oversized, salt-stained Iverson jersey and a lavender silk hair wrap. She’s barefoot. 
+
+**WIDER:**
+
+The workshop is a basement sanctuary. Amber light from three different desk lamps pools over a central industrial workbench, fighting against the rhythmic, ghostly blue flicker of a 3D printer in the corner. 
+
+Racks of half-finished capes—velvets, synthetics, leathers—hang like ghosts. A wall is plastered with reference photos: Janelle Monáe in futuristic chrome, ancient West African bronze masks, and schematics for Valkyrie flight-suits.
+
+Jada grunts, wrestling with a massive breastplate. It’s the "Cyber-Valkyrie" rig. She picks up a HEAT GUN. The coil glows orange. 
+
+The *WHIRR* of the fan fills the room. She blasts the foam, the heat making the material malleable. With calloused hands, she forces the curve, holding it until her muscles tremble.
+
+JADA
+(Muttered, breathless)
+Stay, you stubborn ass jawn. Stay...
+
+The foam cools into a perfect, aggressive arc. She exhales, the breath hitching in her chest.
+
+JADA (V.O.)
+Forty hours of sanding for a thirty-second walk-on. If this seam doesn’t hold the tension of the LEDs, the whole rig’s gonna blow a fuse at the Con. Then what? All this sweat for a "nice try" tweet? 
+
+She stands up, joints POPPING like bubble wrap. She moves to a cracked, floor-length mirror propped up by milk crates. 
+
+Next to the mirror is "THE DOUBLE"—a mannequin molded exactly to Jada’s measurements. No standard retail proportions here. Wide hips, sturdy thighs, a real-world waist.
+
+Jada lifts the breastplate and presses it against her own torso. She adjusts the nylon straps, cinching them over the Iverson jersey. 
+
+She looks at herself. Really looks. She shifts her weight, checking the silhouette. The armor doesn't hide her curves; it cages them in silver-etched power.
+
+JADA
+(To her reflection)
+Aight. Okay. We seeing it now. No cap, this silhouette is lethal.
+
+She strikes a pose—back straight, chin up. For a second, the exhaustion vanishes. She isn't a tired girl in a basement; she’s the vanguard of a dead empire.
+
+*PING.*
+
+The sound is sharp, digital, and annoying. It comes from a battered MacBook perched on a stack of storage bins.
+
+Jada drops the pose. Her shoulders slump. She trudges over and swipes the trackpad with a knuckle to keep the paint off the keys.
+
+**ON SCREEN:** An email from a commission client. 
+*“Hey Jada, following up on the 'Star-Knight' gauntlets. Found a guy using Midjourney/3D-Print workflows who can do a 'similar vibe' for $50. Can you match or should I go with the AI-gen route?”*
+
+Jada’s jaw tightens. Her teeth grind. 
+
+JADA
+Fifty dollars? For a whole-ass gauntlet?
+
+She stares at the screen. The blue light makes her look hollow. 
+
+JADA
+Deadass? Go ahead then. Go get your plastic trash. See if that "vibe" holds up when the light hits it. See if it got a soul.
+
+She doesn't reply. She slams the laptop shut. The silence of the basement feels heavier now. 
+
+She turns back to the Valkyrie suit. She reaches into the interior of the chest piece, her fingers dancing over a hidden terminal of copper wiring and soldered chips. 
+
+JADA
+(A whisper, defiant)
+Let 'em try to prompt *this* into a generator. You can't code soul. 
+
+She flips a micro-toggle.
+
+*CLICK.*
+
+A low HUM vibrates through the room. Starting from the "heart" of the breastplate, a deep, rhythmic violet light begins to PULSE. It travels through the etched grooves of the foam like blood through veins. 
+
+The violet glow hits Jada’s face. It’s hypnotic. The "Masterpiece" is breathing.
+
+Jada stares at it for a long beat. The anger from the email fades, replaced by a cold, hard pride. 
+
+She collapses into her creaky swivel chair. She cracks her knuckles—*pop, pop, pop*—and just looks at the suit. 
+
+She’s spent. Her back aches. Her eyes burn. But she’s winning.
+
+JADA
+(To the suit)
+We gonna movie-star ‘em, girl. They ain't even ready for the slay.
+
+She reaches for her phone. The screen-light illuminates her fierce, tired smile. She opens the camera app, holds the phone up, and frames a shot: her silhouette, dark and jagged, against the pulsing violet glow of the armor.
+
+She types a caption: *STITCHED. NOT PROMPTED. SEE Y'ALL AT THE TOP.*
+
+**FADE OUT.**
+
+**CLOSING IMAGE:**
+Jada, small but immovable, silhouetted against the glowing Valkyrie armor. The warrior she built towers over her, but Jada is the one holding the power.
+
+---PAGE BREAK---
+
+INT. JADA'S WORKSHOP - NIGHT (CONT'D)
+
+[SCENE START]
+
+**INT. JADA'S WORKSHOP - NIGHT (CONT’D)**
+
+The workshop is a cavern of shadow, lit only by the electric neon of JADA’S (24, Black, a force of nature in a tank top) dual-monitor setup. 
+
+The blue light catches the sweat on her brow, turning her forehead into a topographical map of a digital world. The silence is heavy, smelling of spray paint, burnt flux, and old coffee.
+
+*DING.*
+
+The "New Message" chime cuts through the air like a gunshot. 
+
+Jada doesn’t move for a beat. Her hands—stained silver at the knuckles, palms mapped with tiny needle-prick scars—hover over a soldering iron. She sets it down on a heat-proof mat and turns to the screens.
+
+She clicks. The TECHCORP logo—a "TC" so silver and sleek it looks like it was bled from a robot—fills the display.
+
+**JADA (V.O.)**
+(low, a prayer)
+Please let this be the one. Please don’t be playing with me.
+
+She scrolls. The subject line: *PARTNERSHIP PROPOSAL: THE FUTURE OF “JADACRAFT.”*
+
+Her eyes widen. She hits a section titled *COMPENSATION*. Her breath hitches. 
+
+**JADA**
+Deadass? 
+
+She scrolls faster. The numbers are staggering. It’s more than her Patreon, her Etsy, and her weekend shifts at the fabric store combined for a year. It’s "move out of the hood" money. It’s "retirement for Nana" money.
+
+Then, she hits the fine print. *“Digital Asset Synthesis.” “AI-Integrated Design.” “Full-Body Volumetric Ownership.”*
+
+Jada’s jaw tightens. Her hand clenches into a fist, the silver paint cracking on her knuckles. She reaches for her phone and hits a speed-dial.
+
+On the third ring, MARCUS (25, Black, sharp, the kind of guy who can fix a server and a car with the same wrench) picks up. In the background, the rhythmic, high-pitched *whir-click-whir* of a 3D printer hums.
+
+**MARCUS (V.O.)**
+(through speakerphone)
+Yo, J. You see the time? I’m mid-print on that helmet—
+
+**JADA**
+Eighty-five thousand, Marc.
+
+Silence. The 3D printer is the only thing speaking for five long seconds.
+
+**MARCUS (V.O.)**
+Say that again?
+
+**JADA**
+Eighty-five. To start. TechCorp. They sent the contract over two minutes ago. They want the "JadaCraft Aesthetic."
+
+**MARCUS (V.O.)**
+(voice dropping)
+Jada... nobody gives away eighty-five racks for an "aesthetic." What’s the catch? Read the deliverables.
+
+Jada leans in, her face inches from the screen.
+
+**JADA**
+They want a full scan. Every piece of the masterpiece armor. They want to digitize the patterns for their 1.0 Alpha rollout. Marc, they’re offering enough to get Titi out of that third-floor walk-up. I can’t sew my way into that kind of equity, no matter how fast I work.
+
+**MARCUS (V.O.)**
+Equity? J, they don't want your talent. They want your data. Once they got the scan, they don't need the seamstress. You’re building your own replacement. That’s digital sharecropping, sis. They take your seeds, grow the crop, and then charge you for the harvest.
+
+Jada stands up, pacing the small radius of her chair. She kicks a stray spool of EVA foam.
+
+**JADA**
+Replacement? Please. This AI can’t even get a curve right without it looking like a glitch. I’ve seen their renders; they look like plastic junk. But the money? The money is real as hell. I’m tired of being "starving-artist" famous. I want "pay-the-bills" famous. 
+
+**MARCUS (V.O.)**
+And when they use your face and your style to sell a million skins to kids who don’t even know your name? When they "optimize" the Blackness out of your designs because the algorithm says it "scales better"? What then?
+
+**JADA**
+Then I’ll be watching them do it from a house with central air and a door that actually locks, Marc! No cap, I’m tired!
+
+She stops pacing. Her eyes drift to her phone, resting on the desk. A notification from Instagram pops up. A comment on her latest progress reel.
+
+*USER: GAmerGate99: Why you gotta make the armor so "urban"? The character isn't Black. Stop forcing your politics into cosplay.*
+
+Jada stares at the screen. The comment is a tiny drop of poison in a sea of digital noise, but it stings because she’s exhausted. She looks back at the TechCorp offer. The massive dollar amount.
+
+**JADA**
+(voice cold)
+They think I’m "too much" for the hobby? Fine. TechCorp wants to buy the vibe? Let 'em buy it. Maybe I need a shield. Maybe this bag is the only shield I’m gonna get.
+
+**MARCUS (V.O.)**
+(softly)
+A shield stops things from getting in, J. It also keeps you from getting out. Don’t sign that jawn tonight. Just... sleep on it.
+
+**JADA**
+I’ll talk to you later, Marc.
+
+She ends the call. The silence returns, heavier than before.
+
+Jada walks over to the duct-tape dress form. The masterpiece armor—the breastplate—glows under the shop light. It is intricate, hand-tooled, featuring patterns inspired by West African geometry and Philly street art. It is a piece of her soul rendered in foam and paint.
+
+She looks at her hand. 
+
+She holds it up to the monitor, placing her palm near the "ACCEPT" button. 
+
+The contrast is jarring. Her hand is textured, stained with the labor of a thousand hours, scarred and real. The screen is flat, perfect, and utterly cold. 
+
+The cursor blinks. A heartbeat of light.
+
+Jada’s finger twitches over the mouse.
+
+**FADE OUT.**
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. MARCUS'S APARTMENT - NIGHT
+
+[SCENE START]
+
+**INT. MARCUS'S APARTMENT - NIGHT**
+
+CLOSE-UP: A rotary cutter SLICES through thick, brown butcher paper with a rhythmic *zip*. 
+
+Steady hands guide the blade. These aren't just hands; they are a map of history—scarred knuckles, ink stains under the nails, a faint burn mark on the thumb from a 3D printer bed.
+
+The camera pulls back to reveal MARCUS (28, spectacles, wearing a faded "Blerdcon 2019" tee). His apartment is a warm sanctuary of golden lamplight and organized chaos. A heavy oak dining table has been surrendered to spools of high-tensile thread and rolls of iridescent EVA foam.
+
+He wears a wireless headset. His phone glows on the table.
+
+**INT. JADA'S WORKSHOP - NIGHT (INTERCUT)**
+
+Jada paces. The room is a stark contrast—cold neon blue, shadows stretching long across the floor. Behind her, the MASTERPIECE ARMOR stands on a headless mannequin. It looks like a god waiting to be birthed.
+
+Jada holds her phone like a grenade she’s afraid to drop.
+
+JADA
+Yo, Marc. You busy? Or you still tryna be the Black Vera Wang of the Tri-state?
+
+MARCUS
+(A soft laugh, not looking up)
+I’m just tryna get this bodice to sit right, Jada. What’s up? You sound... wiry.
+
+JADA
+I ain't wiry, I’m just... I’m lookin’ at this new carbon-fiber weave. If I hit the seams with that industrial cyanoacrylate, is it gonna fog the finish? I can’t have my jawn lookin’ dusty for the reveal.
+
+Marcus stops cutting. He sets the rotary tool down. He knows that "voice." The way she talks technical when her heart is actually red-lining.
+
+MARCUS
+Jada. 
+
+JADA
+What? I’m deadass, I don't want the chemical reaction to—
+
+MARCUS
+Jada. Stop drawin’. You didn’t call me at midnight to talk about adhesive. What happened?
+
+Jada stops pacing. She looks at her monitor. The TechCorp logo is a bright, corporate eye staring back at her.
+
+JADA
+I got the email, Marc. TechCorp. They didn't just invite me to the incubator... they offered me a full-scale partnership. 
+
+Marcus goes still. He leans back in his chair, the wood creaking.
+
+JADA (CONT'D)
+It’s the bag, bul. For real, for real. They talkin’ six figures upfront. Licensing. A studio in the city. I could finally get out of this basement. I could pay off Ma’s medical debt and still have enough to buy a whole fleet of Bambu printers.
+
+Marcus doesn't celebrate. He looks at his own work—the hand-stitched patterns, the soul in the physical craft.
+
+MARCUS
+Did you read the fine print? The "Digital Twin" clause?
+
+JADA
+(Defensive)
+I read enough. They want to "preserve the process." It’s innovation, Marc. Don't start with that purist talk.
+
+MARCUS
+It ain't about being a purist, it’s about being a ghost. I’ve seen what they do. They don't want you, Jada. They want your measurements. They’re gonna scrape your stitch patterns, your silhouette logic, the way you blend tech with textile—and they’re gonna feed it into an AI generator. 
+
+He stands up, pacing his small apartment, his voice getting tight.
+
+MARCUS (CONT'D)
+In eighteen months, there’s gonna be a "Jada-Style" button on their software. And you? You’ll be sitting in a studio they own, watching a machine do a version of your work that’s just hollow enough to be cheap. They ain't buying your craft, Jada. They’re buying the rights to bury it. You’re signing the death warrant for every Black girl coming up behind you with a sewing machine.
+
+JADA
+(Snapping)
+That’s easy for you to say from the high ground! You got a stable day job at the firm, Marc. You got benefits! You got a 401k! I’m out here bettin’ it all on me, every single day. My rent don't care about "authenticity," and my landlord don't accept "soul" as a down payment. This is life-changing bread!
+
+MARCUS
+(Softly)
+We’ve been here before. Remember the 2022 Expo? 
+
+Jada flinches. The memory hits like a physical weight.
+
+MARCUS (CONT'D)
+We spent forty-eight hours straight in your kitchen. No sleep. Just Red Bull and the smell of hot glue. We built that entire Vanguard set by hand. And who did the judges give the "Innovator" award to? That kid from the suburbs who just prompt-engineered a 3D print and didn't even know how to finish a seam.
+
+JADA
+(Voice trembling)
+And that’s exactly why I’m takin’ the deal! I’m tired of being the one workin’ ten times harder for a "Good Job" and a pat on the back while they hand the trophies to the people who took the shortcut. If I take this, I’m the one in the room. I’m the one with the power.
+
+MARCUS
+You won't be in the room, Jada. You’ll be the wallpaper.
+
+Silence hangs between them, heavy and electric. It’s the kind of silence that only exists between two people who have almost said "I love you" a thousand times but said "Check this seam" instead.
+
+JADA
+(Quietly)
+I gotta go. I need to think.
+
+MARCUS
+Don't let 'em erase you before you even get started. Please.
+
+JADA
+Aight, Marc. Goodnight.
+
+MARCUS
+'Night, Jada.
+
+Marcus takes off his headset. He looks at his workstation. He reaches over and clicks off the desk lamp. 
+
+**SPLIT SCREEN:**
+
+**LEFT SIDE (MARCUS):** He sits in the dark. The only light is the faint streetlamp filtering through his blinds. He looks exhausted, his hands resting uselessly on his lap. He wants to help her, but he knows he can't compete with a six-figure check.
+
+**RIGHT SIDE (JADA):** She stays in the neon blue. She turns toward her armor. The LED lights in the chest plate flicker—a tiny, unintentional glitch in the wiring. In the cold light, the masterpiece looks less like a triumph and more like a cage.
+
+Jada turns back to her monitor. The cursor in the "Reply" box blinks.
+
+*Blink.*
+*Blink.*
+*Blink.*
+
+Like a heartbeat. Or a countdown.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. TITI'S HOUSE - DAY
+
+[SCENE START]
+
+**INT. TITI'S HOUSE - DAY**
+
+The rhythmic *THUMP-THUMP-THUMP* of a 1950s cast-iron SINGER SEWING MACHINE is the only sound in the room. It’s a mechanical heartbeat. 
+
+Sunlight cuts through yellowed lace curtains, illuminating dust motes that dance over a bowl of steaming grits. The air is thick with the scent of Downy fabric softener and slow-simmering collard greens.
+
+TITI (65) sits at the dining table. She’s regal in a floral housecoat and a silk headwrap, her weathered hands guiding a vibrant piece of KENTE-PRINT fabric under the needle with surgical precision.
+
+Across from her, JADA (27) is a ghost of her online persona. She’s slumped in a mismatched wooden chair, swallowed by an oversized gray hoodie. Her "Masterpiece" armor is back at the apartment; here, she’s just a girl from North Philly with dark circles under her eyes.
+
+Jada’s thumb flickers over her phone screen—a frantic, blue-light twitch.
+
+JADA
+(muttering)
+TechCorp’s legal team sent over the revised PDF. Devon talkin’ ‘bout if I sign by Friday, the first wire hits Monday. Deadass, Titi. Six figures before I even stitch a hem.
+
+Titi doesn’t look up. *THUMP-THUMP-THUMP.* 
+
+JADA (CONT'D)
+I’m talkin’ real ‘get out of the trenches’ money. I could get you that spot in Cherry Hill. No more leaky pipes. No more—
+
+Titi clicks her tongue—a sharp, percussive sound that cuts through the machine’s rhythm. She stops the pedal. Silence rushes into the room.
+
+TITI
+Fold that edge, Jada.
+
+JADA
+Titi, I’m tryin’ to tell you—
+
+TITI
+And I’m tellin’ you the bias tape is slipping. Put that glass slab down and help your elder turn this hem.
+
+Jada sighs, a heavy, frustrated sound, and sets the phone face down. She leans forward, her fingers trembling slightly as she grips the fabric. 
+
+TITI (CONT'D)
+Now. What they want for all this "math" they giving you?
+
+JADA
+It ain’t math, it’s an AI sponsorship. They want to "optimize" my workflow. Scan my designs into their engine so the software can generate the base patterns. It’ll do all the tedious jawns—the scaling, the grading, the repetitive stitches. It’s efficient.
+
+TITI
+(snorts)
+Microwave greens are efficient, too. Get ‘em hot in three minutes. But they don't feed your spirit, and they sure as hell don't taste like home. 
+
+JADA
+It’s not the same. This is tech. It’s progress.
+
+TITI
+If a machine makes it, Jada, it don't got no ghost in it. You sellin' the clothes, or you sellin' your ghost?
+
+Jada flinches. She looks at the phone, then back at Titi’s steady gaze.
+
+JADA
+They want to scan *me*, too. Not just the work. A full-body digital twin for the "global avatar market." 
+
+Titi narrows her eyes, sensing the hesitation in Jada’s voice.
+
+JADA (CONT'D)
+Elena—the rep—she said the algorithm works better with "standardized proportions." They want to... slim the digital version down. Just a little. To make it "aspirational." 
+
+Titi lets out a dry, humorless laugh. She reaches across the table and catches Jada’s hands in hers. Titi’s palms are calloused, warm, and unshakable.
+
+TITI
+Aspirational? Girl, you are built like a cathedral. You got your grandmother’s hips and my shoulders. That thickness is the architecture of your ancestors. It’s survived Jim Crow, the walk from Down North, and every hardheaded man in this city. It ain’t a "bug" to be fixed by some boy in a cubicle.
+
+JADA
+(softly)
+They say it’s what the market wants.
+
+TITI
+The market wants to eat you without having to look at you. Your great-grandmother, she used to stitch messages into quilts for the folks heading North. Map lines hidden in the embroidery. To the white folks, it was just a blanket. To us, it was a map to the promised land. For us, making things by hand wasn't no hobby. It was survival. It was saying "I am here" when the world tried to say we weren't.
+
+Jada looks down at her hands, the same hands that spend eighteen hours a day wiring LEDs into EVA foam and hand-sewing silk linings.
+
+JADA (V.O.)
+I spend all my time trying to build "Masterpieces" to prove I'm the best. But Titi makes me feel like I'm already the prize.
+
+Titi reaches into her sewing basket and pulls out an old, heavy steel SEAM RIPPER. The metal is worn smooth from decades of use. She presses it into Jada’s palm.
+
+TITI
+If you take that money—and I know you might have to—you don't go in there as a "creator." You go in there as a maker. 
+
+JADA
+What’s the difference?
+
+TITI
+A creator thinks they made the world. A maker knows how to take it apart. 
+
+Jada closes her fingers around the cold steel. It feels heavier than the phone. More solid.
+
+TITI (CONT'D)
+You take their money. You build your little "twins." But you keep that ripper close. If they try to stitch you into a shape that don't fit, you be ready to rip the seams out their whole system from the inside. Understand?
+
+Jada looks at the seam ripper. She feels the weight of it. A slow, dangerous smile spreads across her face. The "vibrate" mode on her phone goes off on the table, but she doesn't even glance at it.
+
+JADA
+(low, firm)
+Understood. No cap.
+
+Jada stands up. She looks taller. The hoodie doesn't hide the power in her frame anymore; it just contains it. She slides the seam ripper into her front pocket like a concealed blade.
+
+JADA (CONT'D)
+I gotta go. Marcus is waiting on the final renders for the TechCorp pitch.
+
+TITI
+Go on then. And Jada? 
+
+Jada pauses at the door.
+
+TITI (CONT'D)
+Don't you dare come back here talking 'bout no "standardized proportions." You're a masterpiece, girl. Act like it.
+
+Jada nods once—sharp, certain—and steps out into the Philly sun.
+
+Behind her, Titi kicks the pedal. 
+
+*THUMP-THUMP-THUMP.* 
+
+The machine starts up again, louder now. It sounds like a war drum.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+EXT. PHILADELPHIA CONVENTION CENTER - DAY
+
+**EXT. PHILADELPHIA CONVENTION CENTER - DAY**
+
+The morning sun bounces off the glass facade of the Convention Center, creating a blinding glare—the "Broad Street Burn." A SEPTA bus hisses past, belching exhaust into the humid air. 
+
+*CLACK-CLACK. CLACK-CLACK.*
+
+Two massive, heavy-duty rolling crates—midnight black with "JADACRAFT" stenciled in jagged gold graffiti—slam against the uneven pavement of the crosswalk.
+
+JADA (24, a storm in a "STITCH OR DIE" hoodie) hauls the crates with white-knuckled intensity. She’s got oversized shades on and a garment bag slung over one shoulder like a rifle.
+
+A wheel on the lead crate catches a jagged crack in the concrete. The crate tilts. Jada lunges, catching it before the masterpiece inside can shift.
+
+JADA
+(under her breath)
+Deadass? Not today. Broad Street don’t give a damn about your EVA foam. Move, Jada. Move.
+
+She heaves the crate back upright. Her bicep ripples under the hoodie. She’s breathing hard, sweat beads forming at her temples. 
+
+The crowd around her is a chaotic blur. Half are traditional cosplayers—cardboard, duct tape, hand-painted leather—and the other half are "Plastic." They wear "TECHCORP PRO-SKINS"—flat, textureless spandex suits with AI-generated shading that looks perfect from ten feet away and soulless from two.
+
+Jada eyes a "Pro-Skin" wearer nearby. The guy looks like a video game character that hasn't finished rendering. 
+
+JADA (V.O.)
+Look at this jawn. No texture. No heart. Just a 3D print and a prayer. 
+
+Three young guys in high-end "Accuracy-Check" builds—gatekeepers of the scene—stand near the concrete pillars. They’re whispering, judging every person who walks by. Their eyes land on Jada’s crates.
+
+AMARA (16, Black, wearing a DIY denim vest with anime patches) nudges her friend.
+
+AMARA
+(whispering)
+Yo... look at the tag on that box. That’s JadaCraft. 
+
+The whisper ripples through the nearby crowd like a current. *JadaCraft. The Philly Queen. The LED Goddess.*
+
+Jada feels the shift in the air. The "Main Character" energy settles over her shoulders like a cape. She stands a little taller, ignoring the burn in her traps.
+
+A tearing sound stops her. 
+
+To her left, the PRO-SKIN GUY is panicking. The seam under his arm has split, revealing cheap white elastic underneath the "high-def" print. The AI-shading is warping, making him look like a glitched file.
+
+PRO-SKIN GUY
+(frantic)
+No, no, no! This cost five hundred credits! It’s supposed to be "structural-mesh!"
+
+Jada stops. She looks at her watch. She’s late. She looks at the guy. He’s pathetic. 
+
+She reaches into a tactical pouch on her belt, pulls out a specialized curved needle and a spool of heavy-duty nylon thread.
+
+JADA
+Yo, back up. Stop pulling at it, you makin' it worse.
+
+PRO-SKIN GUY
+(startled)
+I—I think the algorithm miscalculated the tension...
+
+JADA
+(deadpan)
+The algorithm don't know your measurements, bruh. It knows a math equation. Hold your arm out.
+
+Her hands move with terrifying precision. *Stitch-pull-loop.* She isn't just sewing; she’s reinforcing. 
+
+JADA (CONT'D)
+That TechCorp mess is just pixels on polyester. It ain't got no bones. You want a suit to hold? You gotta build the skeleton first. 
+
+She snips the thread with her teeth and pats his shoulder. Hard.
+
+JADA (CONT'D)
+Aight, you’re good. For now. Try not to breathe too hard.
+
+The guy stares at her, awestruck. Jada turns back to her crates, but Amara and her friends have closed in. Amara is vibrating with excitement, holding a phone out.
+
+AMARA
+Oh my god, JadaCraft? I’m such a fan! Your WIP on the Gram had me screaming! The way you did those LEDs? Revolutionary, no cap.
+
+Jada’s exhaustion vanishes. She pivots. The "Brand" clicks into place. She drops her shades an inch, flashing a million-dollar Philly smile. 
+
+JADA
+Appreciate you, sis. Real recognize real. We don't do that "click-and-print" mess over here. We bleed for the seams. You building something?
+
+AMARA
+(beaming)
+Trying to. I’m doing a custom Cyber-Punk Philly build.
+
+JADA
+Bet. Send me the progress pics. I wanna see that hustle. 
+
+Jada poses for a quick selfie—strong, chin up, crates flanking her like gold-stenciled sentinels. Amara looks at the photo like she just met royalty.
+
+*BUZZ. BUZZ.*
+
+Jada’s phone vibrates in her hoodie pocket. She pulls it out.
+
+**SCREEN: NOTIFICATION - DEVON COLE (TECHCORP)**
+*"Jada, checking in. Our offer is only valid through the weekend. Don't let the 'old way' hold you back. Let’s talk about your future."*
+
+Jada stares at the name. *Devon Cole.* The man who wants to turn her hands into a proprietary software.
+
+JADA
+(to herself)
+Not today, Devon. Not today.
+
+She shoves the phone back into her pocket, deep. 
+
+She reaches the massive automatic sliding doors of the Convention Center. Through the glass, she can see the madness—the lights, the cameras, the thousands of fans waiting for a hero.
+
+A blast of freezing AC hits her as the doors slide open, a violent contrast to the Broad Street heat. The roar of the crowd inside rises to a crescendo.
+
+Jada grabs the handles of her crates. She doesn't look like a girl with a hobby. She looks like a gladiator entering the Coliseum.
+
+JADA
+(internal)
+Aight, Philly. Let's show 'em how we do.
+
+She steps over the threshold. The wheels of her crates scream on the polished linoleum, cutting through the noise. 
+
+**FADE OUT.**
+
+---PAGE BREAK---
+
+INT. CONVENTION FLOOR - DAY
+
+[SCENE START]
+
+**INT. PHILADELPHIA CONVENTION CENTER - DAY**
+
+MACRO SHOT: A pair of hands, knuckles scarred by needle pricks and fingertips stained with a silvery, conductive pigment. They move with the surgical precision of a clockmaker. 
+
+JADA (24, Black, eyes like flint) snaps a glowing LED gauntlet into place. *CLICK.* The blue light bleeds through the gaps in a complex Kente-cloth weave layered over 3D-printed carbon fiber. 
+
+She stands in "The Forge"—her 10x10 booth space, a sanctuary of foam scraps and soldering iron smoke. She’s half-dressed in her masterpiece. The armor is a fusion of Afrofuturist cyber-plates and traditional West African geometry. It’s heavy. It’s loud. It’s hers.
+
+A shadow falls over her workbench. 
+
+BRENDAN (30s, pale, wearing a "Staff" lanyard over a shirt featuring a robot nobody remembers) leans against a structural pillar. He isn’t looking at her badge. He’s squinting at the seam where the fabric meets the resin.
+
+JADA
+(Without looking up)
+You lost, fam? Hall C is that way.
+
+BRENDAN
+Just checking credentials. Making sure everyone’s... compliant with the "Handmade Only" category. 
+
+Brendan circles the table like a vulture. He reaches out a finger to touch a chest plate. Jada shifts her weight, placing herself between him and the armor. A silent, physical "No."
+
+BRENDAN (CONT'D)
+Clean work. Too clean. That TechCorp resin? Most people don't get their hands on that unless they have corporate backing. Or an AI-generative model to do the rendering.
+
+JADA
+(V.O.)
+*Here we go. The Tax. He sees the jawn, he sees me, and the math don't add up in his head. He thinks I’m the help, not the architect.*
+
+Jada stops. She sets down her needle. The low hum of the convention floor—the distant "kawaii" shouts and the shuffling of a thousand feet—seems to fade. 
+
+JADA
+(Voice like cold iron)
+You think a machine spit this out?
+
+BRENDAN
+(Smirking)
+I’m just saying, the symmetry on the Kente-fractals... it’s mathematically perfect. Hard to do in a basement in North Philly. Did you commission the files from a studio in Shenzhen? Or just prompt-engineered the textures?
+
+Jada steps out from behind the table. She’s five-foot-six, but in the half-suit, she looks seven feet tall. 
+
+JADA
+Listen close, 'cause I’m only gonna educate you once. That "TechCorp" resin? It’s a custom mix. I cut it with a fifteen-percent flex-agent and a pearlescent pigment I ground myself from mica. If I used a stock AI-render, the geometry would’ve collapsed at the joints during the cure. 
+
+She points to the intricate stitching on the undersuit.
+
+JADA (CONT'D)
+And this "mathematical perfection"? That’s three nights of hand-stitching conductive thread through a silk-cotton blend to make sure the LEDs don't short when I move. I don't let a machine think for me, and I damn sure don't let a man think he knows my toolkit better than I do. 
+
+Brendan blinks. He shifts his weight, the smirk flickering like a dying bulb.
+
+BRENDAN
+I... look, I was just saying it’s surprising. You don't exactly look like the typical... tech-head. It’s a compliment, really.
+
+JADA
+(A short, sharp laugh)
+"Surprising." Deadass? You mean you didn’t think a girl like me knew her way around a CAD file. Just say that. Keep it a stack so I can get back to work.
+
+BRENDAN
+I’m just doing my job, lady. Checking for... quality control.
+
+JADA
+Check this then. 
+
+Jada picks up her helmet. It’s a terrifying, beautiful mask—a mechanical interpretation of a mask from the Dan people, updated for a war in the stars.
+
+JADA (CONT'D)
+You lookin' for a seam-rip? 'Cause you're pushin' your luck on a Saturday morning, fam. If you ain't here to judge the craft, keep it pushin'. 
+
+Brendan looks at the helmet, then at the fire in her eyes. He mumbles something about "checking Hall B" and scurries off into the crowd of cosplayers.
+
+Jada watches him go. Her shoulders drop an inch. The adrenaline is there, but so is the weight. 
+
+JADA
+(V.O.)
+*Every time. I gotta present the whole damn syllabus just to prove I’m in the room. I’m tired of being a "surprise."*
+
+She wipes a bead of sweat from her forehead. She looks at her reflection in a small vanity mirror—the silver pigment on her skin, the Kente patterns reflecting in her eyes. 
+
+She grabs the helmet. 
+
+JADA
+(To herself)
+Aight. Bet. 
+
+She slams the helmet down. *HISS.* The vacuum seal engages. 
+
+The HUD (Heads-Up Display) flickers to life—a cascade of blue data, heat maps, and integrity checks scrolling across her vision. The world outside turns high-contrast, sharp, and manageable. 
+
+Behind the translucent visor, Jada’s face hardens. The irritation is gone, forged into a cold, diamond-hard focus. 
+
+She steps out of the booth and into the main aisle. She isn't just Jada from North Philly anymore. She’s the Vanguard. And the floor is a battlefield.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. CONVENTION FLOOR - LATER
+
+INT. CONVENTION FLOOR - LATER
+
+The air is thick with the smell of floor wax, overpriced popcorn, and the metallic tang of thousands of overheating laptops. 
+
+A high-end smartphone, glowing with a circular LED ring-light, hovers inches from JADA’S (20s, powerhouse, eyes sharp as needles) face. The screen is a blur of scrolling hearts and "QUEEN" emojis.
+
+Jada stands in the center of "THE FORGE," her booth. She is a tectonic plate of technology and tradition. Her armor—a masterpiece of Kente-weave fabric fused with carbon-fiber plates—hums with a low, rhythmic violet light. 
+
+Jada adjusts a pauldron. It’s heavy. Real heavy. She’s sweating, a bead rolling down her temple, missing her hand-painted liner by a fraction.
+
+ELENA VANCE (20s, porcelain-smooth, wearing a $5,000 "minimalist" anime bodysuit) glides into the booth. She doesn’t look at Jada. She looks at the lens on her gimbal.
+
+ELENA
+(To the camera)
+Oh. My. God. You guys? Are you seeing this? I am literally *obsessed*.
+
+Elena slides into Jada’s personal space, her hip nearly bumping Jada’s gauntlet. She pivots the gimbal so they are both framed. Jada stiffens, her boots planted wide.
+
+ELENA (CONT'D)
+I’m here with Jada—can we just get some Ws in the chat for Black Excellence? Like, I am so here for supporting diverse creators. Look at the... the texture. It’s so *raw*.
+
+JADA (V.O.)
+Raw? Girl, I spent six weeks soldering these circuit paths and thirty yards of reinforced silk on this jawn. This ain’t "raw," it’s engineered. 
+
+Jada forces a tight, professional smile. The kind that doesn't reach the eyes.
+
+JADA
+(Voice low, steady)
+It’s Kente-carbon weave, Elena. Integrated with a haptic feedback loop. Not exactly raw. It’s precision.
+
+ELENA
+(Ignoring her, to the camera)
+Right? So authentic! It’s just so important to see people taking up space in the community. We need this energy!
+
+Elena reaches out. Her manicured finger, tipped with a sharp acrylic nail, aims straight for the delicate, hand-stitched embroidery on Jada’s midriff.
+
+Jada’s hand—encased in a matte black gauntlet—snakes out. She intercepts Elena’s wrist with a soft *clack* of polymer.
+
+JADA
+Cose-play rule number one, sis. No touchy the craft. You’ll mess with the calibration. 
+
+ELENA
+(Laughs airily to the camera)
+Oop! Feisty! We love a protective artist, don't we, babes? 
+
+Elena leans in. She pulls the phone away just enough to break the "public" angle. She smells like expensive vanilla and clinical-grade sanitizer. Her voice drops, losing the high-pitched "influencer" trill. It’s cold now.
+
+ELENA (CONT'D)
+(Sotto voce)
+Honestly, Jada, I really do admire you. I wish I had your... *confidence*.
+
+JADA
+(Wary)
+My confidence?
+
+ELENA
+(Eyes scanning Jada's curves)
+To wear something so... revealing. With your body type? It’s so brave to just ignore the accuracy trolls and do your own thing. Truly. You’re an inspiration to the plus-size community.
+
+Jada’s jaw tightens. She feels the heat rising under the carbon fiber.
+
+JADA
+Accuracy trolls? This is an original design, Elena. My own IP. And "revealing"? I’m wearing more tech than the NASA rover. This "body type" is what carries forty pounds of gear without breaking a sweat. Deadass.
+
+ELENA
+(Flashing a million-dollar smile back to the camera)
+Anyway! Tagging Jada below! Check out her little booth if you want something... unique! Love you, mean it, bye!
+
+Elena blows a kiss to the lens and vanishes into the crowd, her gimbal bobbing above the sea of heads like a periscope. 
+
+Jada stands still. The "wall" of fans with their phones slowly dissipates, following the bigger star. The silence of the booth feels louder than the noise of the con.
+
+JADA (V.O.)
+"Brave." Like I’m some charity case instead of the one who built the stage she’s dancing on. 
+
+Jada looks down at her gauntlet. A streak of Elena’s shimmering, high-definition bronzer is smeared across the hand-stitched Kente fabric. 
+
+Jada wipes it with a thumb. 
+
+*Flicker.*
+
+The blue LED in her left gauntlet stutters. A small red warning light pulses on her inner wrist display.
+
+JADA
+(A whisper)
+Great. Now the sensors are actin' up. 
+
+She looks toward the exit where Elena disappeared. The sea of flashing cameras and digital noise swallows the influencer whole. 
+
+Jada rolls her shoulders, the heavy armor creaking. She looks at her reflection in a dark monitor nearby. She doesn't look "raw." She looks like a soldier waiting for the real war to start.
+
+JADA (CONT'D)
+(To herself, Philly-thick)
+Aight. Play time is over. 
+
+She turns back to her workbench, grabbing a soldering iron like a weapon.
+
+FADE OUT.
+
+---PAGE BREAK---
+
+INT. CONVENTION PANEL ROOM - DAY
+
+[SCENE START]
+
+**INT. CONVENTION PANEL ROOM - DAY**
+
+A cavernous hall swallowed by shadows, illuminated only by the aggressive violet glow of the stage and a thousand glowing smartphone rectangles held aloft. They aren't just fans; they’re a digital jury.
+
+JADA (24, obsidian skin, regal features) sits center stage. She is the "Cyber-Pharaoh." Her chestpiece is a masterpiece of hand-tooled leather, etched with geometric patterns that pulse with amber fiber optics. She sits with the "Philly Lean"—low in the chair, ankles crossed, taking up space like it belongs to her.
+
+To her left, ELENA VANCE (30s, blonde, teeth too white) adjusts her "perfect" 3D-printed gauntlets. They look like high-end Tupperware. 
+
+Behind them, a massive banner: **TECHCORP: THE FUTURE OF CREATIVITY.**
+
+ELENA
+(beaming into the cameras)
+...and that’s the beauty of it. We’re democratizing art. No more gatekeepers, no more blistered fingers. We have to evolve, Jada. Technology is just another tool in the box, right?
+
+Elena reaches over, giving Jada’s arm a patronizing, sisterly pat. 
+
+JADA
+(V.O.)
+*This jawn feel like a setup.*
+
+Jada doesn't flinch. Her eyes remain fixed on the crowd. 
+
+At the aisle microphone, a teenaged BOY (15) stands trembling. He wears a suit made of spray-painted Amazon boxes. His duct-tape seams are peeling.
+
+THE FAN
+Um, hi. JadaCraft, I’ve followed you since the basement vlogs. But... my dad says I shouldn't bother learning to sew or leather-work anymore. He says the new TechCorp AI-Print suite can just ‘generate’ the whole fit for me in 3D. 
+
+The kid looks down at his cardboard gauntlet.
+
+THE FAN (CONT'D)
+Is he right? Am I just wasting my time trying to do it by hand?
+
+The room goes dead silent. The hum of the HVAC system sounds like a funeral dirge.
+
+Jada feels the weight of the TechCorp contract sitting in her back pocket. A six-figure "Consultant" check. All she has to do is nod.
+
+She looks toward the back of the room.
+
+DEVON COLE (30s, sharp suit, eyes like a hawk) leans against the EXIT door. He gives her a slow, imperceptible nod. *Stick to the script, Jada. Get the bag.*
+
+Jada looks back at the kid. She sees herself ten years ago—broke, armed with a stolen needle and a dream.
+
+JADA
+(low, resonant)
+Lean in, young boul. Let me tell you something your daddy won't.
+
+She leans forward, the fiber optics in her chestpiece flaring to a bright, angry orange.
+
+JADA (CONT'D)
+Elena here says it’s just a tool. But a tool helps you build. An AI? That jawn replaces the builder. 
+
+Elena’s smile falters. She shifts in her seat, the plastic of her suit squeaking.
+
+ELENA
+Jada, let's stay on topic—
+
+JADA
+(cutting her off)
+I’m deadass on topic. You want a costume? Buy the app. Download the file. Print the plastic. You’ll look "perfect." You’ll look just like every other bot in this room. 
+
+Jada holds up her hands. Her fingertips are scarred, stained with black dye and needle pricks.
+
+JADA (CONT'D)
+But you want a legacy? You gotta bleed on the needle. My fingers got the calluses to prove I exist. I know every stitch in this leather because I fought for 'em. Every time I messed up, I learned. Every time I poked myself, I put a piece of me into the craft.
+
+She stands up. The "Cyber-Pharaoh" looks ten feet tall under the stage lights.
+
+JADA (CONT'D)
+That machine? It ain't got no skin in the game. It don't know why we do this. It don't know the struggle. 
+
+She points directly at the kid in the cardboard suit.
+
+JADA (CONT'D)
+Your suit is falling apart, kid. And it’s the most beautiful thing in this room because *you* made it. Don't let ‘em tell you your hands are obsolete. 
+
+The crowd is frozen. Thousands of screens are still pointed at her.
+
+JADA (CONT'D)
+Because at the end of the day? You can't 'prompt' your way into a soul. You either built it, or you're just wearing a ghost.
+
+The silence holds for a heartbeat—then the room **EXPLODES**. 
+
+A roar of cheers rips through the hall. People are standing. The "digital daggers" are now a sea of frantic movement as the clip goes viral in real-time.
+
+Elena Vance looks like she’s just sucked a lemon. She looks at the TechCorp logo, then at Jada, her face curdling into a mask of corporate fury.
+
+Jada doesn't look at her. She looks at Devon.
+
+At the back of the room, Devon Cole hasn't moved. He’s looking at his phone. His face is illuminated by a graph—the engagement numbers are vertical. Spiking. 
+
+He isn't angry. He’s intrigued. 
+
+Jada exhales, the adrenaline hitting her like a freight train. She knows she just burned the contract. She just nuked the sponsorship. 
+
+She feels lighter than she has in months.
+
+**CLOSE ON:**
+
+Devon Cole. He types a single message into his phone:
+
+*“Forget the brand ambassador play. She’s not a puppet. She’s the spark. Double the offer, but change the terms. We don't want her face—we want her fire.”*
+
+He looks up, a predatory smile playing on his lips, as Jada walks off the stage like a queen leaving a battlefield.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. UPSCALE RESTAURANT - NIGHT
+
+[SCENE START]
+
+**INT. VUE 42 - NIGHT**
+
+MACRO SHOT: A gold-leafed oyster, glistening with mignonette, slides across a white marble tabletop like a puck on ice. 
+
+PAN UP to see JADA (20s). Her skin is deep obsidian, glowing under the amber chandelier light. She’s wearing a burnt orange knit dress that clings to her like a second skin—it’s high fashion, but it screams "North Philly royalty." 
+
+Her hands rest on the pristine linen. They are the hands of a laborer: calloused palms, ink-stained cuticles, and a fresh 3D-printer burn on her thumb.
+
+Across from her sits DEVON COLE (30s). He’s the color of a caramel macchiato in a charcoal suit that costs more than Jada’s car. He doesn't wear a tie. He doesn't need to. He leans back, his arms draped over the leather chair, owning the oxygen in the room.
+
+A WAITER pours a vintage Solaia without showing the label. Devon doesn't even look at the bill.
+
+DEVON
+The internal wiring on that Cyber-Pharaoh chest piece? To use fiber-optics for the pulse rhythm instead of standard LEDs? That was a flex, Jada. I’ve seen the builds from Tokyo to Milan. Yours... yours got soul in the silicon.
+
+Jada takes a sip of the wine. It tastes like dark berries and old money.
+
+JADA
+(Smirking)
+You actually know what you lookin’ at, or your assistant gave you the SparkNotes?
+
+DEVON
+(Laughs)
+Deadass? I spent three summers in my cousin’s garage in Hunting Park trying to kit-bash Gundam models with scrap metal. I know what a clean solder looks like.
+
+Jada relaxes an inch. Her shoulders drop from her ears.
+
+JADA
+Aight, so you know the vibes. Then you know that build took six months of my life. My hands stay scarred from the needle pricks and the resin fumes. You talkin’ ‘bout an app, Devon. You want to replace all that sweat with a damn algorithm?
+
+DEVON
+(Leans in)
+Replace? Jada, look at me. Look where we at. 
+
+He gestures to the sea of beige and glass around them. A few wealthy white patrons steal glances at Jada—some with curiosity, some with "is she supposed to be here?" eyes.
+
+DEVON (CONT'D)
+They see the dreads, the curves, the way you talk... they want to box you in. They want you to stay the "talented girl from the block" making costumes in her mama's basement. I’m tryin’ to hand you the key to the whole building.
+
+JADA
+The key come with a price, though. It always do.
+
+DEVON
+It’s about scale, sis. Why be a star in a convention hall with five thousand people when you can be the blueprint for five million?
+
+Devon reaches into his breast pocket and slides a sleek, translucent glass tablet across the marble. 
+
+Jada taps the screen. A 3D "Synthetix" render of her likeness pops up. 
+
+It’s her. But... *better*. The digital Jada has a waist three inches smaller. Her skin is two shades lighter, glowing with a synthetic radiance. Every "imperfection"—the tiny scar on her chin, the slight asymmetry of her nose—is gone. 
+
+JADA (V.O.)
+*She look like me. If I was made in a lab and hated carbs.*
+
+JADA
+(To Devon)
+Who is this? ‘Cause this ain’t the jawn I see in the mirror. You bleached my skin and snatched my ribs, Devon. No cap, this is weird.
+
+DEVON
+It’s "Optimization." The AI calculates what the global market responds to. It’s still you—it’s your essence. Your brand.
+
+JADA
+It’s a costume of me.
+
+DEVON
+It’s a six-figure consultation fee.
+
+The table goes silent. The clinking of silverware from the other tables sounds like a countdown.
+
+DEVON (CONT'D)
+One hundred and fifty thousand. Just for the likeness rights and the AI-costume generator training data. That’s just the upfront. Residuals on every digital "fit" sold in the metaverse. 
+
+Jada’s throat goes dry. She thinks about the stack of "Final Notice" bills on her kitchen table. She thinks about the 4:00 AM shifts where she’s crying over a jammed sewing machine because she can't afford the industrial upgrade.
+
+JADA
+Elena Vance... she doing this too?
+
+DEVON
+(Dismissive)
+Elena already signed. She’s pivotin’ to "Digital Creative Director." While you out here breakin’ your back over a heat gun, she’s gonna be on a beach in Tulum watching her bank account grow while the AI does the heavy lifting.
+
+JADA
+But what about the girls following me? The ones who actually want to learn the craft? If I give you my "blueprint," I’m basically telling them don't bother picking up a needle.
+
+DEVON
+I’m tellin’ you to take the bag so you can buy the building. You want to save the culture? Fine. Get rich first. Then you can build all the maker-spaces you want. But you can’t fight a revolution when your electricity ‘bout to get cut off.
+
+Jada looks down at her ink-stained fingers. Then she looks at the glowing, "perfect" version of herself on the tablet. The digital Jada is smiling. She looks rested. She looks like she’s never worked a day in her life.
+
+JADA
+You got the contract on that glass?
+
+DEVON
+(Grins)
+I’ll have my people send the DocuSign to your phone before the dessert hits the table.
+
+Devon stands up, smoothing his jacket. He places a heavy, matte-black metal business card on the table.
+
+DEVON (CONT'D)
+Think about it, Jada. Stop being a worker. Start being a god.
+
+He walks away toward the front of the restaurant, speaking into a sleek headset as he goes.
+
+Jada stays seated. She picks up the metal business card. Its surface is polished to a mirror finish. 
+
+She holds it up. In the reflection of the card, her face is distorted by the restaurant’s designer lighting—fractured into sharp, metallic angles. 
+
+She looks at her real reflection in the card. Then she looks at the "optimized" version on the tablet.
+
+She can’t tell which one she wants to be anymore.
+
+A notification pings on her phone: *NEW DOCUMENT READY FOR SIGNATURE.*
+
+Jada stares at the screen. Her thumb hovers over the "Sign" button. The 3D-printer burn on her thumb is red and raw.
+
+FADE OUT.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+MONTAGE: JADA'S RISE
+
+thought)[SCENE START]
+
+**INT. VARIOUS LOCATIONS - MONTAGE**
+
+**CLACK-CLACK-CLACK-CLACK.**
+
+The sound of a high-speed motorized shutter is deafening. Each flash is a blinding white explosion that burns the retina.
+
+**FLASH.**
+
+JADA (24, Philly-born, glowing) stares into the lens. Her eyes are an electric, unnatural violet—AI-enhanced contact lenses. She’s draped in a "TechCorp" exoskeleton that glows with a cold, blue neon. 
+
+**FLASH.**
+
+Jada is on the cover of *GLITCH* Digital Magazine. The headline reads: *THE NEW FACE OF THE FRONTIER.*
+
+**FLASH.**
+
+Jada stands in front of a Times Square billboard. It’s HER. Fifty feet tall. The Philly girl in the masterpiece armor, but the colors have been "corrected." It’s brighter. Less grit. More "marketable."
+
+**FLASH.**
+
+JADA (V.O.)
+(A whisper, breathless)
+Deadass... I’m really out here. 
+
+**INT. TECHCORP SHOWROOM - DAY**
+
+A $5,000 3D printer sits on a pedestal. Jada unboxes it while a cameraman circles her like a shark. She’s rocking a TechCorp-branded track suit, high-gloss synthetic material.
+
+JADA
+(To the camera, practiced)
+Yo, shout out to the fam at TechCorp for the drop. This jawn is state-of-the-art. No cap, the resolution on this is crazy. We really levelin' up the craft today.
+
+Behind the camera, DEVON COLE (30s, sharp, predatory grace) leans against a minimalist wall. He nods at a brand rep, his thumb flicking over a tablet. 
+
+DEVON (V.O.)
+Don't think of it as changing your style, Jada. Think of it as *scaling* your soul.
+
+**INT. STUDIO BACKSTAGE - DAY**
+
+Jada is pinned into a makeup chair. A WHITE STYLIST with a frantic energy grabs a lock of Jada’s dreads, twisting it with a thick, silver wire.
+
+STYLIST
+We’re going for ‘Cyber-Elf.’ Very sleek. Very high-concept. I just need to... flatten these down a bit more.
+
+Jada flinches as a comb tugs her scalp. She catches Devon’s reflection in the mirror. She opens her mouth to speak, her Philly accent ready to bite.
+
+JADA
+Yo, chill, you gonna pull my—
+
+Devon gives a single, sharp nod. *Stay down.* 
+
+Jada’s jaw clenches. She goes quiet. The Stylist wraps the silver wire around her hair like a leash. 
+
+The sound of an industrial AI-programmed sewing machine rises—a cold, mechanical *WHIRR* that lacks the rhythmic soul of Jada’s old pedal-kick machine.
+
+**INT. "DIVERSITY IN GAMING" PANEL - DAY**
+
+Jada sits on a stage. ELENA VANCE (40s, "Progressive" chic, pearls) sits next to her. The crowd is a sea of white faces, a thousand iPhone screens held up like mirrors.
+
+ELENA
+(Into the mic, performative)
+We are just *so* obsessed with Jada's ‘urban’ aesthetic. It's so... brave. It brings this certain... *unrefined* energy to the Metaverse that we’ve been craving.
+
+Elena reaches over and pats Jada’s hand. Jada’s smile is a mask of porcelain. 
+
+Under the table, Jada’s thumb hovers over a text notification.
+
+**MARCUS (On Screen):** *U good? You still coming to the shop tonight? We got the new resin in. Your spot’s waiting.*
+
+Jada doesn't reply. She locks the screen. 
+
+JADA (V.O.)
+Get the bag. Just get the bag. Don't look at the stitches.
+
+**INT. LUXURY HOTEL ROOM - NIGHT**
+
+The room is $2,000 a night and smells like nothing. 
+
+Designer shopping bags—Gucci, Prada, TechCorp—are piled in the corner like trash. 
+
+Jada is slumped on the edge of the king-sized bed, the blue light of her phone washing out her features. She scrolls through her Instagram comments. 
+
+*“This looks like a render.”*
+*“Where’s the Philly soul at?”*
+*“I miss the handmade builds. This feels... corporate.”*
+
+Jada stares at the screen. Her eyes are red, the violet contacts sitting on the nightstand in a puddle of saline. 
+
+**INT. STERILE HALLWAY - NIGHT**
+
+Jada is back in her "Masterpiece Armor." 
+
+But it’s been modified. TechCorp logos are etched into the breastplate. Glowing LED strips cover the hand-tooled leather. 
+
+She stands alone in a white, fluorescent hallway. She looks like a queen, but her shoulders are slumped under the weight of the plastic and the glass. The "armor" doesn't feel like protection anymore; it feels like a cage.
+
+The upbeat Afro-fusion beat that started the montage has slowed down, warping into a low, distorted mechanical hum. 
+
+**INT. HOTEL VANITY - LATER**
+
+Jada stands in front of the mirror. She reaches up and peels a prosthetic "elf ear" off her skin. 
+
+She winces. Underneath, her real ear is raw, red, and irritated. 
+
+She looks down at her hands. 
+
+The "laborer’s hands" she had in the restaurant—the ones with the tiny nicks from the needles, the faint silver scars from the soldering iron, the callouses of a creator—are gone. 
+
+Her hands are soft. Clean. Manicured. 
+
+She rubs her thumb over her pointer finger, looking for the familiar roughness of a life spent building things from scratch. 
+
+There is nothing. Just smooth, expensive skin. 
+
+A look of pure horror dawns on her face. She looks at her reflection, and for a second, she doesn't see a "Face of the Frontier."
+
+She sees a ghost.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. JADA'S WORKSHOP - DAY
+
+INT. JADA'S STUDIO - DAY
+
+MACRO SHOT: A 3D printer nozzle extrudes a thin, umbilical cord of OBSIDIAN FILAMENT. It doesn’t flow like fabric; it builds, layer by micro-layer, with a terrifying, mathematical precision. 
+
+The sound is a high-pitched, digital WHINE—a mosquito in the ear of the room. It’s a sharp contrast to the rhythmic, heart-beat *THUMP-THUMP* of the vintage Singer sewing machine gathering dust in the corner.
+
+JADA (24, sharp-edged, but looking frayed at the seams) sits slumped at her primary workbench. She’s wearing an oversized, pristinely white TECHCORP HOODIE—a sponsorship piece that looks out of place among the grease stains and spray paint of her shop.
+
+She holds a 3D-printed gauntlet. It’s perfect. Too perfect. She drags a piece of 120-grit sandpaper across a seam, but the TechCorp composite doesn’t "give." It doesn't smell like leather or burnt foam. It smells like a server room.
+
+JADA
+(To herself, a low rasp)
+Shit is cold. Deadass feels like I’m sanding a tombstone.
+
+She drops the gauntlet. It CLATTERS with a hollow, plastic ring.
+
+On her workbench, a sleek TECHCORP TABLET glows. The screen displays "AIDA" (AI Design Assistant). A 3D model of her current armor project spins slowly.
+
+AIDA’s voice is smooth, synthetic, and vaguely condescending.
+
+AIDA (V.O.)
+Jada, I have optimized the breastplate silhouette. I’ve implemented a thirty-percent reduction in material around the ribcage and increased the vertical lift for... visual impact.
+
+Jada squints at the screen. The armor looks like it was designed for a doll, not a warrior. The bust-line is aggressive, physically impossible for a human woman to breathe in without the "digital tucking" AIDA is suggesting.
+
+JADA
+Yo, AIDA, chill. Nobody can move in that. You tryna have my client pass out on the floor? That jawn is thirsty.
+
+AIDA (V.O.)
+Market analytics suggest this aesthetic increases social media engagement by forty-two percent. Shall I commit the change?
+
+Jada’s finger hovers over the "Delete" icon. Her reflection in the tablet shows the dark circles under her eyes. She thinks about the rent for this new Callowhill studio. She thinks about the "Glitch" magazine cover.
+
+She doesn't delete it. She swipes to "Minimize."
+
+Her phone vibrates on the workbench, spinning in a circle. The caller ID reads: **MARCUS (THE OG)**.
+
+She hits speaker.
+
+JADA
+Yo, Marc. You’re early with the check-in. I’m still in the lab.
+
+MARCUS (V.O.)
+(Deep, soulful Philly rasp)
+Lab? Sounds more like a dental office in there, sis. What’s that whining noise? You building a spaceship or a costume?
+
+JADA
+(Defensive, leaning back)
+I’m building a brand, Marc. TechCorp sent over the new carbon-weave printers. I’m cranking out plates in four hours that used to take me four days. Efficiency is the move, no cap.
+
+MARCUS (V.O.)
+Efficiency is for factories, Jada. I saw the Glitch cover. You look... shiny. High-res. But I’m looking at the zoom-ins, and I can't see the stitch-work, sis. I don't see the hand-burnished edges. Where’s the soul at?
+
+Jada rubs her temples.
+
+JADA
+Soul don't pay the mortgage on a studio in Callowhill, Marc. This tech? It’s just a faster needle. That’s all it is. A tool.
+
+MARCUS (V.O.)
+A needle don't think for you. A needle don't tell you to make the armor "sexier" for the algorithm. You coming to the Philly North-Side Con next month? I got a booth for the old heads. Tell me you’re bringing the Hand-Stitched Valkyrie. Tell me you still got the prototype.
+
+Jada looks over at a mannequin. The Valkyrie armor—the piece that started it all—is draped in a TechCorp garment bag. It looks small. Primitive.
+
+JADA
+I... I gotta see what the schedule looks like. TechCorp might have me in Tokyo for a demo.
+
+MARCUS (V.O.)
+Tokyo. Word. Just... watch your fingers, Jada. Machines like to bite. And they don't care if you bleed.
+
+A sudden, jarring GRINDING sound erupts from the 3D printer. 
+
+JADA
+Marc, I gotta go. The jawn is trippin'.
+
+She hangs up before he can answer.
+
+The printer is shaking. The nozzle is caught on a hardened glob of filament. A red light flashes on the tablet: **CRITICAL PRINT ERROR: LAYER MISALIGNMENT.**
+
+Jada stands, her chair scraping the floor. She opens the printer's glass door.
+
+Inside, the "Black Diamond" armor plate is a disaster. The machine didn't stop; it kept extruding. A tangled, bird’s nest of plastic guts fills the chamber—looking like a tumor made of obsidian wire.
+
+JADA
+No, no, no... that’s three hundred dollars of filament right there. 
+
+She reaches in, her hand instinctively going for her pliers to fix it, to feel where the jam is, to understand the failure.
+
+She stops. 
+
+The AIDA tablet CHIMES.
+
+AIDA (V.O.)
+Error detected. Manual intervention is not recommended. Would you like to initiate "Auto-Repair and Recalibrate"? Estimated time: 12 minutes.
+
+Jada looks at her pliers. Then she looks at her hands. Her callouses are starting to fade. Her fingertips are soft for the first time in five years.
+
+She looks at the mess—the "plastic guts." It looks like a dead thing.
+
+She sighs, a long, hollow sound. She taps the tablet.
+
+JADA
+Do it. Auto-repair. Just... make it look like the picture.
+
+The machine WHIRS back to life. A mechanical arm sweeps the "guts" into a waste bin. The nozzle realigns itself with a cold, triumphant BEEP.
+
+Jada sits back down. She rests her hands in her lap, useless.
+
+CLOSE ON: Jada’s hand. 
+
+She holds it up to the eerie blue light of the printer’s UI. Her thumb is stained with a smudge of real motor oil and silver paint from earlier—a messy, tactile "mistake" against the sterile, flawless glow of the TechCorp machinery. 
+
+Against the blue light, the smudge looks like a bruise. She stares at it until the digital whine drowns out the sound of her own breathing.
+
+FADE OUT.
+
+---PAGE BREAK---
+
+INT. COFFEE SHOP - DAY
+
+[SCENE START]
+
+**INT. ARTISAN COFFEE HOUSE - DAY**
+
+MACRO SHOT: A delicate foam heart on a latte. A stream of viscous, pitch-black espresso pours directly into the center, shredding the art. The white foam curdles and turns a muddy, bruised grey. 
+
+The high-pitched WHINE of the espresso machine’s steam wand pierces the air. It bleeds into the GHOST-SOUND of a 3D printer’s rhythmic mechanical hum. 
+
+Rain streaks the front window, blurring the gritty North Philly street. A sticker on the glass reads: *“SUPPORT HUMAN ARTISTS – NO ALGORITHMS.”*
+
+MARCUS (30s, sharp eyes, wearing a thrifted Carhartt jacket with intricate hand-embroidered floral patches) sits in a corner booth. He’s a fortress of stillness. He doesn't look at his phone. He looks at his black coffee.
+
+JADA (20s) approaches. She’s swallowed by a salt-and-pepper oversized hoodie. Her face is a map of exhaustion, but her eyes are frantic, vibrating with caffeine. 
+
+She stops at the table. Marcus doesn't look up. He looks at her hands resting on the edge of the wood.
+
+Underneath her fingernails is a ring of SHIMMERING BLACK RESIN. Silver paint is smudged into her knuckles like a permanent bruise. 
+
+JADA
+(voice low, raspy)
+You been sitting here long?
+
+MARCUS
+Long enough to see you’re shaking.
+
+JADA
+(V.O.)
+*He knows. He’s always been able to read the data on my face before I even process the upload.*
+
+Jada slides into the booth. She moves with a heavy, armored grace, taking up space even in her fatigue.
+
+MARCUS
+That resin under your nails ain't from a hand-mold, Jada. It’s TechCorp’s “Obsidian Grade.” High-viscosity, industrial-strength.
+
+He finally looks her in the eye. 
+
+MARCUS (CONT'D)
+You’re smelling like a server farm.
+
+JADA
+(scoffing)
+So we skip the “how you doing, Jada?” We just going straight to the interrogation? Aight. Bet.
+
+Marcus slides a tablet across the table. On the screen: a leaked TechCorp press release. A SILHOUETTE of a woman in high-tech geometric armor. The stance—one shoulder slightly higher, the tilt of the chin—is unmistakably hers. 
+
+MARCUS
+The streets are saying you signed. They saying the “Queen of the Forge” sold the blueprint.
+
+JADA
+The streets don't pay my electric bill, Marc. Deadass. You know how many months I’m behind on the studio? Philly don't pay in “authenticity.” This rent is real. These bills are real. 
+
+She leans in, her voice a sharp whisper. 
+
+JADA (CONT'D)
+I’m tired of stitching my fingers raw for pennies while Elena Vance gets a million for a “collab” she didn't even touch. She couldn't even tell you the difference between a running stitch and a weld, but she’s the face of the "New Era"? Nah. I’m getting mine.
+
+MARCUS
+By becoming a ghost? You’re selling the one thing they can't replicate: your touch. The soul of it. 
+
+He gestures to the air between them, as if tracing a pattern.
+
+MARCUS (CONT'D)
+I remember you at ten years old, sitting at your Titi’s feet while she ran that old Singer sewing machine. That machine had a heartbeat. You told me you could feel the history in the thread. Now you’re just feeding data to a machine that’s gonna spit out a million plastic versions of you and discard the original. 
+
+JADA
+(snapping)
+Titi was broke, Marcus! She died with a closet full of beautiful jawns and not enough to cover the funeral. I’m not doing that. I’m not being a “starving artist” for the culture’s entertainment. 
+
+MARCUS
+This ain't about the bag, Jada. It’s about the colonization. They’re digitalizing your likeness. Once they got the code, they don’t need the creator. You’re becoming a ghost in their machine. 
+
+JADA
+(tears of frustration welling)
+Then help me! 
+
+The outburst silences the clinking of spoons in the shop. A few hipsters glance over. Jada doesn't care. She leans over the table, her hand reaching out, almost touching his sleeve. 
+
+JADA (CONT'D)
+Don't just judge me from your pedestal of “old-school” integrity. You got your little shop, you got your vintage patches, and you’re content. Good for you. But I’m tryna build a legacy that actually keeps the lights on. If you hate it so much, help me find a better way. Don't just sit there looking at me like I’m a traitor.
+
+Marcus looks at her hand—the resin-stained fingers trembling near his own. For a second, the tactical standoff breaks. There’s a flare of something heavy and hot between them—years of shared blueprints and late-night shop talks. He moves his hand, as if to cover hers, then pulls back at the last second to grab a sugar packet.
+
+The distance between them feels like a canyon.
+
+MARCUS
+(quietly)
+I can’t help you build a prison, Jada. I loved the girl who made things because they *needed* to exist. I don’t know who this TechCorp avatar is. 
+
+Jada stares at him. The "Vibe" in the room is suffocating. She realizes he’s not just mourning the art; he’s mourning *them*.
+
+JADA
+(standing up)
+Fine. Stay in the past then. I got a deadline. 
+
+She doesn't touch her latte. She turns and strides toward the door, her oversized hoodie billowing like a cape. 
+
+**EXT. COFFEE SHOP - CONTINUOUS**
+
+Jada steps out into the Philly rain. She doesn't pull up her hood. She lets the cold water hit her face, trying to wash off the smell of "Obsidian Grade" resin. She looks lonely, a small figure against the backdrop of a city that demands everything and gives nothing back.
+
+**INT. COFFEE SHOP - CONTINUOUS**
+
+Marcus watches her through the glass until she vanishes into the grey. 
+
+He looks down at the table. Beside her untouched drink is a crumpled RECEIPT. 
+
+He picks it up and turns it over. 
+
+On the back, in messy, brilliant ballpoint pen, is a SKETCH. It’s an armor piece—a gauntlet. One half is sharp, cold, geometric lines. The other half is organic, flowing like the embroidery on his jacket. It’s a synthesis. A struggle. It’s beautiful.
+
+Marcus traces the lines with his thumb. His expression isn't angry anymore. It’s heartbroken. He folds the receipt and tucks it into his inner pocket, right over his heart.
+
+FADE OUT.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. CONVENTION FLOOR - NYC CON - DAY
+
+INT. JAVITS CENTER - NEW YORK CITY - DAY
+
+**MONTAGE - THE GRIND**
+
+-- JADA’S (20s, powerhouse, skin like obsidian) calloused fingers pull a needle through thick, hand-dyed leather. Her knuckles are stained indigo.
+
+-- CLOSE ON: A glue gun smoking. Jada jams a fan’s broken bracer back together, her eyes sharp, focused.
+
+-- SNAP: A selfie with a sweaty kid in a cape. Jada flashes a grin that doesn’t reach her eyes. 
+
+-- CLINK: A Square reader swipes. Success, but at the cost of her soul.
+
+**BACK TO SCENE**
+
+The camera PULLS BACK. The Javits Center is a neon-drenched fever dream. Thousands of bodies, a cacophony of nerd-core bass and air-conditioned hum. 
+
+Jada stands behind her booth: "JADA CRAFT & COUTURE." She’s wearing the **MASTERPIECE ARMOR**. It’s the "Void-Runner" design—the culmination of six months of sleepless nights. It’s leather, brass, and bioluminescent thread that pulses like a heartbeat. 
+
+MARCUS (30s, Black, relaxed vibe, wearing a "FOAM-HEAD" apron) leans over from the next booth.
+
+MARCUS
+Yo, J, you need a minute? You look like you 'bout to bite the next person who asks for a discount.
+
+JADA
+(adjusting her pauldron)
+I’m aight, Marcus. Just these folks got me tight. They want the masterpiece for the price of a t-shirt. Deadass.
+
+A line of fans waits. Jada turns to a girl holding a notebook.
+
+JADA (CONT'D)
+Yeah, so the leather is vegetable-tanned, then I hand-distressed the edges to give it that "interstellar desert" look. See the stitch pattern? That’s my—
+
+Jada freezes. The words die in her throat.
+
+The crowd parts like the Red Sea. Walking down the main aisle is a vision. 
+
+CASSIDY (20s, blonde, "filtered" skin, rail-thin) struts with a pack of PHOTOGRAPHERS circling her like sharks. She’s wearing the Void-Runner. 
+
+But it’s not *Jada’s* Void-Runner.
+
+JADA (V.O.)
+What the hell is this jawn?
+
+Jada steps out from behind her table. She moves with the weight of her armor, making Marcus look up.
+
+MARCUS
+Jada? Where you goin’?
+
+Jada doesn't answer. She walks toward Cassidy. As she gets closer, the Uncanny Valley hits her like a freight train. 
+
+The suit on Cassidy is too perfect. There are no seams. No needle holes. No imperfections in the grain. It’s a 3D-printed shell that looks like leather but shines like plastic. The LEDs are surgical blue—blinding and cold.
+
+Jada reaches out, her hand trembling slightly. She touches Cassidy’s shoulder.
+
+CASSIDY
+(startled, smiling for a camera)
+Oh! Hey! You like it?
+
+JADA
+(voice low, dangerous)
+This is... the Void-Runner. 
+
+Jada’s thumb brushes the left pauldron. She finds it. A specific, tiny jag in the design where Jada’s blade had slipped three months ago.
+
+JADA (CONT'D)
+You even kept the mistake. The slip-cut on the edge. How? 
+
+CASSIDY
+(giggling)
+Oh my god, right? The detail is insane! It’s the new TechCorp "Urban Legend" preset. 
+
+JADA
+Preset? What you mean "preset"? This is my design. I spent half a year engineering this pattern. No cap, I bled on this leather.
+
+CASSIDY
+(oblivious)
+Oh, I totally get it. I’m a huge fan of the "Jada-style" aesthetic. I just fed her IG photos into the TechCorp app. I had to tweak the "curvy" slider down, though—you know, to make it actually fit me. It took like, ten minutes to print the whole kit?
+
+Jada stares at her. The "curvy" slider. Her body—her actual, physical form—has been treated like a glitch to be corrected by an algorithm. 
+
+JADA
+Ten minutes. You just... prompted me away?
+
+A PHOTOGRAPHER (40s, White, wearing three Nikons) nudges Jada’s shoulder.
+
+PHOTOGRAPHER
+Hey, move it, honey. You’re blocking the light. I need a clean shot of the suit.
+
+JADA
+(turning on him)
+"Honey"? You deadass? Look at what I’m wearing! This is the original. This is the work!
+
+PHOTOGRAPHER
+(unimpressed)
+Yeah, but her suit glows better for the lens. It’s optimized. You’re too... matte. Just step back into the shadow for a sec, okay?
+
+He doesn't wait for an answer. He literally pushes past Jada, forcing her back toward the dark edge of a concrete pillar.
+
+Jada stands in the shadows. She watches Cassidy pose. The flashes are strobe-lights of erasure. Cassidy’s AI-printed "Void-Runner" is the center of the universe. Jada, the creator, is a ghost.
+
+Marcus appears at her side. He looks at Cassidy, then at Jada’s stained hands.
+
+MARCUS
+I told you, J. They don't want the baker. They just want the recipe. And now the machine is givin' the bread away for free.
+
+JADA
+(whispering)
+She called me a "preset." Like I’m just some code they can run through a filter.
+
+Jada looks across the floor. 
+
+Near a VIP lounge entrance, DEVON COLE (40s, sharp suit, corporate-cool) is leaning against a railing. He’s been watching the whole thing. He catches Jada’s eye.
+
+He doesn't look sorry. He looks like a scout who just watched a star player get injured and is already calculating the replacement's value. 
+
+Devon raises a bottle of expensive water toward her. A "cheers" gesture. 
+
+Jada looks down at her hands. The indigo dye is under her fingernails. Her palms are calloused. They hurt. 
+
+She clinches her fists. The bioluminescent thread in her own armor pulses—dimmer than the AI version, but deep. Real.
+
+JADA
+(to herself, cold)
+Aight. Bet. 
+
+She doesn't look hurt anymore. The "queen" is gone. The "warrior" is taking over.
+
+JADA (CONT'D)
+If they want the recipe... they better be ready for the heat in the kitchen.
+
+Jada turns her back on the flashes and walks toward Marcus’s booth, her stride heavy and rhythmic.
+
+JADA (CONT'D)
+Marcus. Close up your jawn. We gotta talk.
+
+MARCUS
+Talk about what?
+
+JADA
+How we burn this whole system down. 
+
+**FADE OUT.**
+
+---PAGE BREAK---
+
+INT. TECHCORP OFFICE - DAY
+
+[SCENE START]
+
+**INT. TECHCORP OFFICE - MANHATTAN - DAY**
+
+The silence is expensive. Floor-to-ceiling glass frames a god-complex view of the Manhattan skyline. White marble floors, white walls, white furniture. The only color comes from a massive holographic projection in the center of the room.
+
+A 3D wireframe rotates slowly—a "Perfected" cosplay model. She’s an impossible version of a human. AI-smoothed skin, waists that don’t leave room for organs, and armor that glows with an ethereal, unnatural light. 
+
+DEVON COLE (40s, White, wearing a suit that costs more than a mid-sized sedan) stands behind a standing desk. He’s sipping a swamp-green juice through a glass straw. He doesn't look up when the heavy glass doors slide open.
+
+JADA (20s, Black) enters like a thunderclap in a library. Her denim jacket is a riot of hand-sewn patches and embroidery. Her dreadlocks are coiled tight with copper wire, catching the clinical LED light. Her thumbs are stained a deep, permanent indigo—the mark of a dyer.
+
+She doesn't wait for a greeting. She slams her cracked tablet onto the marble desk. The sound echoes.
+
+JADA
+Yo, look me in my face and tell me this ain’t a straight up heist. 
+
+Devon looks down at her tablet. On the screen: a side-by-side. On the left, Jada’s "Indigo Valkyrie"—hand-tooled leather, asymmetrical stitching, a specific interlocking weave on the breastplate. On the right, TechCorp’s "Gen-Art Skin 04." It is an exact replica, down to the intentional "imperfections" in the grain.
+
+DEVON
+(smooth, unbothered)
+Jada. Good to see you again. You look... vibrant.
+
+JADA
+Cut the cap, Devon. That’s my grandmother’s stitch pattern on that breastplate. The AI didn't 'dream' that jawn up. It stole it from my Patreon HD gallery. My private files.
+
+DEVON
+(chuckles)
+'Stole' is such a legacy-term, Jada. We prefer 'Iterative Inspiration.' We didn't take your work. We fed it to a system that learned how to be better because of you. 
+
+He swipes a finger through the air. The hologram shifts, deconstructing Jada’s armor into raw data points. 
+
+DEVON (CONT'D)
+You’re the blueprint, Jada. Don't you want to be the blueprint for the future of the entire industry?
+
+JADA
+The future? You’re talkin’ about math. I’m talkin’ about blood. I sat for eighty hours straight on that leather. My eyes were bleedin’ tryin’ to get that weave right. You just hit ‘enter’ and called it a day? Deadass?
+
+DEVON
+I’m calling it efficiency. Take a seat. 
+
+JADA
+I’ll stand. I ain’t stayin' long enough to get comfortable.
+
+Devon sighs, leaning back. He pulls up a digital document on his desk surface. 
+
+DEVON
+Let’s look at the paperwork. Remember that NYC Con sponsorship? The three thousand we gave you for the booth and the 'Reference Access' agreement?
+
+JADA
+(her eyes narrow)
+That was for photos. For the promo reel. 
+
+DEVON
+(tapping a clause)
+Section 4, Paragraph B: 'Grantor provides TechCorp perpetual, irrevocable rights to all visual data, structural patterns, and aesthetic signatures for the purpose of machine learning and generative asset creation.'
+
+Jada feels the air leave the room. She looks at the fine print. It’s a cage made of legalese.
+
+JADA
+(whispering)
+You think because I’m a ‘founding contributor’ that makes this aight? You used me to train the machine that’s gonna put me out of a job. 
+
+DEVON
+Not just you. Everyone. Look at this. 
+
+He taps a button. A 3D-printer in the corner of the room whirs to life. In a matter of seconds, a section of the Indigo Valkyrie breastplate is printed in a flexible, high-density polymer. It looks perfect. It feels like nothing.
+
+DEVON (CONT'D)
+This costs fifty dollars to manufacture. It’s light. It’s waterproof. It’s flawless. Why spend a month on leather and dye, Jada, when the algorithm can do it in a minute? We're saving you from the needle. We’re giving you your time back.
+
+JADA
+(shaking her head)
+You’re not savin’ me. You’re hollowin’ me out. 
+
+She grabs her tablet, her hand trembling—not from fear, but from a cold, sharp clarity.
+
+JADA (CONT'D)
+You don't want my craft. You don’t care about the history in these stitches or why that blue has to be that specific shade of indigo. You just want my ghost so you can sell it back to girls who look like me for half the price. 
+
+DEVON
+It’s the democratization of art, Jada. Everyone gets to be a Valkyrie now.
+
+JADA
+No. Everyone gets to wear a corpse. 
+
+She turns on her heel. 
+
+DEVON
+Wait—the payout for the first quarter of the Gen-Art sales is being processed. It’s more money than you’ve made in three years. Don't walk away from the bag.
+
+Jada stops at the door. She doesn't look back.
+
+JADA
+Keep the bag. I know how to make another one. You? You can’t make anything without us.
+
+The doors slide shut behind her. 
+
+**INT. ELEVATOR - CONTINUOUS**
+
+Jada stands in the center of the mirrored elevator. The walls are polished chrome. 
+
+The LED strip lighting in the ceiling flickers, reflecting off her skin. In the mirrored surfaces, her face looks fragmented—slices of her eyes, her lips, her copper-wired hair, repeated a thousand times until she looks like the wireframe model upstairs. Digital. Artificial. 
+
+She looks down at her hands. 
+
+The indigo stain is deep under her fingernails. It’s messy. It’s stubborn. It’s the only thing in this building that isn't a simulation. 
+
+She rubs her thumb against her forefinger, feeling the grit of the dye, the callus of the needle-pricks. 
+
+JADA (V.O.)
+(low, dangerous)
+Bet. Let the machine try to copy the soul. We’ll see who’s still standin’ when the power goes out.
+
+The elevator hits the lobby with a soft chime. Jada steps out into the real world. 
+
+[SCENE END]
+
+---PAGE BREAK---
+
+EXT. NYC STREET - NIGHT
+
+EXT. NYC STREET - NIGHT
+
+The brutalist concrete of the Financial District looms like a canyon. Everything here is built to make a person feel small. 
+
+JADA (24, skin the color of deep espresso, dreads pulled into a sharp, structural bun) is the only thing moving in the silence. 
+
+She looks like a contradiction. A sharp blazer and a silk dress, but the heels are gone. She’s wearing battered rubber slides. She’s dragging a massive, heavy-duty rolling gear bag—The Armor.
+
+The wheels rattle over the uneven pavement. *Clack-clack-clack.* A loud, discordant sound that echoes off the glass skyscrapers. 
+
+Jada stops. Her chest heaves. She wipes sweat from her forehead, leaving a smudge of graphite from her fingers.
+
+She looks at her palm. It’s red and raw where the handle has been digging in. Callouses from weeks of hand-sewing Kevlar and silk-weaving glow under the blue LED streetlights.
+
+JADA (V.O.)
+All that tech in that office... and my hands still look like I been out here breakin’ rocks. 
+
+She looks at her hand, then up at a digital billboard. A holographic model with skin the color of a peach pit—poreless, perfect, fake—blinks down at her. 
+
+Jada pulls her phone out. The screen is a war zone. 
+
+NOTIFICATIONS:
+- *“CosplayQueen88: That waist is impossible. Stop lying.”*
+- *“AI-Fixer: [Image Attached] I fixed your face to fit the character’s lore. Much better!”* (The image shows Jada with light skin and a thin nose).
+- *“DM: You selling the patterns or just being a gatekeeper?”*
+
+She swipes them away with a violent, jagged motion. 
+
+JADA
+(muttered)
+Deadass weirdos. Y’all wouldn't know real if it bit you in the neck. 
+
+She leans against a cold stone pillar. She’s tired. Not just "need a nap" tired. She’s "soul-leaking-out-the-bottom-of-her-feet" tired. 
+
+She hits a contact: TITI. 
+
+The phone rings. One. Two. Three. 
+
+Jada’s posture softens. The "Boss" facade drops. Her shoulders slump. She looks like a girl from Philly who just wants to go home.
+
+VOICEMAIL (TITI)
+(A warm, scratchy voice; the sound of Sunday mornings)
+You’ve reached Titi. If this is about the bake sale, leave a message. If this is Jada—baby, stop working and go eat something green. God bless.
+
+*BEEP.*
+
+Jada opens her mouth. The air in the city feels thin.
+
+JADA
+(Softly)
+Hey Titi... I’m just... I’m in the city. 
+
+She looks at the gear bag. The "Masterpiece." The thing that’s supposed to change her life.
+
+JADA (CONT'D)
+Everything’s moving real fast. These people... they talkin’ like they want me, but they lookin’ through me, you feel me? I just wanted to hear a real voice. A Philly voice. 
+
+Her voice cracks. She stops. She stares at her reflection in a darkened storefront. 
+
+JADA (CONT'D)
+I’m fine. I’m killin’ it. No cap. Just... call me when you can.
+
+She stares at the "SEND" icon. She hesitates. 
+
+She hits "DELETE." 
+
+JADA
+(To herself)
+Philly grit don't feel like much when the whole world's made of glass.
+
+She looks at the storefront window again. Behind the glass, a row of white, faceless, rail-thin mannequins stand in identical poses. 
+
+Jada’s reflection is layered over them. Her curves, her dark skin, the messy reality of her sweat and her labor. She looks like a glitch in their system. 
+
+She doesn't look like a "Brand." She looks like a person. And in this neighborhood, at this hour, a person is a dangerous thing to be.
+
+A gust of wind kicks up from a nearby subway grate. It smells of hot metal, old grease, and humanity. 
+
+Jada grabs the handle of the gear bag. She adjusts her grip, ignoring the sting in her palm. 
+
+JADA (V.O.)
+They want the armor. They don’t want the girl who bled to make it. 
+
+She turns her back on the glass buildings. She drags the bag toward the subway entrance—a black hole leading back to the real world. 
+
+The *clack-clack-clack* of the wheels resumes, faster now, descending into the earth.
+
+FADE OUT.
+
+---PAGE BREAK---
+
+INT. JADA'S APARTMENT - NIGHT
+
+[SCENE START]
+
+**INT. JADA'S APARTMENT - NIGHT**
+
+CLOSE-UP on a silver needle. It’s frozen mid-plunge through a layer of iridescent faux-leather, thick as a dragon’s hide. The thread is a neon-reactive filament, shimmering even in the gloom.
+
+The only light comes from the cold, blue strobe of a smartphone screen and the circular ghost of a ring light, currently powered down.
+
+The heavy gear bag sits by the front door, half-slumped, looking like a body Jada hasn’t decided where to bury yet.
+
+JADA (24, sharp-edged, eyes tired but burning) sits on a backless workbench stool. She’s stripped of the NYC armor. No boots. No blazer. She wears a silk bonnet and an oversized "PHILLY KNOWS" t-shirt that swallows her frame. 
+
+Surrounding her is a "MAKER’S SANCTUARY." Mannequins draped in half-pinned muslin stand like sentinels. Bins are labeled with masking tape: EVA FOAM, THERMOPLASTIC, LED DRIVERS. On the wall, a collage of Black warriors—historical and fantasy—stare down with judging eyes.
+
+Jada reaches up, peeling off a heavy faux-mink eyelash. She winces as the glue pulls.
+
+HAPTIC BUZZ. The phone on the workbench rattles against a metal tin of pins. 
+
+*Bzzzt. Bzzzt. Bzzzt-bzzzt-bzzzt.*
+
+It’s not a call. It’s a notification cascade. A digital landslide.
+
+Jada frowns, picking up the device. She swipes. The X/Twitter app opens. 
+
+The header image is a pristine, white-walled studio. The profile pic: ELENA VANCE—blonde, minimalist, smiling with too many teeth.
+
+**@ElenaVance (Verified): A Thread on "Authenticity" and the AI-Invasion of the Maker Space 🧵.**
+
+Jada’s thumb hovers. She scrolls.
+
+A photo hits the screen. It’s grainy, taken from a distance. It’s Jada and DEVON COLE standing outside the TechCorp building. Devon is mid-laugh, his hand hovering near Jada’s shoulder in that "corporate smooth" way.
+
+Jada looks like she’s selling him the world.
+
+**ELENA (V.O.)**
+(saccharine, performative)
+*I just want to protect the community I love. We have to gatekeep excellence, or AI will replace us all.*
+
+Jada’s breath hitches. She scrolls faster. 
+
+**CAPTION:** *"Stitch & Slay or Stitch & Sell-out? Hard to claim 'handmade' when you’re taking meetings with the company trying to automate our hands out of existence. Is JadaCraft the future, or just a front for TechCorp’s new generative-mesh algorithm?"*
+
+JADA
+(a low, guttural hiss)
+This snake-bread b***h. Deadass? 
+
+She taps the comments. It’s a bloodbath.
+
+**@MakerMama:** *I thought she was one of us. Guess the 'Craft' in JadaCraft stands for Corporate.*
+
+**@IronStitcher:** *Another AI-generated fraud. Look at the seams in her last post. No human does that. She’s a plant.*
+
+**@CosplayKing88:** *Cancel the contract. We don't support TechCorp puppets.*
+
+Jada’s hand starts to shake. She stands up, the stool screeching against the hardwood. She paces the small radius of her workbench, her shadow dancing long and distorted against the wall of warriors.
+
+JADA
+(to the room)
+One meeting. I take *one* meeting to try and get us some real funding, and now I’m a plant? Y’all don’t even know the half. This jawn is blood, sweat, and tears.
+
+*PING.* 
+
+A text banner drops from the top of the screen.
+
+**MARCUS:** *Jada, don't look at the bird app. Call me. We need to spin this before the morning. People are buggin out.*
+
+*PING.* 
+
+Another notification. This one is an email. The subject line: **OFFICIAL NOTICE: Indie Craft Championship - DISQUALIFICATION.**
+
+Jada stops moving. Her heart hammers against her ribs like a trapped bird. She taps the email.
+
+**TEXT:** *"Dear Jada, In light of recent concerns regarding the 'authenticity' and 'technological origins' of your entries, and per our Community Standards clause (Link attached: See Vance Thread), we are rescinding your invitation to the 2024 Championship..."*
+
+Jada grips the edge of the workbench. Her knuckles turn ashen, white against the deep brown of her skin. 
+
+**ELENA (V.O.)**
+(the voice echoing, louder now)
+*We have to be so careful, don’t we? About who we let into our sacred spaces. Some people just don't value the "soul" of the stitch.*
+
+JADA
+(muttered, cracking)
+Soul of the stitch? I built this from nothing. While you were buying patterns, I was scavenging scrap from the junkyard in North Philly. No cap, I’ll see you in hell before I let you take this.
+
+She looks at her Masterpiece Armor in the corner. The LEDs are dark. The hand-painted bracers look like cold, dead scales. 
+
+The "bag" from TechCorp is sitting on the table—a digital offer that could change her life. But the cost is already being deducted from her soul.
+
+Jada reaches out and picks up a SEAM RIPPER. The small, hooked blade glints under the single blue light of the phone. 
+
+She walks over to the armor. She doesn't touch the fabric. She just stands there, holding the sharp point of the ripper against her own thumb. A tiny, silver threat.
+
+Her phone screen times out. 
+
+The blue light fades.
+
+Jada is left standing in the pitch black, the only sound the distant, rhythmic hum of the city outside and her own jagged breathing.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. TITI'S HOSPITAL ROOM - DAY
+
+[SCENE START]
+
+**INT. TITI’S HOSPITAL ROOM - DAY**
+
+A flickering fluorescent bulb hums a dying note, casting a sickly greenish tint over the room. 
+
+The contrast is sharp: TITI’S (65) hand, the color of polished mahogany and mapped with deep, hard-earned wrinkles, rests on a bleached-white hospital sheet that’s seen too many bleach cycles. It’s thin, scratchy.
+
+Next to her IV-bruised skin sits a VINTAGE WOODEN THIMBLE. It looks ancient, carved from dark oak, out of place among the sterile plastic tubes and the rhythmic, artificial *BEEP... BEEP* of the heart monitor.
+
+The door SWINGS open. 
+
+JADA (27) stands in the frame, chest heaving like she just ran a five-furlong. Her "JadaCraft" hoodie is oversized, hiding the power of her frame, but her presence fills the small room. Her dreads are a chaotic crown, pulled back in a messy bun. 
+
+Her thumbs are stained with silver grease and fresh heat gun burns.
+
+JADA
+(breathless)
+Titi. I’m—I’m so sorry. The bus was trippin’, and then the lab—
+
+Titi doesn't look up immediately. She keeps her eyes on the window, watching the Philly skyline. She looks smaller in the hospital gown, her floral headscarf the only splash of color in the room.
+
+TITI
+Stop all that noise, girl. You vibrating the whole floor. 
+
+Jada exhales, the "hustle" leaving her lungs in one long hiss. She walks to the bed, her movements heavy, her boots clunking on the linoleum.
+
+JADA
+I’ve been pressed, Ma. Deadass. But look... I got news. The kind of news that changes the whole trajectory.
+
+Titi finally turns her head. Her eyes are still sharp as needles, even if her body is failing. She reaches out, grabbing Jada’s hand. Not to hold it, but to *inspect* it.
+
+TITI
+Look at these hands. You been wrestling with that plastic again?
+
+JADA
+It’s Worbla, Titi. And carbon fiber. I’m finishing the masterpiece set. But listen—TechCorp called. Devon, the VP? He’s talkin’ six figures. High six. 
+
+Jada’s eyes light up, a frantic, desperate glint.
+
+JADA (CONT'D)
+They want to scan the whole catalog. Put my likeness, my designs, the whole 'JadaCraft' aesthetic into their AI engine. It’s the play, Titi. No more scraping for commissions. No more late fees. I can get you out of this budget-ass room and into a private wing in NYC. Specialists. The best.
+
+Titi lets go of Jada’s hand like it’s suddenly turned cold. She looks at the IV bag dripping clear liquid into her vein.
+
+TITI
+Six figures for your ghost?
+
+JADA
+(confused)
+What? No, it’s a partnership. A sponsorship. They use my "style" to generate assets for the Metaverse. I don't even have to stitch the jawns myself anymore. The machine does the heavy lifting.
+
+TITI
+So what you sayin’ is, you want to be a ghost in your own skin.
+
+JADA
+(frustrated)
+I’m saying I want to save your life! This ain't about "art" right now, it’s about the bag. I’m tired of being talented and broke. That’s a trap.
+
+TITI
+You talkin’ about "making it" like you building a house out of shadows, Jada. If a machine can do what you do, then what was all that blood on the needle for? All those nights you spent crying over a hemline because the "vibe" wasn't right?
+
+Jada paces the small space, taking up the room, her silhouette powerful against the window.
+
+JADA
+The world’s changing. You gotta evolve or get left. They gonna do it anyway, Titi. Might as well be me getting the check.
+
+TITI
+(softly)
+Can the machine feel the weight of the cloth?
+
+JADA
+(V.O.)
+*She always does this. Takes the tech and turns it into a sermon.*
+
+TITI
+Can that AI feel the spirit of your great-grandmother when you’re building that armor? Does it know the difference between a stitch made in anger and a stitch made in love? 
+
+JADA
+(defensive)
+The code is deep, Titi. It learns.
+
+TITI
+It steals. It don’t learn. It consumes. They want to buy your hands so they can sell you back your own fingers. And once they got the "essence" of Jada, what they need Jada for?
+
+Titi reaches for the wooden thimble on the side table. Her hand shakes slightly, but her grip is firm.
+
+TITI (CONT'D)
+Your Great-Grandma Hattie used this to sew the quilts that kept us warm when the gas was cut off in '74. This wood has her sweat in it. Her DNA. It’s an anchor. 
+
+Titi holds the thimble out. Jada looks at it—a small, dark piece of history.
+
+TITI (CONT'D)
+I ain't scared of this sickness, baby. I’ve lived a long life. But I’m terrified of seeing you turn into a digital ghost. Don't let 'em own the way you see the world.
+
+Jada slowly reaches out. She takes the thimble. It’s surprisingly heavy. It feels warm, holding the heat of Titi’s palm.
+
+JADA
+(voice low)
+I just want you to be okay.
+
+TITI
+I’m okay as long as you’re whole. A check won’t stitch your soul back together once they pull the threads out.
+
+*BUZZ. BUZZ.*
+
+Jada’s phone vibrates in her hoodie pocket. A blue light bleeds through the fabric. 
+
+ON SCREEN (NOT SEEN): A notification from DEVON (TECHCORP): *“Contract is live. Sign by EOD for the signing bonus.”*
+
+Jada looks at the pocket. She looks at the phone’s glow. 
+
+Then, she looks at the thimble. 
+
+She doesn't pull the phone out. She ignores the vibration. Slowly, she slips the wooden thimble onto her middle finger. 
+
+It fits perfectly. Like it was carved for her.
+
+JADA
+(a whisper)
+Bet.
+
+The blue light in her pocket fades as the screen times out. The only light left is the dim, flickering hospital bulb and the sunset hitting the mahogany of their skin.
+
+Jada sits on the edge of the bed, her weight sinking into the thin mattress, grounding herself in the silence.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. JADA'S WORKSHOP - NIGHT
+
+[SCENE START]
+
+**INT. JADA'S WORKSHOP - NIGHT**
+
+A single LED strip—half-detached and flickering—casts a rhythmic, neon-blue pulse over a headless mannequin. 
+
+The mannequin wears the "Masterpiece Armor." What should be a triumph is a tragedy in EVA foam. The breastplate is cracked where a pair of heavy shears remains embedded in the wall behind it. 
+
+The floor is a graveyard. Silver leaf flakes like metallic dandruff over thread clippings, discarded sketches, and empty Red Bull cans. 
+
+JADA (27) is slumped on a low-rolling stool, knees pulled to her chest. She’s buried in an oversized "MarcFab" merch hoodie—three sizes too big, smelling of old fleece and corporate laundry detergent. Her dreads are pulled back in a messy, frayed wrap, several stray hairs catching the blue light.
+
+The workshop smells like a funeral for a high-school chemistry project: hot glue, burnt plastic, and the acidic tang of stale coffee.
+
+Jada stares at her hands. Her cuticles are shredded. Her fingertips are stained silver and mapped with a hundred tiny, red needle pricks.
+
+JADA (V.O.)
+Titi used to say a stitch in time saves nine. But what if the whole damn fabric is rotten? What if you sew your heart into the seam and the thread just... snaps?
+
+She picks up a cracked iPhone. The screen is a spiderweb of glass. She scrolls.
+
+ON SCREEN: A photo from 2015. A younger, beaming Jada in a poorly stitched spandex suit. The seams are puckered, the colors are clashing, but her smile is wide enough to break the frame. 
+
+JADA (V.O.)
+Look at this bul. Just happy to be there. Didn't know about no algorithms. Didn't know about 'brand identity.' Just wanted to be a superhero for a day.
+
+She swipes. 
+
+ON SCREEN: A flurry of recent notifications. 
+
+"User402: Why is she always making the characters Black? It’s not lore accurate."
+
+"CosplayCzar: Honestly, the AI-gen version of this suit looks better. Jada’s getting slow."
+
+"SimpLord99: Stick to the bikini jawns. We don't care about the craftsmanship."
+
+Jada closes her eyes. A muscle in her jaw twitches. 
+
+She reaches onto the cluttered workbench and picks up a vintage wooden thimble. It’s smooth, worn down by decades of Titi’s labor. Jada tries to slide it onto her middle finger, but her hand is shaking—a fine, high-frequency tremor. 
+
+The thimble clatters to the floor. It rolls under a mountain of scrap fabric.
+
+JADA
+(a dry whisper)
+Deadass can’t even hold a piece of wood.
+
+She looks at her sewing machine. Her "Excalibur." A heavy-duty Singer that has hummed through a thousand nights. Right now, it looks like an industrial tombstone. 
+
+A PING echoes through the room. 
+
+On the workbench, a TABLET SCREEN glows. It’s the TechCorp contract. The white light of the document is clinical, blinding, cutting through the moody blue of the LED strip. It looks like a digital predator waiting for its prey to stop breathing.
+
+Another PING. A text message banner slides over the contract.
+
+**DEVON (TECHCORP): The offer expires at midnight, Jada. Think about Titi. The ICU isn't cheap. Don't let pride be the reason she loses that room.**
+
+Jada stares at the word "PRIDE." It feels like a slap. 
+
+She leans forward, her forehead resting against the cool, hard edge of the workbench. 
+
+The silence in the room is heavy, punctuated only by the *click-hum* of the flickering LED. Then, the sound changes. A hitch in her breathing. 
+
+Jada isn't screaming. She isn't throwing things anymore. She is weeping—the silent, rib-shaking kind of grief that comes when you realize the exit sign is a hallucination.
+
+JADA
+(to the empty room)
+I built this jawn from nothing. I sewed my soul into every one of these jawns. How... how it end up costing me everything? 
+
+She looks up. Her eyes are bloodshot, reflecting the cold white light of the tablet. She looks at the Masterpiece Armor—the cracked breastplate, the dulling silver. 
+
+She reaches out. Her hand hovers over the tablet screen. 
+
+Her shadow on the plywood wall is massive, distorted by the low-angle light. With her arms reaching toward the digital contract, the shadow looks like a puppet, its limbs held up by invisible, jagged strings.
+
+JADA
+(whispering)
+I'm sorry, Titi.
+
+Her trembling finger descends toward the "ACCEPT" button. The blue light dies as the LED strip finally burns out, leaving her face illuminated only by the cold, corporate white of the screen.
+
+**FADE TO BLACK.**
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. JADA'S WORKSHOP - DAWN
+
+INT. JADA'S WORKSHOP - DAWN
+
+Close on JADA’S hands. Her knuckles are ashy, graying against the deep cocoa of her skin. Her cuticles are stained with stubborn streaks of silver paint and dried adhesive. 
+
+But her fingers? Steady as a surgeon’s. 
+
+She smooths a piece of crumpled drafting paper against the scarred oak of her workbench. The morning sun, filtered through thick Philly smog, cuts a sharp diagonal across the paper. It looks like a spotlight hitting a stage.
+
+JADA (24, "Philly Against Everybody" hoodie, silk bonnet askew) is slumped in her ergonomic chair. Her eyes are bloodshot, the bags under them heavy with the weight of a dozen all-nighters.
+
+The "Masterpiece Armor"—the project she thought would save her—is shoved into the far corner. It’s a mess of over-engineered plastic and wires. A ghost.
+
+On the floor, a TECHCORP TABLET face-down. Its edge pulses with a rhythmic, insistent blue light. *Notification. Notification. Notification.*
+
+Jada looks at it. Her lip curls.
+
+JADA
+(to the tablet)
+Keep callin’. See what it get you.
+
+She kicks the tablet. It skids across the floor, disappearing into the shadows beneath her industrial sewing machine.
+
+She stands. Her spine pops—a dry, rhythmic sound. With one decisive, violent sweep, she clears the workbench. Foam scraps, empty Red Bull cans, and plastic fasteners rain onto the floor.
+
+She reaches for a tin of shea butter. 
+
+She digs out a glob, rubbing it into her palms. The smell—nutty, earthy, warm—fills her nostrils, pushing out the chemical stink of contact cement. She breathes it in. Grounding.
+
+JADA (V.O.)
+Devon thinks he can just feed my life into a box. Code it. Quantize it. Like there’s an equation for the way the light hits a seam at 3 AM. 
+
+She looks at her hands, now glowing, supple.
+
+JADA (V.O.)
+(Cont'd)
+They want a prompt? Aight. I’ll give ‘em a pulse.
+
+She doesn't reach for the digital stylus. She grabs a raw charcoal pencil.
+
+She leans over the paper. She doesn't draw "perfect" lines. She draws *herself*.
+
+The charcoal moves with aggressive, heavy strokes. She’s not sketching a mannequin; she’s sketching a silhouette with hips, with a chest, with a stance that says *don't touch me unless you’re ready to lose a finger.*
+
+The armor lines celebrate her curves rather than flattening them. It’s not "optimal aerodynamic plating." It’s a shell. A skin.
+
+JADA
+(muttering)
+Algorithm can’t calculate soul, Devon. It don’t know how to bleed for the craft. Deadass.
+
+She stops, staring at the sketch. It’s raw. It’s Philly. It’s her.
+
+She moves to a stack of plastic bins in the corner. She ignores the "TechCorp Grade" carbon fiber sheets. She pulls out an old, weathered wooden crate.
+
+Inside: "Heirloom" fabrics. 
+
+She pulls out a length of indigo-dyed mudcloth, stiff and storied. Then, a heavy scrap of vintage denim, faded to a perfect sky-blue, inherited from her Titi’s sewing kit.
+
+She carries them back to the bench, overlaying the textures on top of the charcoal sketch. The deep blue of the mudcloth against the black carbon lines.
+
+JADA (V.O.)
+You can’t prompt "inheritance." You can’t scrape the web for the way Titi used to hum when she hit the bobbin. 
+
+She picks up a needle. Not the sewing machine—not yet. This needs to be felt.
+
+She threads a spool of heavy-duty, waxed upholstery thread. She licks the end, slides it through the eye of the needle with a single, sharp movement.
+
+She takes a scrap of thick, pebbled leather and the denim. She pushes the needle through.
+
+It’s hard. It resists. She has to use a thimble, pressing with the ball of her thumb until the needle bites through the layers.
+
+JADA
+(a whisper)
+Keep the bag, Devon. I’m keeping the blueprint.
+
+The sound of the thread pulling through the fabric is a sharp *zip-hiss*. 
+
+JADA (V.O.)
+Every stitch a choice. Every knot a memory. Let’s see your AI simulate a heart that’s actually breakin’.
+
+She sits taller now. The "maker" has returned, displacing the "content creator." The slouch is gone. Her shoulders are square.
+
+The sunlight gets stronger, turning the smog outside to a hazy gold.
+
+WIDE SHOT:
+
+Jada from behind, framed by the large industrial window. She is a small silhouette in a cavernous, messy room, but she looks immovable.
+
+On the table, the charcoal warrior-queen looks back at her, vibrating with life. 
+
+Under the table, in the dark, the TechCorp tablet gives one final, weak blue flicker. 
+
+It goes black. Battery dead.
+
+Jada doesn't even notice. She’s already on the second stitch. 
+
+FADE OUT.
+
+---PAGE BREAK---
+
+INT. COMMUNITY CENTER - DAY
+
+[SCENE START]
+
+INT. NORTH PHILLY COMMUNITY CENTER - DAY
+
+The gym is a relic. Vaulted ceilings, peeling sky-blue paint, and the rhythmic *thump-thump* of a radiator that sounds like a failing heart. 
+
+A corkboard by the double doors is a graveyard of old business. A tattered flyer for a 2019 "Stop the Violence" rally overlaps a faded ad for $50 braids.
+
+JADA (24, tired but electric) slams a neon-pink flyer over the mess. It’s hand-lettered in thick, defiant Sharpie: **STITCH & SLAY: NO PROMPTS, JUST PRICKED FINGERS.**
+
+She turns to face the room. 
+
+A dozen creators—THE INDIES—are scattered across folding chairs. They are a kaleidoscope of Black and Brown excellence: thrifted hoodies, vibrant headwraps, and hands stained with fabric dye. 
+
+At their feet sit bins of EVA foam, spools of industrial thread, and scrap leather. 
+
+MARCUS (26, built like a linebacker in a tactical vest) leans against a stack of moth-eaten gym mats in the corner. His arms are crossed. His eyes are on Jada, heavy with a "show me" stare.
+
+JADA
+(Projecting, voice echoing)
+Aight, listen up! I know the radiator sounds like it’s ‘bout to blow, but I need your ears.
+
+The room settles. A young girl, NIKKI (19), stops hand-sewing a foam gauntlet and looks up.
+
+JADA (CONT'D)
+Y’all seen the news. TechCorp just dropped that 'Aura-Gen' update. They sayin’ you don’t need a needle no more. Just type in "Afrofuturistic Knight" and a printer spits out the vibes in twenty minutes.
+
+She paces the floor, her "Philly Rebels" hoodie swishing.
+
+JADA (CONT'D)
+They want to turn our culture into a math equation. They want the look without the labor. They want the drip, but they scared of the sweat. And I’m deadass—I am not letting a prompt-box replace a sewing machine. 
+
+NIKKI
+(Quietly)
+But Jada... the TechCorp printers do it perfect. No seams. No mistakes. My last commission got cancelled ‘cause the client said a bot could do it for half the price. How we supposed to compete with "perfect"?
+
+Jada stops. She reaches into her bag and pulls out a thick piece of hand-tooled, dark mahogany leather. She tosses it to Nikki.
+
+JADA
+Smell that. 
+
+Nikki sniffs it. The scent of tannins and oil fills the air.
+
+JADA (CONT'D)
+Feel the grain. That’s cowhide I spent six hours buffing until my fingers cramped. That leather got a history. It got a soul. A printer can’t give you a soul. It can give you a copy of a copy, but it can’t give you *us*.
+
+MARCUS
+(From the shadows)
+That’s a real pretty speech, Jade. 
+
+The room goes cold. All heads turn to Marcus. He doesn't move from the mats.
+
+MARCUS (CONT'D)
+But let’s keep it a stack. Word on the street is Devon Cole from TechCorp is blowing up your phone. You talkin’ like a revolutionary, but you still got the corporate devil in your call logs. 
+
+Jada’s jaw tightens. She feels the TechCorp contract in her back pocket—a literal weight against her hip.
+
+MARCUS (CONT'D)
+So, which one is it? Are we the "movement," or are we just the leverage you need to get a bigger bag before you sell us out? 
+
+Jada stares him down. The silence is deafening. She steps closer to the group, taking up space, her posture unyielding.
+
+JADA
+The bag is tempting. No cap. I’m tired of my heat getting cut off. I’m tired of choosing between buying zippers or buying groceries. 
+
+She holds up her hands, palms out. Her cuticles are shredded. There’s a jagged, healing scar across her thumb from a slipped X-Acto blade.
+
+JADA (CONT'D)
+But look at these. Code can’t bleed for the craft. A bot didn’t earn these scars. I did. We did. TechCorp wants to "top-tier" us out of our own skins. They want to curate the "Philly Aesthetic" while they gentrify the blocks that made it.
+
+She looks Marcus dead in the eye.
+
+JADA (CONT'D)
+I ain't signing shit unless it means *everybody* in this room gets a seat at the table. We making it out the basement, but we taking the basement with us. We doing a Handmade Showcase. Real materials. Real hands. No prompts. 
+
+A beat. 
+
+Nikki stands up, holding the leather.
+
+NIKKI
+I got some scrap vibranium-style plating. We could mix it with some kente weave. Make it street, but make it royalty.
+
+A heavy-set guy in the back, TYRELL, chimes in.
+
+TYRELL
+I can weld the frames for the wings. If we using real steel, they gonna be heavy, but they gonna look *mean* under the lights.
+
+JADA
+(A smirk growing)
+Bet. We go high-fantasy, but we keep it North Philly. I want layers. I want textures. I want them to see the stitches and know a human being put their life into it.
+
+The energy in the room shifts. The skepticism melts into a frantic, creative heat. People start dragging bins together, trading swatches, arguing over color palettes.
+
+Marcus finally pushes off the mats. He walks over to Jada, leaning in close so only she can hear.
+
+MARCUS
+You better be for real about this, Jade. Because if you lead them to the top of the mountain just to drop ‘em? You can’t never come back to the block.
+
+JADA
+I’m already home, Marcus. Watch me work.
+
+EXT. COMMUNITY CENTER - CONTINUED
+
+Through the high, grimy windows of the gym, the sun begins to dip, casting long shadows.
+
+WIDE SHOT:
+
+The gym is vast and dark, but in the dead center, the circle of Indies is huddled around a pile of glowing fabrics and raw materials. From this height, they look like a small campfire burning in the middle of a dark forest.
+
+They are small. They are outgunned by the billion-dollar algorithms of TechCorp. 
+
+But as Jada points to a sketch, her laughter echoing against the rafters, they are loud.
+
+FADE OUT.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. PHONECALL / SPLIT SCREEN
+
+[SCENE START]
+
+**INT. PHONECALL / SPLIT SCREEN - NIGHT**
+
+The screen CLEAVES down the center, a jagged line separating two worlds.
+
+LEFT SIDE: JADA (24) is slumped in a sagging kitchen chair in Titi’s dim dining room. She’s wearing a silk bonnet and an oversized "PHILLY MADE" tee stained with sweat and neon-pink dye. Her hands, calloused and messy, tremble as she stares at her phone. Behind her, the MASTERPIECE ARMOR glows on a mannequin—a fierce, iridescent god of fiberglass and LEDs.
+
+RIGHT SIDE: MARCUS (26) stands in his clinical, high-tech studio. He’s the image of stability in a black thermal and a leather shop apron. He’s sanding a pauldron, the rhythmic *shhh-shhh* of the sandpaper keeping time with the blue pulse of a 3D PRINTER humming in the background.
+
+Jada’s phone VIBRATES on her thigh. 
+Caller ID: **MarcFab (The Opps?)**
+
+She lets it ring. Once. Twice. She exhales a breath that tastes like exhaustion and cold coffee.
+
+JADA (V.O.)
+(Internal)
+*Don’t pick it up. He just gonna tell you why you wrong. He gonna tell you that TechCorp check is blood money while he sittin’ pretty in a studio I can’t even afford the rent on.*
+
+The phone rings a third time. She swipes.
+
+JADA
+Yo.
+
+MARCUS
+(Beat)
+You sound like you’re ready to swing on somebody, J.
+
+JADA
+I’m tired, Marc. My eyes hurt, my back hurt, and I’m definitely not in the mood for a lecture on the "sanctity of the craft." You callin’ to tell me I’m a sellout again or what?
+
+Marcus stops sanding. He looks at his reflection in the polished pauldron.
+
+MARCUS
+I’m calling because I pulled up those photos you sent last week. The ones of the breastplate assembly.
+
+JADA
+And? You gonna tell me it’s too busy? Too much "Philly grit" for your sleek aesthetic?
+
+MARCUS
+I was wrong about the weight distribution.
+
+Jada freezes. She leans back, her eyes narrowing.
+
+JADA
+Say that again? 
+
+MARCUS
+I ran the numbers. The way you offset the LED housings against the resin density... it’s perfect. You were right about the physics, J. You’re always right about the physics.
+
+Jada’s posture softens, just a fraction. She looks over her shoulder at the armor. The pink LEDs flicker like a heartbeat.
+
+JADA
+(Small smirk)
+Deadass? ‘Cause you was drawlin’ last night, Marc. Acting like I didn't know my own jawn.
+
+MARCUS
+I was being a hater. I’ll own that. I spent all morning trying to replicate that curve on the printer and it just... it looks sterile. It doesn't have that soul you get from the hand-stitch.
+
+JADA
+(Softening)
+Stitching them lights was hell, Marc. I got needle bites all over my thumbs. This resin I’m using is cheap, too. It’s bubbly. I spent four hours just sanding the chest piece and I still feel like it’s trash compared to what you got over there.
+
+MARCUS
+It’s not trash. It’s textured. There’s a difference.
+
+The sound of the 3D PRINTER (High-pitched, mechanical) fills Marcus’s side. The sound of JADA’S HEAVY BREATHING fills her side. The digital vs. the organic.
+
+MARCUS (CONT'D)
+I saw the news, J. The TechCorp offer. It’s all over the feeds.
+
+Jada’s face hardens again. She rubs a smudge of pink dye onto her cheek.
+
+JADA
+Here we go.
+
+MARCUS
+Wait. Just... listen. I don’t want you broke, Jada. I know how much Titi needs, and I know how much you’ve sacrificed for this suit. I just... I want you whole. I don’t want them to buy your hands and then tell you how to move ‘em.
+
+JADA
+The bag is heavy, Marc. No cap. Elena is talkin’ numbers that would change my whole life. But this sewing machine? This resin? It’s getting heavier every day. I’m drowning in this basement.
+
+MARCUS
+(Voice dropping, intimate)
+I ain’t mean to step on your hustle. I see them vultures circling and I get... defensive. For the culture. For you. You’re the best I’ve ever seen, and if they take that from you, they’re taking it from all of us.
+
+Jada looks at her hands. The neon dye looks like blood in the dim light.
+
+JADA
+I don’t know if I can keep being the "soul" of the neighborhood if I can’t pay the light bill, Marc.
+
+Silence stretches between the two screens. The romantic tension is a physical weight, bridging the gap between her kitchen chair and his high-end workbench.
+
+MARCUS
+Come by the shop tomorrow?
+
+JADA
+Marc...
+
+MARCUS
+No strings. No TechCorp talk. I got that industrial-grade adhesive you like—the stuff that doesn't cloud the LEDs. We can just... work. Just us.
+
+Jada closes her eyes. She can almost smell the ozone and sawdust of his shop.
+
+JADA
+You got the good adhesive? The German stuff?
+
+MARCUS
+(A smile in his voice)
+The best. 
+
+JADA
+...Bet. I’ll be there. But if you start talkin’ ‘bout "corporate ethics," I’m dipping.
+
+MARCUS
+Word. Get some sleep, J. 
+
+JADA
+Yeah. You too.
+
+Jada ends the call. The split screen lingers. 
+
+On the LEFT, Jada stands up, walking over to the armor. She reaches out, her calloused thumb tracing the seam Marcus complimented—the one where the physics were "perfect." She looks at the TechCorp contract sitting on the table, then back at the suit.
+
+On the RIGHT, Marcus reaches over and flicks a switch. The blue light of the 3D printer dies. He is plunged into total darkness, the only light being the faint glow of his phone screen as he stares at Jada’s contact photo.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. NYC CONVENTION CENTER - MAIN HALL - DAY
+
+INT. NYC CONVENTION CENTER - MAIN HALL - DAY
+
+A forest of twenty-foot digital banners looms over the cavernous space. On the screens: AI-generated models with impossible proportions, wearing "perfect" armor that has never touched a soldering iron.
+
+The air is a cocktail of industrial ozone, expensive espresso, and the low-frequency thrum of a mainstage bassline that vibrates in the marrow.
+
+LOW ANGLE TRACKING SHOT through the legs of the "normie" crowd—thousands of store-bought superhero tees and plastic badges—moving toward Booth #402: THE HANDMADE SHOWCASE.
+
+JADA (24, sharp features, dreads pulled into a punishingly tight bun) is a frantic blur of motion. Her hands, stained with "Void-Black" metallic pigment and scarred by hot glue burns, tremble as she yanks a heavy flight case shut. 
+
+ZIP. The sound is a jagged serration against the ambient noise.
+
+JADA
+(under her breath)
+Don’t trip on the wires, Jada. Keep it tight. Don’t let these vultures see the shakes. Deadass.
+
+She stands. She’s wearing a utility vest over a mesh top, looking like she’s ready to build a city or burn one down. She hoists THE MASTERPIECE ARMOR onto its stand.
+
+It is a revelation. 
+
+Unlike the flat, injection-molded plastic of the TechCorp booths, Jada’s armor looks *alive*. The iridescent paint shifts from deep violet to a bruising obsidian. It’s organic, ribbed like a deep-sea predator, pulsing with hand-soldered internal LEDs that breathe with a soft, amber light.
+
+A few passing cosplayers stop dead. One whispers, "Is that... hand-laid foam?"
+
+JADA
+(to herself, a small smirk)
+Yeah. Real craft. Catch the vapors.
+
+Suddenly, the vibe shifts. The crowd parts like the Red Sea for a localized cyclone of vanity.
+
+ELENA (23, glowing with expensive skincare and the arrogance of a million followers) approaches. She’s encased in a "VALKYRIE" SUIT—a hyper-symmetrical, AI-designed chassis that looks less like clothing and more like a high-end German SUV. 
+
+Elena isn't walking; she’s *broadcasting*. She holds a gimbal-mounted smartphone, narrating to her "legion."
+
+ELENA
+(into the phone)
+...and guys, we just *had* to stop by the indie section. I’m all about supporting the grass-roots creators, you know?
+
+Elena steps into Jada’s booth space. Her entourage—three assistants with ring lights and battery packs—swarms in, effectively pinning Jada against her own workbench.
+
+ELENA (CONT'D)
+Jada! Oh my god, look at you! You look... exhausted. Such a vibe. 
+
+JADA
+(tightening her jaw)
+It’s called work, Elena. I know you ain't seen it in a minute. 
+
+Elena ignores the jab, turning her camera toward the Masterpiece Armor. She reaches out—a cardinal sin—and runs a manicured nail along the iridescent shoulder plate.
+
+ELENA
+Oh wow. Look at the *soul* in this piece, guys. It’s so... brave to use traditional foam in 2026. It’s practically vintage, right? Like, a total throwback to the analog days.
+
+JADA
+(stepping forward, reclaiming her space)
+It ain't vintage, Elena. It’s structural. I’m putting tension in the seams you can't get from a 3D print. That jawn has weight because it’s got heart.
+
+ELENA
+(with a pitying smile)
+Of course, babe. It’s just... so much *work*. Why suffer for the craft when the "Bag" is right there? TechCorp offered you the partnership too, didn't they? Or were they only looking for... a certain aesthetic?
+
+The "certain aesthetic" comment hangs in the air, heavy with unspoken gatekeeping.
+
+One of Elena’s assistants, a jittery guy in a TechCorp lanyard, "accidentally" backs into Jada’s main power strip. He lingers there, his heavy, liter-sized water bottle positioned precariously on the edge of the table right above the exposed LED controller.
+
+Jada doesn't see him. She’s locked in a stare-down with Elena.
+
+JADA
+I don't need a TechCorp logo to validate my hands. My work speaks. Your suit looks like it was rendered in a boardroom, no cap. It's got no grit.
+
+ELENA
+(tilting her head)
+Grit doesn't win the "Best in Show" fifty-thousand-dollar grant, Jada. Precision does. 
+
+Elena turns back to her camera, dismissing Jada instantly.
+
+ELENA (CONT'D)
+Anyway, guys! Moving on to the VIP lounge! Don't forget to vote for the Valkyrie!
+
+As the swarm begins to move, Jada catches a movement at the edge of the booth. 
+
+MARCUS (30s, "MarcFab," a legend in the Philly scene, wearing a duster made of recycled ballistic nylon) is standing twenty feet away. He doesn't come over. He just catches Jada’s eye.
+
+He taps his temple, then points a single finger toward the "assistant" lingering by the power strip. A silent warning. 
+
+Jada’s eyes dart down. She sees the water bottle. She sees the intent. 
+
+The "Hustler" switch flips. The anxiety evaporates, replaced by a cold, sharp survivalism. She realizes she isn't at a convention. She’s in a combat zone.
+
+Jada reaches out, her hand moving like a strike, and snatches the water bottle just as the assistant "slips."
+
+JADA
+(voice like gravel)
+You dropped something, fam. Better get that back to the VIP lounge before you trip on all that *precision*.
+
+The assistant pales and scurries after Elena’s retreat.
+
+Jada stands alone in her booth now. The Masterpiece Armor glows behind her, defiant.
+
+CLOSE UP - JADA
+
+Her jaw is set. Her eyes are narrowed, watching Elena’s "Valkyrie" suit retreat into the neon glare of the TechCorp sector.
+
+CLOSE UP - THE SHOULDER PLATE
+
+A single, slow bead of condensation from a massive overhead AC vent drips onto the iridescent surface. It rolls down the "organic" curve of the foam.
+
+In the reflection of the armor’s obsidian finish, we see the flickering, neon TechCorp logo: "AI-FUTURE: PERFECTLY HUMAN." 
+
+The logo distorts across the handmade texture of Jada’s work, looking like a digital parasite trying to find a way inside.
+
+JADA (V.O.)
+Aight. You want a war? Bet. 
+
+Jada grabs a wrench from her belt. She isn't shaking anymore.
+
+FADE OUT.
+
+---PAGE BREAK---
+
+INT. BACKSTAGE - DAY
+
+[SCENE START]
+
+**INT. NYC CONVENTION CENTER - BACKSTAGE - DAY**
+
+A macro shot of a "snake pit." Heavy-duty industrial power cables—black, scarred, and thick as pythons—tangle across the cold concrete floor. The air back here smells of ozone, dry ice, and expensive hairspray.
+
+A hand enters the frame. Long, lavender-colored designer acrylic nails, encrusted with Swarovski crystals, hover over a heavy iron breaker switch. 
+
+Label: **STAGE B – MAIN LIGHTING/PROPS.**
+
+Above the cables, the "Dim Zone" is a labyrinth of velvet drapes and equipment crates. 
+
+ELENA VANCE (20s, blonde, curated to within an inch of her life) fumbles with a specialized precision screwdriver. She’s wearing her "Starlight Valkyrie" suit—a $15,000 AI-designed marvel of 3D-printed resin and white LEDs. It looks like a museum piece, stiff and sterile. 
+
+Elena is sweating. It’s ruining the matte finish of her foundation. She’s hyperventilating as she jams the screwdriver into the LED relay feed.
+
+A sharp CLICK echoes. 
+
+A beam of blinding white LED light cuts through the darkness, pinning Elena against the breaker box. She gasps, shielding her eyes with a gloved hand.
+
+Ten feet away, MARCUS "MARCFAB" JOHNSON (20s, tall, built) steps out of the shadow of a rigging truss. He’s a contrast in craftsmanship. His "Black Panther: 2099" tech-suit is a matte-black weave of carbon fiber and hand-stitched leather. His hood is down, revealing a face of cold, unimpressed granite.
+
+He doesn't say a word. He just holds the work-light steady.
+
+ELENA
+(Voice jumping an octave)
+Marcus! God, you scared the life out of me. I was... I was just looking for you. Or a technician.
+
+Marcus lowers the light slightly, but the tension in the air remains taut as a piano wire.
+
+ELENA (CONT'D)
+(Adopting a rehearsed, "influencer" tone)
+This junction looks... frayed. Totally unsafe. I was just trying to keep the stage secure for everyone. You know how Jada’s DIY rigs can be. They’re so... unpredictable. A total fire hazard, really. I’m just doing my part as a partner of the Con to ensure safety protocols are met.
+
+Marcus finally moves. He walks toward her, his boots making a heavy, deliberate *thud-thud-thud* on the concrete. He stops three feet away.
+
+MARCUS
+Funny. I’ve been standing here two minutes, Elena. Watching you sweat through that expensive-ass plastic.
+
+ELENA
+I don't appreciate your tone, Marcus. I’m trying to—
+
+MARCUS
+You weren’t looking for a fray. You were looking for the kill-switch. 
+
+He gestures with his chin toward the breaker.
+
+MARCUS (CONT'D)
+Jada’s work is hand-soldered. Every wire tinned, every circuit grounded. She doesn't do "hazards." Yours? Yours is drop-shipped from a factory in Shenzhen and glued together with a prayer. That’s the real danger to this show.
+
+ELENA
+(A hiss of desperation)
+You have no idea what it takes to maintain a brand like mine. Jada is a flash in the pan. She’s disruptive. The organizers want *consistency*. They want *me*. 
+
+Marcus pulls a smartphone from a tactical pouch on his thigh. He taps the screen. 
+
+The screen shows a crystal-clear video of the last sixty seconds: Elena crouching over the cables, screwdriver in hand, face twisted in malicious intent.
+
+ELENA (CONT'D)
+(Face paling)
+Delete that. Right now. That’s... that’s a violation of my privacy. I'll have my legal team—
+
+MARCUS
+(Cutting her off)
+Legal team? Nah. I ain't calling the cops, Elena. I’m calling the culture. One upload. One tag to the cosplay community, the Black makers, the kids who actually build their own jawns instead of buying ‘em. 
+
+He steps into her personal space. He’s a head taller, his presence swallowing the light.
+
+MARCUS (CONT'D)
+You talk real loud about "sisterhood" on the ‘Gram, but the minute a Black girl builds a better throne, you’d rather burn the whole palace down than sit in the second row. 
+
+Elena’s lower lip trembles. The "Valkyrie" looks small now. Fragile.
+
+MARCUS (CONT'D)
+Get out of here. Before I decide that the world needs to see the "real" Elena Vance.
+
+Elena doesn't wait. She gathers her pristine white cape, her acrylics clicking against her armor as she scrambles toward the stage-left exit. She vanishes through the heavy drapes without looking back.
+
+Marcus breathes out a long, heavy sigh. He drops to one knee beside the cables.
+
+He inspects the relay Elena was tampering with. It’s slightly loose. He pulls a multi-tool from his belt—a real one, worn and oily. With a few deft turns, he secures the connection. 
+
+He stands up, his hand hovering over the breaker.
+
+**CLOSE UP:**
+
+Marcus’s calloused, oil-stained thumb. It looks powerful against the industrial metal. 
+
+He flicks the switch.
+
+**CRACK-BOOM.**
+
+The sound of the stage power surging to life is like a heartbeat. The hum of the massive transformers intensifies, vibrating through the floorboards. 
+
+In the distance, through the curtains, a steady, rhythmic glow begins to pulse. Jada’s "Masterpiece Armor" is waking up. 
+
+Marcus looks toward the stage, a grim, protective smile touching his lips. 
+
+MARCUS
+(To himself)
+Go get ‘em, Jada. No cap.
+
+[SCENE END]
+
+---PAGE BREAK---
+
+INT. MAIN STAGE - DAY
+
+[SCENE START]
+
+**INT. MAIN STAGE - DAY**
+
+A heavy red velvet curtain hangs like a guillotine blade. Behind it, the air is thick with the smell of ozone, hairspray, and hot circuitry.
+
+LOW ANGLE: JADA (24, Black, powerhouse build) stands in the shadows. She is a silhouette framed by light leaking through the fabric weave, creating a shimmering "halo" around her dreadlocks. 
+
+Against her dark form, the "Valkyrie of the Vine" armor pulses. Emerald LED strips embedded in hand-tooled leather beat like a slow, neon heart.
+
+JADA (V.O.)
+(A whisper)
+Breath in for four. Hold for two. Don’t let these vultures see the sweat. This jawn is yours.
+
+The crowd outside is a dull roar, the sound of a thousand people waiting to be entertained by a "content creator."
+
+Jada grips the edge of the curtain. Her hands are calloused. A fresh needle puncture on her thumb stings.
+
+JADA (V.O.)
+They want a render. I’m giving ‘em a riot.
+
+She steps forward.
+
+The curtain pulls back.
+
+A singular, punishing white spotlight hits her. 
+
+JADA
+
+She doesn't do the "waifish" runway walk. She plants her feet wide. A power stance that claims the floor. 
+
+The armor is magnificent. It’s not just a costume; it’s a fortress. Hand-tooled emerald leather meets iridescent 3D-printed scales. Her cape, woven from recycled copper wire and tech-waste, catches the light like a fallen star.
+
+The crowd GAPS. A thousand cell phones rise in unison—digital fireflies in the dark.
+
+IN THE FRONT ROW:
+
+MARCUS (40s, Black, Sharp-eyed) leans forward. He doesn't record. He just watches, arms folded, nodding slowly. He’s the only one really *seeing* the stitch-work.
+
+IN THE WINGS:
+
+DEVON COLE (30s, White, wearing a suit that costs more than Jada’s car) watches from the shadows. His face is a mask of "Return on Investment." Beside him, ELENA VANCE (20s, White) holds her phone up, narrating to her livestream in a performative whisper.
+
+ELENA
+(To her phone)
+Guys, look at this "organic aesthetic" we helped Jada develop. Total visionary vibes...
+
+ON STAGE:
+
+The massive AI-generated screen behind Jada FLICKERS. A technical glitch. The hyper-clean digital forest backdrop stutters, threatening to wash her out in a sea of "Error 404" blue.
+
+Jada doesn't flinch. She ignores the digital noise. She marches to the very edge of the stage, feet thumping on the wood, forcing the audience to look at the *physical* weight of her craft.
+
+She reaches for the mic. The feedback SQUEALS—a raw, analog scream.
+
+JADA
+(Into the mic)
+Aight, chill. Chill.
+
+The room goes silent. Jada reaches into her gauntlet and pulls out a crumpled piece of paper—the PR script Devon wrote for her. She looks at it for a beat, then drops it. It flutters to the floor like trash.
+
+JADA
+They told me an algorithm could do this better. Deadass. They said a prompt could replace the blood on my needle and the callus on my thumb. 
+
+She points to a jagged, uneven scar in the emerald leather near her ribs.
+
+JADA
+See this? This ain't a glitch. This a needle slip at three in the morning when my eyes was crossing and the coffee stopped working. This the mark of a human hand. My hand.
+
+DEVON’S face hardens. He gestures to a STAGE HAND, pointing at the mic.
+
+JADA
+You can’t "generate" soul. You can’t prompt the weight of my ancestors into a silk hem. This ain't a render. This is a riot.
+
+She looks directly at the VIP SECTION—the TechCorp executives in their glass-walled box. 
+
+JADA
+Keep your "optimization." Keep your "efficiency." I’m the one who bled for this. No cap—I’m the one who owns it.
+
+Devon turns to his assistant, his voice a low, corporate hiss.
+
+DEVON
+She’s burning the bridge. She just voided the morality clause. Get the legal team on the phone. Now.
+
+Jada hears the murmurs starting, but she doesn't care. She stands tall, the LED circuitry in her armor glowing brighter as she pushes the power pack to its limit. 
+
+Marcus stands up in the front row. He starts to clap. A slow, heavy beat. 
+
+Then others join. The sound builds from a trickle to a flood. 
+
+CLOSE UP - JADA
+
+Sweat beads on her forehead. A smear of gold greasepaint runs down her cheek like a tear of war-paint. She isn't smiling for the cameras. She looks exhausted. She looks liberated.
+
+Behind her, the "TECHCORP" logo on the big screen flickers one last time and DIES. 
+
+The stage lights go black, leaving JADA as the only source of light in the entire room, her armor pulsing emerald in the dark.
+
+**[SCENE END]**
+
+---PAGE BREAK---
+
+INT. MAIN STAGE - DAY (CONT'D)
+
+INT. MAIN STAGE - DAY (CONT’D)
+
+A BLINDING WASH of white stage lights hits the lens, bleaching the frame to pure silver before the color bleeds back in—vibrant, high-contrast, and aggressive. 
+
+The floorboards don’t just shake; they THUD. A heavy, industrial bassline kicks in, a rhythmic heart-throb that syncs with the screams of 5,000 people. 
+
+JADA (24) steps out from the wings. 
+
+She isn't just wearing the VALKYRIE OF THE VINE armor; she is armored by it. The emerald-green plates, hand-tooled with leather filigree, hug her curves like a second, lethal skin. Fiber-optic vines pulse with a soft, bioluminescent lime-green glow, mimicking a steady heartbeat.
+
+She stops center stage. The massive LED backdrop behind her flares into a kaleidoscope of forest-fire gold.
+
+JADA (V.O.)
+(A whisper in her own head)
+Aight. Don’t trip. Don’t stumble. Own the floor. They can’t ignore this jawn. No cap, you worked too hard for a slip-up. 
+
+The EMCEE’S voice cuts through the roar like a jagged blade.
+
+EMCEE (V.O.)
+Representing the 215... JADA-CRAFT!
+
+Jada squares her shoulders. Her "battle mask"—a sharp, stoic professional gaze—is perfect, but her chest is heaving. The high-functioning anxiety is a live wire under her skin. 
+
+She scans the "pit"—the front-row chaos. 
+
+MARCUS (26) is there, practically hanging over the metal barricade. He’s wearing his "Philly Built" hoodie, hood pushed back to reveal a face split wide by a grin. He’s got his DSLR in one hand, but he’s forgotten he’s a photographer. 
+
+In his other hand, he holds his smartphone aloft like a holy relic. 
+
+On the screen, grainy and flickering in the North Philly kitchen light, is TITI. Her face is a map of beautiful, weathered joy. She’s weeping, her hand pressed against her mouth.
+
+MARCUS
+(Screaming over the bass)
+LOOK AT HER! LOOK AT MY SISTER! THAT’S THAT PHILLY HEAT! 
+
+Jada’s eyes lock onto the tiny, pixelated screen. The "battle mask" cracks for a fraction of a second. She sees Titi’s lips move. 
+
+TITI
+(Muffled, through the phone)
+My baby... she look like a prayer. You see her, Marcus? She look like a whole prayer!
+
+The distance between the South Jersey Convention Center and the North Philly rowhome vanishes. Jada isn’t in a contest anymore. She’s in a temple. 
+
+The anxiety evaporates. In its place: Radical Transfiguration. 
+
+Jada shifts her weight. It’s not a pageant walk; it’s a tactical advance. She plants her boots. 
+
+JADA (V.O.)
+Bet. Let's give 'em the whole show then.
+
+She strikes her signature power pose—fists clenched at her sides, chin tilted up. 
+
+THE FLEX: On her command, the fiber-optic vines on her armor SURGE. The emerald green transitions into a BLINDING, INCANDESCENT GOLD. 
+
+The audience goes nuclear. The light reflects off Jada’s dark skin, making her look like she’s been forged in a star.
+
+In the Judge’s Pit, ELENA VANCE (40s, sleek, wearing a blazer that costs more than Jada’s car) leans over to the judge next to her. Her face is a mask of corporate "impressed," but her eyes are arctic. She whispers behind a manicured hand.
+
+ELENA VANCE
+It’s... loud. Technically proficient, but does it fit the brand? It feels a bit... aggressive for the retail line.
+
+She’s calculating. She’s measuring the threat Jada poses to her own "minimalist-chic" empire.
+
+Jada doesn't see the whisper, but she feels the chill. She turns her head toward the judges’ table, her gaze locking onto Elena. 
+
+Jada’s thumb hits a recessed switch in her gauntlet. 
+
+WHIRR-THUD.
+
+The VALKYRIE WINGS—six feet of mechanical, articulating feathers layered in iridescent green and gold—EXPAND. They snap open with the sound of a closing vault door, spanning the width of the stage. 
+
+LOW ANGLE - WORM’S EYE VIEW
+
+Jada stands at the very edge of the stage, towering over the camera, a literal goddess of metal and vine. Behind her, the crowd is a frenetic blur of motion and flashing lights. 
+
+But her SHADOW—long, dark, and immovable—stretches out across the floor. It rolls over the judges’ table like an eclipse, drowning Elena Vance in total darkness. 
+
+Jada doesn’t smile. She doesn't have to. She just takes up space. All of it.
+
+JADA (V.O.)
+Yeah. Stay in the dark then. I’m the one bringing the light. 
+
+The music reaches a deafening crescendo as we--
+
+FADE TO BLACK.
+
+---PAGE BREAK---
+
+EXT. NYC CONVENTION CENTER - NIGHT
+
+EXT. JAVITS CENTER - NIGHT
+
+The glass monolith of the Javits Center looms like a sleeping titan. Inside, the neon pulse of the convention still flickers, but out here, the NYC air is a cold slap of reality.
+
+Silence—or what passes for it in Manhattan—replaces the roar of ten thousand fans. A piece of discarded EVA foam, jagged and painted a burnt copper, skitters across the concrete. A techno-organic tumbleweed.
+
+The sliding doors HISSS open.
+
+JADA (24, a vision of Philly grit and cosmic grace) stumbles out. She’s shed the masterpiece—the Valkyrie armor—leaving her in an oversized Philadelphia Eagles hoodie and leggings. Her dreads are pulled back, but she hasn't wiped off the stage makeup; silver geometric lines still slash across her cheekbones, catching the streetlights.
+
+She drags a heavy-duty rolling case. It groans under the weight of the wings.
+
+MARCUS (26, built like a linebacker with the hands of a watchmaker) walks in lockstep. He wears a charcoal "MarcFab" work shirt, sleeves rolled to the elbows, showing forearms stained with motor oil and iridescent purple overspray.
+
+Jada’s knees buckle—just a micro-inch—and Marcus is there. He catches her elbow, his hand steadying her like a tripod.
+
+JADA
+(A raspy whisper)
+Yo... my legs are deadass about to fall off. For real.
+
+MARCUS
+I got you. Give me the lead on the case, J. I’m the pack mule tonight.
+
+He takes the handle of the rolling case. Jada exhales a breath she’s been holding since the morning. She pulls her phone from her pocket. The screen glow is harsh against her tired eyes.
+
+She stops. She stares at the screen.
+
+JADA
+(V.O.)
+I spent three months breathing contact cement fumes for this moment. Six figures. That TechCorp check was supposed to be the "we made it" button. 
+
+Jada turns the phone toward Marcus.
+
+ON THE SCREEN: An email draft addressed to DEVON COLE. The "SEND" button is greyed out because the message is already GONE.
+
+The body of the email is short: *“The intellectual property remains mine. The culture isn't for sale. Respectfully, Jada B.”*
+
+JADA
+That’s a lot of zeroes I just deleted, Marc. My Titi’s gonna think I’m crazy. She gonna be asking why we still taking the SEPTA when I coulda been on a private jet to the TechCorp labs.
+
+Marcus stops. He lets the case handle drop. He turns to her, his shadow long and sharp against the glass. He takes her hand. Not a "date" hand-hold, but a firm, grounding grip—palm to palm, creator to creator.
+
+MARCUS
+Listen to me. Titi knows the difference between a golden cage and a real throne. You see how they looked at you in there? Like you were a product they could just... patch and update.
+
+He squeezes her hand. His skin is rough, calloused from the lathe.
+
+MARCUS (CONT'D)
+You look like a Queen tonight, J. A real one. Not some corporate mascot in a spirit-glass suit. You kept your soul. That’s worth more than Devon Cole’s entire portfolio. No cap.
+
+Jada looks at their joined hands. The silver paint from her suit has rubbed off on his thumb.
+
+JADA
+(A small, weary smile)
+You out of pocket for being this sentimental, you know that? 
+
+MARCUS
+Just stating facts. 
+
+PING. 
+
+Jada’s phone vibrates. Then again. PING. PING. PING.
+
+She looks down. It’s not an email from a lawyer. It’s a string of notifications from her Patreon and her "Buy Me A Coffee" link.
+
+*@CosplayKai sent $10.00: "For the Culture! Keep building, Queen."*
+*@StitchWitch sent $5.00: "That wing-span was legendary. Thanks for the tutorial!"*
+*@PhillyMade sent $25.00: "Keep it 100. We see you."*
+
+JADA
+(Softly)
+Look at that. The tribe is moving. 
+
+MARCUS
+Slow and steady. The foundation is solid, J. We don't need their blueprint. We got our own.
+
+Jada leans her head against Marcus’s shoulder. The adrenaline is gone, replaced by a deep, honest ache. She smells like sawdust, expensive perfume, and victory.
+
+JADA
+Aight, but don't get it twisted. I’m still gonna need you to help me weld those micro-LEDs on the next build. That Valkyrie 2.0 gotta have the hydraulics. Don't think you're off the hook just 'cause you gave a speech.
+
+MARCUS
+(Laughing)
+I ain't going nowhere. I’m your lead engineer for life, remember?
+
+JADA
+Bet. 
+
+They start walking again, moving away from the "corporate" glow of the convention center toward the dark, yawning mouth of the subway entrance. 
+
+The city skyline glitters in the distance—thousands of lights, none of them owned by TechCorp. 
+
+CLOSE ON: Jada’s free hand as it swings by her side. 
+
+We see the truth of the craft: the skin of her fingertips is toughened by heat guns, her cuticles are stained with "Viking Silver" pigment, and there’s a fresh needle-prick on her index finger from a last-minute stitch. 
+
+It’s the hand of a creator. It’s a hand that owns its work.
+
+They disappear into the shadows of the city, two silhouettes against the night, leaving the neon cage behind.
+
+FADE TO BLACK.

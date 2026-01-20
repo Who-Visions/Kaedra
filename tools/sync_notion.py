@@ -60,58 +60,172 @@ class NotionBridge:
             print(f"❌ Connection failed: {e}")
             return False
 
+    def _get_title(self, props: dict) -> str:
+        """Robustly extract title from Notion properties."""
+        for key in ["Name", "Title", "Page"]:
+            if key in props and props[key]["title"]:
+                return props[key]["title"][0]["plain_text"]
+        return "Untitled"
+
+    def _extract_properties(self, props: dict) -> dict:
+        """
+        Extract simplified key-value pairs from Notion properties.
+        Handles Schema V2 types: rich_text, select, multi_select, relations, dates.
+        """
+        data = {}
+        for key, value in props.items():
+            ptype = value["type"]
+            
+            # 1. Title / Rich Text
+            if ptype in ["title", "rich_text"]:
+                content = ""
+                for segment in value.get(ptype, []):
+                    content += segment.get("plain_text", "")
+                data[key] = content
+                
+            # 2. Select
+            elif ptype == "select":
+                select_obj = value.get("select")
+                data[key] = select_obj["name"] if select_obj else None
+                
+            # 3. Multi-Select
+            elif ptype == "multi_select":
+                data[key] = [opt["name"] for opt in value.get("multi_select", [])]
+                
+            # 4. Status
+            elif ptype == "status":
+                status_obj = value.get("status")
+                data[key] = status_obj["name"] if status_obj else None
+                
+            # 5. Date
+            elif ptype == "date":
+                date_obj = value.get("date")
+                if date_obj:
+                    data[key] = {
+                        "start": date_obj.get("start"),
+                        "end": date_obj.get("end"),
+                        "time_zone": date_obj.get("time_zone")
+                    }
+                else:
+                    data[key] = None
+                    
+            # 6. Relation
+            elif ptype == "relation":
+                data[key] = [rel["id"] for rel in value.get("relation", [])]
+                
+            # 7. URL / Email / Phone / Number
+            elif ptype in ["url", "email", "phone_number", "number"]:
+                data[key] = value.get(ptype)
+                
+            # 8. Checkbox
+            elif ptype == "checkbox":
+                data[key] = value.get("checkbox")
+                
+            # 9. Files
+            elif ptype == "files":
+                files = []
+                for f in value.get("files", []):
+                    f_idx = {"name": f.get("name")}
+                    if "external" in f:
+                        f_idx["url"] = f["external"]["url"]
+                    elif "file" in f:
+                        f_idx["url"] = f["file"]["url"]
+                    files.append(f_idx)
+                data[key] = files
+            
+            # Default fallback
+            else:
+                data[key] = value
+                
+        return data
+
     def pull_ingestion_queue(self):
         """
         Pull 'Approved' items from Notion Ingestion Queue -> local ingestion.json
         """
         if not self.client: return
         
-        # Use Data Source ID (from ds/ part of URL, not db= part)
-        ds_id = self.config["mappings"]["ingestion_json"]
-        print(f"📥 Pulling Ingestion Queue (Data Source ID: {ds_id})...")
+        # Use Universe Database ID
+        db_id = self.config["databases"]["universe_db"]
+        print(f"📥 Pulling Ingestion Queue (Database ID: {db_id})...")
         
         try:
-            # Query using direct requests with 2025-09-03 API
+            # Query using standard Notion API
             import requests
             import uuid
             
             # Format UUID with dashes if needed
-            if len(ds_id) == 32:
-                ds_id = str(uuid.UUID(ds_id))
+            if len(db_id) == 32:
+                db_id = str(uuid.UUID(db_id))
             
             headers = {
                 "Authorization": f"Bearer {self.token}",
-                "Notion-Version": "2025-09-03",
+                "Notion-Version": "2022-06-28",
                 "Content-Type": "application/json"
             }
-            url = f"https://api.notion.com/v1/data_sources/{ds_id}/query"
+            
+            # Query for items that are NOT already Imported/Active/Completed?
+            # actually, let's just pull everything that isn't already synced locally?
+            # Or filter by Status = Approved?
+            # For V2, let's pull everything that is NOT 'Unknown' status maybe?
+            # Or sticking to the original plan: Pull "Approved" (mapped to something?)
+            # Wait, "Status" options are: Unknown, Active, Inactive, Completed.
+            # So "Approved" logic from Plan was: Map "Reference" -> "Active".
+            # Let's query for Status="Active" or just pull recently updated?
+            
+            url = f"https://api.notion.com/v1/databases/{db_id}/query"
+            
+            # Payload: no filter for now to capture the V2 snapshot, or maybe just page_size
             payload = {
-                "filter": {
-                    "property": "Status",
-                    "select": {
-                        "equals": "Approved"
-                    }
-                }
+                "page_size": 100
+                # "filter": {
+                #     "property": "Status",
+                #     "status": {
+                #         "equals": "Active" # Example
+                #     }
+                # }
             }
-            resp = requests.post(url, headers=headers, json=payload)
-            resp.raise_for_status()
-            response = resp.json()
+            
+            # Pagination Loop
+            has_more = True
+            next_cursor = None
+            all_results = []
+            
+            while has_more:
+                if next_cursor:
+                    payload["start_cursor"] = next_cursor
+                    print(f"   ... Fetching next page (found {len(all_results)} so far)")
+                
+                resp = requests.post(url, headers=headers, json=payload)
+                resp.raise_for_status()
+                response = resp.json()
+                
+                all_results.extend(response["results"])
+                
+                has_more = response.get("has_more", False)
+                next_cursor = response.get("next_cursor")
             
             new_items = []
-            for page in response["results"]:
+            for page in all_results:
                 props = page["properties"]
-                title = props["Title"]["title"][0]["plain_text"] if props["Title"]["title"] else "Untitled"
+                
+                # Use new extractor
+                attrs = self._extract_properties(props)
+                
+                # Standardize Core Fields for Kaedra
+                title = attrs.get("Name", "Untitled")
                 
                 item = {
                     "id": page["id"],
                     "title": title,
-                    "status": "Approved",
-                    "category": "Imported",
-                    "notion_url": page["url"]
+                    "status": attrs.get("Status", "Unknown"),
+                    "category": attrs.get("Category", "Uncategorized"),
+                    "notion_url": page["url"],
+                    "attrs": attrs # Store full V2 schema here
                 }
                 new_items.append(item)
                 
-            print(f"   Found {len(new_items)} approved items.")
+            print(f"   Found {len(new_items)} items.")
             
             # Merge with existing: deduplicate by ID
             ingest_path = self.world_path / "ingestion.json"
@@ -122,42 +236,68 @@ class NotionBridge:
                 existing_items = existing_data.get("items", [])
                 existing_ids = {item["id"] for item in existing_items}
             
-            # Add only new items
-            added = 0
+            # Add only new items or update existing
+            updated_count = 0
+            new_count = 0
+            
+            # Map for O(1) update
+            existing_map = {item["id"]: idx for idx, item in enumerate(existing_items)}
+            
             for item in new_items:
-                if item["id"] not in existing_ids:
+                if item["id"] in existing_map:
+                    # Update existing
+                    idx = existing_map[item["id"]]
+                    existing_items[idx] = item
+                    updated_count += 1
+                else:
+                    # Add new
                     existing_items.append(item)
-                    added += 1
+                    new_count += 1
             
             data = {"items": existing_items}
             ingest_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-            print(f"✅ Saved to {ingest_path} (+{added} new)")
+            print(f"✅ Saved to {ingest_path} (+{new_count} new, {updated_count} updated)")
             
-            # Writeback: Update status to "Imported" in Notion
-            if new_items:
-                self._mark_as_imported([item["id"] for item in new_items], ds_id, headers)
+            # Writeback: Update status to "Active" in Notion if needed
+            # For now, let's only mark if they were "Unknown" and we want to acknowledge receipt?
+            # Or just skipping writeback loop to avoid changing user data too aggressively during migration.
+            # "Fix: _mark_as_imported - Change target status from "Imported" (invalid) to "Active" (valid)."
+            
+            # Let's only mark items that are NOT "Active", "Inactive", "Completed" -> i.e. "Unknown"
+            to_mark = [
+                item["id"] for item in new_items 
+                if item["status"] not in ["Active", "Inactive", "Completed"]
+            ]
+            
+            if to_mark:
+                print(f"   Writing back status 'Active' for {len(to_mark)} items...")
+                self._mark_as_imported(to_mark, db_id, headers)
             
         except Exception as e:
-            print(f"❌ Pull failed: {e}")
+            if 'resp' in locals():
+                print(f"❌ Pull failed: {e}\nResponse: {resp.text}")
+            else:
+                print(f"❌ Pull failed: {e}")
 
     def _mark_as_imported(self, page_ids: List[str], ds_id: str, headers: dict):
-        """Update Notion items' status to 'Imported' after pulling."""
+        """Update Notion items' status to 'Active' after pulling."""
         import requests
         
         for page_id in page_ids:
             try:
                 url = f"https://api.notion.com/v1/pages/{page_id}"
+                # Schema V2 'Status' property is type 'status', not 'select'
                 payload = {
                     "properties": {
                         "Status": {
-                            "select": {"name": "Imported"}
+                            "status": {"name": "Active"}
                         }
                     }
                 }
                 resp = requests.patch(url, headers={**headers, "Content-Type": "application/json"}, json=payload)
                 resp.raise_for_status()
             except Exception as e:
-                print(f"   ⚠️ Could not mark {page_id[:8]}... as Imported: {e}")
+                print(f"   ⚠️ Could not mark {page_id[:8]}... as Active: {e}")
 
     def push_to_bible(self):
         """
@@ -176,7 +316,7 @@ class NotionBridge:
         bible = json.loads(bible_path.read_text(encoding="utf-8"))
         
         # Get World Bible page ID (we'll create pages under it)
-        parent_page_id = self.config["pages"]["world_bible"]
+        parent_page_id = self.config["pages"]["cinematic_universe"]
         if len(parent_page_id) == 32:
             parent_page_id = str(uuid.UUID(parent_page_id))
             

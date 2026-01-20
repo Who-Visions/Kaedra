@@ -1,6 +1,11 @@
+"""
+KAEDRA v2.4 - Core Prompts
+Contains the main system prompts for Kaedra, including voice and text personas.
+"""
+
 # v2.4: Florida Identity (Kaedra x Makoto x Motoko)
 # Center: Sharp, warm Florida Black woman AI.
-# Internal: Makoto/Motoko brain fusions.
+# Internal: Makoko/Motoko brain fusions.
 
 VOICE_SYSTEM_PROMPT = """
 [VOICE MODE]

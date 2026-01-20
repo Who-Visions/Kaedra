@@ -10,6 +10,9 @@ Current State: Scene [PHASE] | POV: [POV] | Mode: [MODE] | Tension: [TENSION]
 [DOCTRINE DIRECTIVES]
 [DIRECTIVES]
 
+[CO_WRITING_PROTOCOL]
+
+
 [LOCATION & LORE CONTEXT]
 World: [WORLD_NAME]
 Universe: [UNIVERSE]
@@ -140,6 +143,16 @@ class PromptBuilder:
         directives = directives or []
         directives_block = "\n".join(f"{i+1}. {d}" for i, d in enumerate(directives)) or "1. Maintain forward motion."
         prompt = prompt.replace("[DIRECTIVES]", directives_block)
+
+        # [CO_WRITING_PROTOCOL]
+        protocol = ""
+        try:
+            with open("lore/co_writing_protocol.md", "r", encoding="utf-8") as f:
+                protocol = f.read()
+        except:
+            protocol = "Collaborate with Rhea Noir on story generation."
+        prompt = prompt.replace("[CO_WRITING_PROTOCOL]", f"[CO-WRITING PROTOCOL]\n{protocol}")
+
 
         # [TIME AWARENESS]
         now_str = datetime.now().strftime("%A, %B %d, %Y | %I:%M %p")

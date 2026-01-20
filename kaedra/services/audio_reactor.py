@@ -1,84 +1,96 @@
+"""
+KAEDRA v1.0 - Audio Reactor Service
+Analyzes real-time audio input for volume (RMS) and bass (FFT) detection.
+Used for lighting and UI synchronization.
+"""
+
 try:
-    import sounddevice as sd
     import numpy as np
+    import sounddevice as sd
     HAS_AUDIO = True
 except (ImportError, OSError):
     sd = None
     np = None
     HAS_AUDIO = False
 
+import logging
 import threading
 import time
-import logging
-from typing import Optional
+from typing import Optional, Dict, Any, List, Union
 
 logger = logging.getLogger(__name__)
 
 class AudioReactor:
     """
-    Listens to a specific audio input (e.g. Wave Link Mix) and analyzes it for:
-    - RMS Energy (Volume)
-    - Bass/Kick detection (FFT)
+    Listens to a specific audio input and analyzes it for RMS Energy and Bass/Kick.
     """
 
-    def __init__(self, device_id: Optional[str | int] = "Elgato Out Only"):
+    def __init__(self, device_id: Optional[Union[str, int]] = "Elgato Out Only"):
+        """Initialize flags and state."""
         self.device_index = None
         if HAS_AUDIO:
             self.device_index = self._find_device(device_id)
 
-        self.sample_rate = 44100 # Standard audio
-        self.block_size = 2048   # Good for FFT resolution
-        self.channels = 1        # Mono is enough for beat detection
+        self.sample_rate = 44100  # Standard audio
+        self.block_size = 2048    # Good for FFT resolution
+        self.channels = 1         # Mono is enough for beat detection
 
         # Runtime (Not Pickled)
         self.running = False
         self._thread: Optional[threading.Thread] = None
 
         # State
-        self.energy = 0.0      # Smoothed RMS (0.0 - 1.0)
-        self.bass_energy = 0.0 # Low freq energy
-        self.is_beat = False   # True if beat detected in last frame
+        self.energy = 0.0       # Smoothed RMS (0.0 - 1.0)
+        self.bass_energy = 0.0  # Low freq energy
+        self.is_beat = False    # True if beat detected in last frame
 
         # Config
-        self.gain = 2.0        # Software gain
+        self.gain = 2.0         # Software gain
         self.smooth_factor = 0.8
 
     def __getstate__(self):
+        """Prepare for pickling."""
         state = self.__dict__.copy()
         # Exclude thread
-        if "_thread" in state: del state["_thread"]
-        state["running"] = False # Ensure it starts stopped in cloud
+        if "_thread" in state:
+            del state["_thread"]
+        state["running"] = False  # Ensure it starts stopped in cloud
         return state
 
     def __setstate__(self, state):
+        """Restore from pickling."""
         self.__dict__.update(state)
         # Restore runtime defaults
         self._thread = None
         self.running = False
 
-    def _find_device(self, target: Optional[str | int]) -> Optional[int]:
-        if target is None: return None
-        if isinstance(target, int): return target
+    def _find_device(self, target: Optional[Union[str, int]]) -> Optional[int]:
+        """Discovery logic for audio input devices."""
+        if target is None:
+            return None
+        if isinstance(target, int):
+            return target
 
-        name_filter = str(target)
+        name_filter = str(target).lower()
         try:
             devices = sd.query_devices()
-            best_idx = None
 
             # 1. Try to find Specific Target (e.g. "Elgato Out Only")
-            for i, device in enumerate(devices):
-                if name_filter.lower() in device['name'].lower() and device['max_input_channels'] > 0:
+            for i, d in enumerate(devices):
+                if name_filter in d['name'].lower() and d['max_input_channels'] > 0:
                     return i
 
             # 2. Fallback: Search for any "Mix" or "Stream" input if target failed
-            for i, device in enumerate(devices):
-                if device['max_input_channels'] > 0:
-                    name = device['name']
-                    if "Elgato" in name and ("Mix" in name or "Stream" in name or "Output" in name):
+            for i, d in enumerate(devices):
+                if d['max_input_channels'] > 0:
+                    name = d['name']
+                    matches_brand = "Elgato" in name
+                    matches_kw = any(k in name for k in ["Mix", "Stream", "Output"])
+                    if matches_brand and matches_kw:
                         return i
 
             return None
-        except Exception:
+        except (RuntimeError, ValueError, AttributeError):
             return None
 
     @classmethod
@@ -96,21 +108,25 @@ class AudioReactor:
             return []
 
     def start(self):
+        """Start the audio listening thread."""
         if not HAS_AUDIO:
             print("[!] AudioReactor: Audio unavailable (Cloud Mode)")
             return
-        if self.running: return
+        if self.running:
+            return
         self.running = True
         self._thread = threading.Thread(target=self._listen_loop, daemon=True)
         self._thread.start()
         print("[*] Audio Reactor Service Started")
 
     def stop(self):
+        """Gracefully stop the background thread."""
         self.running = False
         if self._thread:
             self._thread.join(timeout=1.0)
 
     def _listen_loop(self):
+        """Internal main loop for input stream."""
         if self.device_index is None:
             # Try to find again or default
             self.device_index = sd.default.device[0]
@@ -123,11 +139,12 @@ class AudioReactor:
                                 callback=self._audio_callback):
                 while self.running:
                     time.sleep(0.1)
-        except Exception as e:
+        except (RuntimeError, ValueError, AttributeError) as e:
             print(f"[!] AudioReactor Stream Error: {e}")
             self.running = False
 
-    def _audio_callback(self, indata, frames, time_info, status):
+    def _audio_callback(self, indata, _frames, _time_info, _status):
+        """Analyze incoming audio block."""
         # 1. Calculate RMS (Volume)
         # Cast to avoid overflow
         data = indata[:, 0].astype(np.float32)
@@ -149,7 +166,7 @@ class AudioReactor:
         current_bass = np.mean(fft_mag[bass_mask]) if np.any(bass_mask) else 0.0
 
         # Normalize bass (heuristic)
-        current_bass = np.clip(current_bass / 50.0, 0.0, 1.0) # Adjust divisor based on testing
+        current_bass = np.clip(current_bass / 50.0, 0.0, 1.0)  # Adjust divisor based on testing
 
         # Beat detection (simple threshold on rise)
         self.is_beat = False
@@ -158,7 +175,8 @@ class AudioReactor:
 
         self.bass_energy = (self.bass_energy * 0.7) + (current_bass * 0.3)
 
-    def get_status(self):
+    def get_status(self) -> Dict[str, Any]:
+        """Return current state summary."""
         return {
             "energy": self.energy,
             "bass": self.bass_energy,
@@ -171,10 +189,11 @@ if __name__ == "__main__":
     reactor.start()
     try:
         while True:
-            s = reactor.get_status()
-            bar = "#" * int(s["energy"] * 50)
-            beat = "BASS!" if s["bass"] > 0.4 else "     "
-            print(f"\r[{beat}] Energy: {s['energy']:.2f} | Bass: {s['bass']:.2f} {bar}", end="")
+            s_data = reactor.get_status()
+            vol_bar = "#" * int(s_data["energy"] * 50)
+            beat_tag = "BASS!" if s_data["bass"] > 0.4 else "     "
+            print(f"\r[{beat_tag}] Energy: {s_data['energy']:.2f} | "
+                  f"Bass: {s_data['bass']:.2f} {vol_bar}", end="")
             time.sleep(0.05)
     except KeyboardInterrupt:
         reactor.stop()

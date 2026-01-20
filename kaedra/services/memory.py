@@ -1,25 +1,26 @@
 """
-KAEDRA v0.0.7 - Memory Service (Vertex AI Agent Engine)
+KAEDRA v1.0 - Memory Service
 Persistent memory storage using Vertex AI Memory Bank.
 """
 
 import uuid
 from datetime import datetime, timezone
-from typing import List, Dict
-import vertexai
-from vertexai import types
-
+from typing import List, Dict, Any
 from dataclasses import dataclass, field
 
-@dataclass
-class MemoryEntry:
-    content: str
-    role: str = "user"
-    timestamp: str = ""
-    metadata: Dict = field(default_factory=dict)
+import vertexai
+from vertexai import types  # pylint: disable=no-name-in-module
 
 from kaedra.core.config import PROJECT_ID, LOCATION, MEMORY_DIR, AGENT_RESOURCE_NAME
 from ..core.memory_topics import get_customization_config
+
+@dataclass
+class MemoryEntry:
+    """Represents a single memory unit."""
+    content: str
+    role: str = "user"
+    timestamp: str = ""
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 class MemoryService:
     """
@@ -30,8 +31,8 @@ class MemoryService:
     def __init__(self):
         self.project_id = PROJECT_ID
         self.location = LOCATION
-        self.engine_name = f"kaedra-memory-bank-v1"
-        self.user_id = "kaedra-user-main" # Single user mode for now
+        self.engine_name = "kaedra-memory-bank-v1"
+        self.user_id = "kaedra-user-main"  # Single user mode for now
         self.session_name = None
         self.agent_engine_resource_name = AGENT_RESOURCE_NAME
 
@@ -79,11 +80,12 @@ class MemoryService:
 
     def _get_model_path(self, model_name: str) -> str:
         """
-        Get the full resource path for a model, handling Global vs Regional endpoints.
-        Gemini 3 models must use 'global'. Others use the service region.
+        Get the full resource path for a model.
+        Gemini 3 models must use 'global'.
         """
         location = "global" if "gemini-3" in model_name else self.location
-        return f"projects/{self.project_id}/locations/{location}/publishers/google/models/{model_name}"
+        return (f"projects/{self.project_id}/locations/{location}/"
+                f"publishers/google/models/{model_name}")
 
     def _ensure_agent_engine(self):
         """Find or create the Agent Engine."""
@@ -96,8 +98,8 @@ class MemoryService:
                     self.agent_engine_resource_name = engine.name
                     print(f"[*] Found existing Agent Engine: {self.agent_engine_resource_name}")
                     return
-        except Exception as e:
-            print(f"[!] Error listing agent engines: {e}")
+        except (RuntimeError, ValueError, AttributeError) as list_err:
+            print(f"[!] Error listing agent engines: {list_err}")
 
         print(f"[*] Creating new Agent Engine '{self.engine_name}'...")
 
@@ -105,7 +107,8 @@ class MemoryService:
 
         memory_config = types.ReasoningEngineContextSpecMemoryBankConfig(
             similarity_search_config=types.ReasoningEngineContextSpecMemoryBankConfigSimilaritySearchConfig(
-                embedding_model=f"projects/{self.project_id}/locations/{self.location}/publishers/google/models/text-embedding-005"
+                embedding_model=(f"projects/{self.project_id}/locations/{self.location}/"
+                                 f"publishers/google/models/text-embedding-005")
             ),
             generation_config=types.ReasoningEngineContextSpecMemoryBankConfigGenerationConfig(
                 model=self._get_model_path(model_name)
@@ -121,9 +124,9 @@ class MemoryService:
             self.agent_engine_resource_name = op.api_resource.name
             print(f"[*] Created Agent Engine: {self.agent_engine_resource_name}")
 
-        except Exception as e:
-            print(f"[!] Failed to create Agent Engine: {e}")
-            raise e
+        except (RuntimeError, ValueError, AttributeError) as create_err:
+            print(f"[!] Failed to create Agent Engine: {create_err}")
+            raise create_err
 
     def _ensure_session(self):
         """Ensure a session exists for the user."""
@@ -131,7 +134,7 @@ class MemoryService:
         session_file = MEMORY_DIR / "current_session.txt"
 
         if session_file.exists():
-            with open(session_file, 'r') as f:
+            with open(session_file, 'r', encoding='utf-8') as f:
                 self.session_name = f.read().strip()
                 return
 
@@ -146,14 +149,14 @@ class MemoryService:
 
             # Save persist
             MEMORY_DIR.mkdir(parents=True, exist_ok=True)
-            with open(session_file, 'w') as f:
+            with open(session_file, 'w', encoding='utf-8') as f:
                 f.write(self.session_name)
 
             print(f"[*] Created Session: {self.session_name}")
 
-        except Exception as e:
-            print(f"[!] Session creation failed: {e}")
-            raise e
+        except (RuntimeError, ValueError, AttributeError) as sess_err:
+            print(f"[!] Session creation failed: {sess_err}")
+            raise sess_err
 
     def insert(self, content: str, role: str = "user") -> str:
         """
@@ -176,8 +179,8 @@ class MemoryService:
                 }
             )
             return inv_id
-        except Exception as e:
-            print(f"[!] Insert failed: {e}")
+        except (RuntimeError, ValueError, AttributeError) as ins_err:
+            print(f"[!] Insert failed: {ins_err}")
             return ""
 
     def consolidate(self):
@@ -190,8 +193,8 @@ class MemoryService:
                 vertex_session_source={"session": self.session_name},
                 config={"wait_for_completion": False}
             )
-        except Exception as e:
-            print(f"[!] Consolidation failed: {e}")
+        except (RuntimeError, ValueError, AttributeError) as cons_err:
+            print(f"[!] Consolidation failed: {cons_err}")
 
     def recall(self, query: str, top_k: int = 5) -> List[Dict]:
         """
@@ -219,8 +222,8 @@ class MemoryService:
                 })
             return memories
 
-        except Exception as e:
-            print(f"[!] Recall failed: {e}")
+        except (RuntimeError, ValueError, AttributeError) as rec_err:
+            print(f"[!] Recall failed: {rec_err}")
             return []
 
     def list_recent(self, limit: int = 10) -> List[Dict]:
@@ -244,8 +247,8 @@ class MemoryService:
                     "timestamp": mem.create_time.isoformat() if mem.create_time else ""
                 })
             return memories
-        except Exception as e:
-            print(f"[!] List recent failed: {e}")
+        except (RuntimeError, ValueError, AttributeError) as list_rec_err:
+            print(f"[!] List recent failed: {list_rec_err}")
             return []
 
     def get_stats(self) -> Dict:
@@ -256,6 +259,6 @@ class MemoryService:
                 scope={"user_id": self.user_id}
             )
             return {"total": len(list(results))}
-        except:
+        except (RuntimeError, ValueError, AttributeError):
             return {"total": 0}
 

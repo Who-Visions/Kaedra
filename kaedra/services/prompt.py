@@ -48,11 +48,11 @@ class PromptService:
     def __init__(self,
                  model_key: str = DEFAULT_MODEL,
                  project: str = PROJECT_ID,
-                 location: str = "global", # Gemini 3 requires global endpoint for dynamic routing
+                 location: str = "global", 
                  enable_grounding: bool = True):
         """Initialize with Vertex AI settings."""
         self.project = project
-        self.location = location
+        self.location = "global" # Force global for preview models
         self.enable_grounding = enable_grounding
         self._default_model_key = model_key
         self._client = None
@@ -98,17 +98,25 @@ class PromptService:
         q_lower = query.lower()
         return any(kw in q_lower for kw in self.DEEP_THINKING_KEYWORDS)
 
-    def _get_config(self, thinking_level: str = "high") -> Any:
+    def _get_config(self, thinking_level: str = "high", response_schema: Any = None) -> Any:
         """Build standard generation config with Gemini 3 thinking."""
         tools = []
         if self.enable_grounding:
             tools.append(types.Tool(google_search=types.GoogleSearch()))
 
-        return types.GenerateContentConfig(
-            temperature=1.0, # Recommended for Gemini 3
+        config = types.GenerateContentConfig(
+            temperature=1.0, 
             tools=tools if tools else None,
             thinking_config=types.ThinkingConfig(thinking_level=thinking_level, include_thoughts=True)
         )
+        
+        if response_schema:
+            config.response_mime_type = "application/json"
+            config.response_schema = response_schema
+            # High thinking recommended for schema-heavy tasks
+            config.thinking_config.thinking_level = "high"
+            
+        return config
 
     def generate(self,
                  prompt: str,
@@ -138,7 +146,9 @@ class PromptService:
         Async generation with Smart Router logic.
         """
         if not self.client:
-            return PromptResult("[!] GenAI Client not initialized", "N/A", 0)
+            await asyncio.to_thread(self._ensure_client)
+            if not self._client:
+                return PromptResult("[!] GenAI Client initialization failed", "N/A", 0)
 
         # 1. Smart Routing Logic
         target_model_key = model_key or self._default_model_key

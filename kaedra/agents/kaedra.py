@@ -1,14 +1,15 @@
-"""
-KAEDRA v0.0.8 - KAEDRA Agent
-The main Shadow Tactician orchestrator.
-"""
-
-from typing import Optional
+import asyncio
+import hashlib
+import io
+import json
+import re
 import time
+import uuid
+from datetime import datetime
+from typing import Optional
 
-from .base import BaseAgent, AgentResponse
-from ..services.prompt import PromptService
-from ..services.memory import MemoryService
+import nest_asyncio
+import pytz
 
 try:
     from google import genai
@@ -16,6 +17,13 @@ try:
 except ImportError:
     genai = None
     types = None
+
+from kaedra.services.prompt import PromptService
+from kaedra.services.memory import MemoryService
+from kaedra.services.storage_utils import get_storage_client
+from kaedra.tools.wispr import get_flow_context
+from kaedra.tools.invoices import invoice_action
+from .base import BaseAgent, AgentResponse
 
 
 KAEDRA_PROFILE = """You are KAEDRA, a shadow tactician and strategic intelligence partner for Who Visions LLC.
@@ -92,14 +100,18 @@ class KaedraAgent(BaseAgent):
 
     def _ensure_genai_client(self):
         """Idempotent init for direct GenAI client."""
-        if self._genai_client: return
+        if self._genai_client:
+            return
 
         if genai:
             try:
                 self._genai_client = genai.Client(vertexai=True, location='us-central1')
                 print("[✅] KaedraAgent: GenAI Client initialized (Vertex AI)")
-            except Exception as e:
-                print(f"[!] KaedraAgent: Failed to initialize GenAI Client: {e}")
+            except (RuntimeError, ValueError) as err:
+                print(f"[!] KaedraAgent: Failed to initialize GenAI Client: {err}")
+                self._genai_client = None
+            except Exception as fatal_err:
+                print(f"[!!] KaedraAgent: Fatal GenAI Client Error: {fatal_err}")
                 self._genai_client = None
         else:
             self._genai_client = None
@@ -128,6 +140,7 @@ class KaedraAgent(BaseAgent):
 
     @property
     def profile(self) -> str:
+        """Return the Kaedra persona profile string."""
         return KAEDRA_PROFILE + """
 [WISPR CONTEXT TOOL]
 To search the user's past voice transcripts/dictations, output:
@@ -161,8 +174,6 @@ Use this when the user wants to see something or requests an image/visualization
         Sync query method required by Vertex AI Reasoning Engine.
         Wraps the async run method for compatibility.
         """
-        import asyncio
-        import nest_asyncio
         nest_asyncio.apply()
 
         # Run the async method synchronously
@@ -193,172 +204,129 @@ Use this when the user wants to see something or requests an image/visualization
         Returns:
             AgentResponse with KAEDRA's response
         """
-        # Get current time for context
-        from datetime import datetime
-        import pytz
-
         est = pytz.timezone('US/Eastern')
         now = datetime.now(est)
         current_time = now.strftime('%I:%M %p EST')
         current_date = now.strftime('%A, %B %d, %Y')
 
-        # Build time context
-        time_context = f"[CURRENT TIME]\nDate: {current_date}\nTime: {current_time}"
-
-        # Recall relevant memories
+        # Build context
+        full_context = [f"[CURRENT TIME]\nDate: {current_date}\nTime: {current_time}"]
         memory_context = self._recall_memories(query)
-
-        # Build combined context
-        full_context = [time_context]
         if memory_context:
             full_context.append(f"[RECALLED MEMORY]\n{memory_context}")
         if context:
             full_context.append(f"[ADDITIONAL CONTEXT]\n{context}")
 
-        combined_context = "\n\n".join(full_context) if full_context else None
-
-        # Build and execute prompt
-        full_prompt = self._build_prompt(query, combined_context)
-
+        combined_context = "\n\n".join(full_context)
         start_time = time.time()
-        result = self.prompt.generate(full_prompt)
+        result = await self.prompt.generate_async(self._build_prompt(query, combined_context))
 
         # --- Tool Execution Logic ---
-        # Parse for [TOOL: get_flow_context(...)]
+        tool_executed = False
+        
+        # Wispr Tool
         if "[TOOL: get_flow_context" in result.text:
-            import re
-            import json
-            from kaedra.tools.wispr import get_flow_context
+            result = await self._handle_wispr_tool(query, result.text, combined_context)
+            tool_executed = True
 
-            # Simple regex to extract args - robust enough for trusted output
-            match = re.search(r'\[TOOL: get_flow_context\((.*?)\)\]', result.text)
-            if match:
-                args_str = match.group(1)
-                tool_output = None
+        # Invoice Tool
+        if not tool_executed and "[TOOL: invoice_action" in result.text:
+            result = await self._handle_invoice_tool(query, result.text, combined_context)
+            tool_executed = True
 
-                try:
-                    # Parse args manually or safely eval
-                    # Safest: parse specific known args
-                    action = "recent"
-                    if 'action="search"' in args_str or "action='search'" in args_str:
-                        action = "search"
-                    elif 'action="stats"' in args_str:
-                        action = "stats"
-
-                    query_arg = None
-                    if 'query="' in args_str:
-                        query_arg = args_str.split('query="')[1].split('"')[0]
-                    elif "query='" in args_str:
-                        query_arg = args_str.split("query='")[1].split("'")[0]
-
-                    # Execute
-                    print(f"[*] Executing Wispr Tool: {action} query={query_arg}")
-                    tool_result = get_flow_context(action=action, query=query_arg)
-
-                    # Recursively run agent with tool output
-                    # We limit depth to avoid loops, but for now 1 level is fine
-                    new_context = f"Context from Wispr Flow:\n{json.dumps(tool_result, indent=2)}"
-
-                    # Re-run with the tool output as context
-                    # Use a system-like prompt to say "Here is the tool output, now answer user"
-                    follow_up_prompt = f"{query}\n\n[SYSTEM] Tool Output:\n{new_context}"
-
-                    # We return the FINAL result
-                    result = self.prompt.generate(self._build_prompt(follow_up_prompt, combined_context))
-
-                except Exception as e:
-                    print(f"[!] Tool execution failed: {e}")
-
-        # Parse for [TOOL: invoice_action(...)]
-        if "[TOOL: invoice_action" in result.text:
-            import re
-            import json
-            from kaedra.tools.invoices import invoice_action
-
-            match = re.search(r'\[TOOL: invoice_action\((.*?)\)\]', result.text, re.DOTALL)
-            if match:
-                args_str = match.group(1)
-
-                try:
-                    # Parse action
-                    action = "list"
-                    action_match = re.search(r'action=["\']([^"\']+)["\']', args_str)
-                    if action_match:
-                        action = action_match.group(1)
-
-                    # Parse provider
-                    provider = "both"
-                    provider_match = re.search(r'provider=["\']([^"\']+)["\']', args_str)
-                    if provider_match:
-                        provider = provider_match.group(1)
-
-                    # Parse other common args
-                    kwargs = {}
-
-                    # status
-                    status_match = re.search(r'status=["\']([^"\']+)["\']', args_str)
-                    if status_match:
-                        kwargs["status"] = status_match.group(1)
-
-                    # days
-                    days_match = re.search(r'days=(\d+)', args_str)
-                    if days_match:
-                        kwargs["days"] = int(days_match.group(1))
-
-                    # query
-                    query_match = re.search(r'query=["\']([^"\']+)["\']', args_str)
-                    if query_match:
-                        kwargs["query"] = query_match.group(1)
-
-                    # customer_name
-                    cname_match = re.search(r'customer_name=["\']([^"\']+)["\']', args_str)
-                    if cname_match:
-                        kwargs["customer_name"] = cname_match.group(1)
-
-                    # customer_email
-                    cemail_match = re.search(r'customer_email=["\']([^"\']+)["\']', args_str)
-                    if cemail_match:
-                        kwargs["customer_email"] = cemail_match.group(1)
-
-                    # Execute
-                    print(f"[*] Executing Invoice Tool: {action} provider={provider}")
-                    tool_result = invoice_action(action=action, provider=provider, **kwargs)
-
-                    # Re-run with tool output
-                    new_context = f"Invoice Tool Result:\n{json.dumps(tool_result, indent=2)}"
-                    follow_up_prompt = f"{query}\n\n[SYSTEM] Tool Output:\n{new_context}"
-                    result = self.prompt.generate(self._build_prompt(follow_up_prompt, combined_context))
-
-                except Exception as e:
-                    print(f"[!] Invoice tool execution failed: {e}")
-
-        # Parse for [TOOL: generate_image(...)]
-        if "[TOOL: generate_image" in result.text:
-            import re
-            match = re.search(r'\[TOOL: generate_image\(prompt=["\'](.*?)["\']\)\]', result.text)
-            if match:
-                prompt_arg = match.group(1)
-                try:
-                    print(f"[*] Executing Image Tool: prompt='{prompt_arg}'")
-                    # Use the new method
-                    image_response = self.generate_image(prompt_arg)
-
-                    # Log and report GCS URI
-                    gcs_info = f" (Backed up to: {image_response.gcs_uri})" if hasattr(image_response, 'gcs_uri') else ""
-                    new_context = f"Image Generation Result: Successfully generated image using {image_response.model if hasattr(image_response, 'model') else 'Gemini'}{gcs_info}."
-                    follow_up_prompt = f"{query}\n\n[SYSTEM] Tool Output:\n{new_context}"
-                    result = self.prompt.generate(self._build_prompt(follow_up_prompt, combined_context))
-                except Exception as e:
-                    print(f"[!] Image generation failed: {e}")
+        # Image Tool
+        if not tool_executed and "[TOOL: generate_image" in result.text:
+            result = await self._handle_image_tool(query, result.text, combined_context)
 
         latency = (time.time() - start_time) * 1000
-
         return AgentResponse(
             content=result.text,
             agent_name=self.name,
             model=result.model,
             latency_ms=latency
         )
+
+    async def _handle_wispr_tool(self, query: str, result_text: str, context: str):
+        """Parse and execute Wispr Flow context search."""
+        match = re.search(r'\[TOOL: get_flow_context\((.*?)\)\]', result_text)
+        if not match:
+            return types.GenerateContentResponse(text=result_text)
+
+        args_str = match.group(1)
+        try:
+            action = "recent"
+            if 'action="search"' in args_str:
+                action = "search"
+            elif 'action="stats"' in args_str:
+                action = "stats"
+
+            query_arg = None
+            if 'query="' in args_str:
+                query_arg = args_str.split('query="')[1].split('"')[0]
+
+            print(f"[*] Executing Wispr Tool: {action} query={query_arg}")
+            tool_result = get_flow_context(action=action, query=query_arg)
+            
+            new_context = f"Context from Wispr Flow:\n{json.dumps(tool_result, indent=2)}"
+            follow_up = f"{query}\n\n[SYSTEM] Tool Output:\n{new_context}"
+            return self.prompt.generate(self._build_prompt(follow_up, context))
+        except (ValueError, KeyError, TypeError) as err:
+            print(f"[!] Wispr Tool Error: {err}")
+            return types.GenerateContentResponse(text=result_text)
+
+    async def _handle_invoice_tool(self, query: str, result_text: str, context: str):
+        """Parse and execute Invoice actions."""
+        match = re.search(r'\[TOOL: invoice_action\((.*?)\)\]', result_text, re.DOTALL)
+        if not match:
+            return types.GenerateContentResponse(text=result_text)
+
+        args_str = match.group(1)
+        try:
+            action_match = re.search(r'action=["\']([^"\']+)["\']', args_str)
+            action = action_match.group(1) if action_match else "list"
+            provider = "both"
+            p_match = re.search(r'provider=["\']([^"\']+)["\']', args_str)
+            if p_match:
+                provider = p_match.group(1)
+
+            kwargs = {}
+            for key in ["status", "query", "customer_name", "customer_email"]:
+                m = re.search(rf'{key}=["\']([^"\']+)["\']', args_str)
+                if m: kwargs[key] = m.group(1)
+            
+            d_match = re.search(r'days=(\d+)', args_str)
+            if d_match: kwargs["days"] = int(d_match.group(1))
+
+            print(f"[*] Executing Invoice Tool: {action} provider={provider}")
+            tool_result = invoice_action(action=action, provider=provider, **kwargs)
+            
+            new_context = f"Invoice Tool Result:\n{json.dumps(tool_result, indent=2)}"
+            follow_up = f"{query}\n\n[SYSTEM] Tool Output:\n{new_context}"
+            return self.prompt.generate(self._build_prompt(follow_up, context))
+        except (AttributeError, ValueError, KeyError) as err:
+            print(f"[!] Invoice Tool Error: {err}")
+            return types.GenerateContentResponse(text=result_text)
+
+    async def _handle_image_tool(self, query: str, result_text: str, context: str):
+        """Parse and execute Image generation."""
+        match = re.search(r'\[TOOL: generate_image\(prompt=["\'](.*?)["\']\)\]', result_text)
+        if not match:
+            return types.GenerateContentResponse(text=result_text)
+
+        prompt_arg = match.group(1)
+        try:
+            print(f"[*] Executing Image Tool: prompt='{prompt_arg}'")
+            img_res = self.generate_image(prompt_arg)
+            gcs_info = f" (Backed up to: {img_res.gcs_uri})" if hasattr(img_res, 'gcs_uri') else ""
+            new_context = f"Image Generation Result: Successfully generated image.{gcs_info}"
+            follow_up = f"{query}\n\n[SYSTEM] Tool Output:\n{new_context}"
+            return self.prompt.generate(self._build_prompt(follow_up, context))
+        except RuntimeError as run_err:
+            print(f"[!] Image Tool Error: {run_err}")
+            return types.GenerateContentResponse(text=result_text)
+        except (ValueError, KeyError) as arg_err:
+            print(f"[!] Image Tool Arg Error: {arg_err}")
+            return types.GenerateContentResponse(text=result_text)
 
     def generate_image(self, prompt: str, model_id: str = "gemini-3-pro-image-preview"):
         """
@@ -370,7 +338,7 @@ Use this when the user wants to see something or requests an image/visualization
             try:
                 self.genai_client = genai.Client(vertexai=True, location='us-central1')
             except Exception as e:
-                raise RuntimeError(f"GenAI Client not initialized: {e}")
+                raise RuntimeError(f"GenAI Client not initialized: {e}") from e
 
         # 1. Primary: Gemini 3 Pro Image (Imagen 3)
         if "gemini-3" in model_id:
@@ -417,8 +385,6 @@ Use this when the user wants to see something or requests an image/visualization
                     if hasattr(part, 'as_image'):
                         img = part.as_image()
                         # Extract bytes if possible
-                        import io
-                        from PIL import Image
                         img_byte_arr = io.BytesIO()
                         img.save(img_byte_arr, format='JPEG')
                         img_bytes = img_byte_arr.getvalue()
@@ -428,15 +394,11 @@ Use this when the user wants to see something or requests an image/visualization
 
             return response
         except Exception as e:
-            raise RuntimeError(f"Image generation failed for all models: {e}")
+            raise RuntimeError(f"Image generation failed for all models: {e}") from e
 
     def _backup_asset(self, data: bytes, prompt: str, content_type: str) -> str:
         """Helper to back up generated assets to GCS."""
         try:
-            from kaedra.services.storage_utils import get_storage_client
-            import uuid
-            import hashlib
-
             bucket_name = "gen-lang-client-0939852539-images"
             client = get_storage_client()
             bucket = client.bucket(bucket_name)
@@ -452,11 +414,13 @@ Use this when the user wants to see something or requests an image/visualization
             uri = f"gs://{bucket_name}/{filename}"
             print(f"[✅] Asset backed up to: {uri}")
             return uri
-        except Exception as e:
-            print(f"[⚠️] Asset backup failed: {e}")
+        except (RuntimeError, ValueError, KeyError) as backup_err:
+            print(f"[⚠️] Asset backup failed: {backup_err}")
+            return "N/A (Backup Failed)"
+        except Exception as fatal_err: # pylint: disable=broad-exception-caught
+            print(f"[!!] Asset backup fatal error: {fatal_err}")
             return "N/A (Backup Failed)"
 
     def run_sync(self, query: str, context: str = None) -> AgentResponse:
         """Synchronous version of run for non-async contexts."""
-        import asyncio
         return asyncio.run(self.run(query, context))

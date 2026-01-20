@@ -1,29 +1,33 @@
+"""
+KAEDRA v1.0 - Text-to-Speech Service
+Supports Gemini Generative TTS and Google Cloud TTS with streaming capabilities.
+"""
+
 import base64
 import queue
 import threading
+from typing import Optional
+
 from google import genai
 from google.genai import types
+try:
+    from google.cloud import texttospeech
+except ImportError:
+    texttospeech = None
 
 from kaedra.core.config import MODELS, PROJECT_ID, LOCATION
 
 # Audio playback (only works on machines with audio output)
 try:
-    import sounddevice as sd
     import numpy as np
+    import sounddevice as sd
     HAS_AUDIO = True
-except (ImportError, OSError) as e:
-    # Catch both ImportError (not installed) and OSError (missing system, e.g. PortAudio)
-    print(f"[!] Audio playback disabled: {e}")
+except (ImportError, OSError) as audio_err:
+    # Catch both ImportError (not installed) and PortAudio/OSError
+    print(f"[!] Audio playback disabled: {audio_err}")
     sd = None
     np = None
     HAS_AUDIO = False
-    print("[!] Audio playback unavailable (sounddevice not installed or no audio device)")
-
-try:
-    from google.cloud import texttospeech
-except ImportError:
-    texttospeech = None
-    print("[!] Warning: google-cloud-texttospeech not installed.")
 
 class StreamWorker:
     """Background worker to play audio stream."""
@@ -51,10 +55,12 @@ class StreamWorker:
         self._thread.start()
 
     def _run(self):
+        """Internal audioop processing loop."""
         import audioop
         while True:
             item = self.q.get()
-            if item is None: break
+            if item is None:
+                break
 
             data_bytes, audio_format = item
             self.playing = True
@@ -71,8 +77,8 @@ class StreamWorker:
                 # DEBUG TRACE
                 # print(f"[DEBUG] StreamWorker: Writing {len(final_data)} bytes...")
                 self.stream.write(final_data)
-            except Exception as e:
-                print(f"[!] Playback Error: {e}")
+            except (RuntimeError, ValueError, AttributeError) as play_err:
+                print(f"[!] Playback Error: {play_err}")
             finally:
                 self.playing = False
                 self.q.task_done()
@@ -128,13 +134,14 @@ class StreamingSession:
                     continue
 
         def run_stream():
+            """Execute and consume the streaming request."""
             try:
                 responses = self._client.streaming_synthesize(request_gen())
                 for response in responses:
                     if response.audio_content:
                         output_callback(response.audio_content, "mulaw")
-            except Exception as e:
-                print(f"[!] TTS Stream Error: {e}")
+            except (RuntimeError, ValueError, AttributeError) as stream_err:
+                print(f"[!] TTS Stream Error: {stream_err}")
 
         self._generator_thread = threading.Thread(target=run_stream, daemon=True)
         self._generator_thread.start()
@@ -201,9 +208,9 @@ class TTSService:
             if sd:
                 devices = sd.query_devices()
                 found = False
-                for i, device in enumerate(devices):
-                    if device['max_output_channels'] > 0 and target.lower() in device['name'].lower():
-                        print(f"[*] TTSService: Found Output Device: {device['name']} (Index {i})")
+                for i, d in enumerate(devices):
+                    if d['max_output_channels'] > 0 and target.lower() in d['name'].lower():
+                        print(f"[*] TTSService: Found Output Device: {d['name']} (Index {i})")
                         self._device_index = i
                         found = True
                         break
@@ -228,30 +235,26 @@ class TTSService:
         self._streaming_client = None
         self._worker = None
 
-    def begin_stream(self) -> StreamingSession:
-        """Start a new TTS stream session."""
-        # Check if we are using Gemini TTS (Streaming not supported natively yet via this class interface easily)
-        # Actually Gemini 2.5 supports streaming audio via Bidi-Live API, but this class uses genai.generate_content for TTS.
-        # generate_content_stream works but it returns text chunks usually, need to check if it streams audio bytes.
-        # For now, if Gemini TTS is selected, we might fallback to oneshot or use Cloud TTS mapping if available.
-
-        # If model is a Gemini Generative TTS model, we can't use Cloud TextToSpeechClient streaming easily yet
-        # unless we map it to a standard voice or use the Live API.
-        # Returning None forces the engine to use speak() (oneshot).
+    def begin_stream(self) -> Optional[StreamingSession]:
+        """
+        Start a new TTS stream session.
+        Returning None forces the engine to use speak() (oneshot).
+        """
+        # Gemini 2.5 supports streaming audio via Bidi-Live API.
+        # This class uses genai.generate_content for TTS.
         if "gemini" in self.model.lower():
             return None
 
-        try:
-            from google.cloud import texttospeech
-        except ImportError:
+        if not texttospeech:
             return None
 
         if not self._streaming_client:
             # Use regional endpoint for stability with new Gemini TTS models
-            api_endpoint = f"{LOCATION}-texttospeech.googleapis.com" if LOCATION != "global" else "texttospeech.googleapis.com"
+            api_ep = (f"{LOCATION}-texttospeech.googleapis.com"
+                      if LOCATION != "global" else "texttospeech.googleapis.com")
             self._streaming_client = texttospeech.TextToSpeechClient(
                 client_options={
-                    "api_endpoint": api_endpoint,
+                    "api_endpoint": api_ep,
                     "quota_project_id": PROJECT_ID
                 }
             )
@@ -287,27 +290,30 @@ class TTSService:
         return session
 
     def speak(self, text: str):
-        """Standard oneshot speak."""
+        """Standard oneshot speak with Gemini fallback."""
         if "gemini" in self.model.lower():
             try:
                 self._speak_gemini(text)
-            except Exception as e:
-                print(f"[!] Gemini TTS Error: {e} - Falling back to Cloud")
+            except (RuntimeError, ValueError, AttributeError) as gem_err:
+                print(f"[!] Gemini TTS Error: {gem_err} - Falling back to Cloud")
                 try:
                     self._speak_cloud_oneshot(text)
-                except: pass
+                except (RuntimeError, ValueError, AttributeError):
+                    pass
         else:
             try:
                 self._speak_cloud_oneshot(text)
-            except Exception as e:
-                print(f"[!] TTS Error: {e}")
+            except (RuntimeError, ValueError, AttributeError) as tts_err:
+                print(f"[!] TTS Error: {tts_err}")
 
     def _speak_cloud_oneshot(self, text: str):
-         # Reuse stream session or separate method?
-         # Separate is safer for one-off calls outside the streaming loop.
+        """Execute a standard cloud TTS synthesis."""
+        if not texttospeech:
+            return
+
         try:
-            from google.cloud import texttospeech
-            api_endpoint = f"{LOCATION}-texttospeech.googleapis.com" if LOCATION != "global" else "texttospeech.googleapis.com"
+            api_endpoint = (f"{LOCATION}-texttospeech.googleapis.com"
+                            if LOCATION != "global" else "texttospeech.googleapis.com")
             client = texttospeech.TextToSpeechClient(
                 client_options={
                     "api_endpoint": api_endpoint,
@@ -324,7 +330,8 @@ class TTSService:
 
             if "-" in voice_name and not model_name:
                 parts = voice_name.split("-")
-                if len(parts) >= 2: language_code = f"{parts[0]}-{parts[1]}"
+                if len(parts) >= 2:
+                    language_code = f"{parts[0]}-{parts[1]}"
 
             synthesis_input = texttospeech.SynthesisInput(
                 text=text,
@@ -335,19 +342,20 @@ class TTSService:
                 name=voice_name,
                 model_name=model_name
             )
-            audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.LINEAR16)
-
-            response = client.synthesize_speech(
-                request={"input": synthesis_input, "voice": voice, "audio_config": audio_config}
+            audio_config = texttospeech.AudioConfig(
+                audio_encoding=texttospeech.AudioEncoding.LINEAR16
             )
+
+            req = {"input": synthesis_input, "voice": voice, "audio_config": audio_config}
+            response = client.synthesize_speech(request=req)
 
             data = response.audio_content
             if data.startswith(b'RIFF'):
                 data = data[44:] # Simple strip
             self.worker.add(data)
 
-        except Exception as e:
-            print(f"[!] OneShot Error: {e}")
+        except (RuntimeError, ValueError, AttributeError) as synth_err:
+            print(f"[!] OneShot Error: {synth_err}")
 
     def _speak_gemini(self, text: str):
         """Use Gemini Generative TTS with optimized streaming."""
@@ -385,18 +393,20 @@ class TTSService:
                 # Immediate playback on audio chunks
                 if part.inline_data:
                     raw = part.inline_data.data
-                    if isinstance(raw, str): raw = base64.b64decode(raw)
+                    if isinstance(raw, str):
+                        raw = base64.b64decode(raw)
                     if raw:
                         self.worker.add(raw)
 
-        except Exception as e:
-            print(f"[!] TTS Error: {e}")
+        except (RuntimeError, ValueError, AttributeError) as gem_err:
+            print(f"[!] Gemini TTS Error: {gem_err}")
 
     def stop(self):
         """Stop all playback."""
         self.worker.stop_all()
 
     def is_speaking(self) -> bool:
+        """Check if audio is currently playing."""
         return self.worker.is_busy()
 
 if __name__ == "__main__":

@@ -1,0 +1,55 @@
+# Notion Database Schema: 2e5ca671-311e-811f-b3d7-c7f3b9150afe
+## Properties
+- **Appears In** (multi_select)
+  - Options: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4', 'Phase 5', 'Shadow Dweller', 'VeilVerse Origins', 'Side Stories', 'Anthology']
+- **Media Type** (multi_select)
+  - Options: ['Film', 'Series', 'Short', 'Comic', 'Audio Drama', 'Game', 'Novel', 'Concept Art']
+- **Universe Era** (select)
+  - Options: ['Pre-History / Void Era', 'Ancient Era', 'Classical Era', 'Modern Era', 'Future Era', 'Post-Apocalyptic Era', 'Timeless / Outside Time']
+- **Creator/Writer** (rich_text)
+- **Relationships** (rich_text)
+- **Affiliation** (rich_text)
+- **Image** (url)
+- **Species/Race** (multi_select)
+  - Options: ['Human', 'Enhanced Human', 'Alien', 'Android/AI', 'Hybrid', 'Deity/Cosmic Being', 'Mutant', 'Clone', 'Spirit/Entity', 'Unknown', 'Silurian', 'Martian', 'Veil-Touched', 'Nephilim', 'Atlantean', 'Construct']
+- **Story Arc** (select)
+  - Options: ['Origin Story', 'Rising Action', 'Climax', 'Resolution', 'Epilogue', 'Standalone', 'Recurring']
+- **Alias** (multi_select)
+  - Options: ['Shadow Courier', 'The Shadow King', 'First Shadow King']
+- **First Appearance** (rich_text)
+- **Canon Status** (select)
+  - Options: ['Canon', 'Semi-Canon', 'Non-Canon', 'Alternate Timeline', 'Retconned', 'Draft', 'Legend', 'Apocrypha', 'Proposed', 'Deprecated']
+- **Abilities/Powers** (rich_text)
+- **Power Level** (select)
+  - Options: ['Cosmic', 'God-Tier', 'High', 'Mid', 'Low', 'None', 'Variable', 'Omega', 'Alpha', 'Beta', 'Standard']
+- **Home World** (rich_text)
+- **Category** (select)
+  - Options: ['Character', 'Location', 'Item', 'Quest', 'Faction', 'Event', 'Artifact', 'Lore', 'Technology', 'Magic System', 'Species']
+- **Notes** (rich_text)
+- **ID** (unique_id)
+- **Parent Organization** (rich_text)
+- **Series/Franchise** (multi_select)
+  - Options: ['VeilVerse Core', 'VeilVerse Alternate', 'Spin-off', 'Prequel Era', 'Sequel Era', 'Anthology', 'Crossover', 'Standalone', 'Shadow Dweller Saga', 'Echo Runners', 'Veil Seekers']
+- **Tags** (multi_select)
+  - Options: ['Magic', 'Royalty', 'Weapon', 'Ancient', 'Cursed', 'Valuable', 'Artifact', 'Divine', 'Veil-Tech', 'Forbidden', 'Lost', 'Legendary', 'Prototype', 'Sentient', 'Scribe-Queue']
+- **Connected To 1** (relation)
+- **Location** (rich_text)
+- **Production Status** (select)
+  - Options: ['Concept', 'In Development', 'Pre-Production', 'In Production', 'Post-Production', 'Released', 'Archived', 'Cancelled']
+- **Timeline Year** (number)
+- **Importance** (select)
+  - Options: ['Major', 'Supporting', 'Minor', 'Background']
+- **Connected To** (relation)
+- **Importance Score** (number)
+- **Themes** (multi_select)
+  - Options: ['War', 'Politics', 'Family', 'Betrayal', 'Redemption', 'Discovery', 'Survival', 'Love', 'Revenge', 'Identity', 'Sacrifice', 'Power']
+- **Description** (rich_text)
+- **Last Updated** (date)
+- **Status** (status)
+  - Options: ['Unknown', 'Active', 'Inactive', 'Completed']
+- **Source URL** (url)
+- **Name** (title)
+- **URL** (url)
+- **ChatTime** (date)
+- **Google Drive File** (relation)
+- **GitHub Pull Requests** (relation)

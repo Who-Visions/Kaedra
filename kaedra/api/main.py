@@ -1,85 +1,21 @@
 import os
 import time
+import asyncio
+from pathlib import Path
 from typing import Optional, Dict, Any, List, Union
 from fastapi import FastAPI, HTTPException, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import sys
-
-# ... (rest of imports)
-
-# ... (Service metadata)
-
-app = FastAPI(
-    title="Kaedra API",
-    description="Shadow Tactician Agent API",
-    version="0.0.9"
-)
-
-# ... (Routers)
-
-# Initialize Services
-from kaedra.services.slack_bot import SlackService
-slack_service = SlackService()
-
-# ... (Middleware)
-
-# ... (A2A Card)
-
-# ... (State)
-
-# ... (Voice Handler)
-
-# ... (Startup Event)
-
-# ...
+import nest_asyncio
+nest_asyncio.apply()  # Allow nested event loops for sync-in-async compatibility
 
 # -------------------------------------------------------------------------
-# SLACK ENDPOINT (HTTP Mode)
+# GLOBAL STATE & CONFIG
 # -------------------------------------------------------------------------
-@app.post("/slack/events")
-async def slack_events(req: Request):
-    """
-    Handle Slack Events via HTTP (Cloud Run Request URL).
-    """
-    if not state.slack_service or not state.slack_service.http_handler:
-        # Fallback if service not ready
-        return {"status": "error", "message": "Slack Service unavailable"}
-    
-    return await state.slack_service.http_handler.handle(req)
-
-@app.get("/slack/oauth")
-async def slack_oauth():
-    """
-    Simple OAuth Redirect Endpoint.
-    Slack requires a valid URL here for the 'Add to Slack' button.
-    """
-    return {"status": "installed", "message": "Kaedra Orchestrator is successfully connected."}
-
-# -------------------------------------------------------------------------
-# DATA MODELS
-# -------------------------------------------------------------------------
-
-# Add project root to path
-sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-
-# Import Kaedra core components
-# Import Kaedra core components
-from kaedra.services.prompt import PromptService
-from kaedra.services.memory import MemoryService
-from kaedra.services.research import ResearchService
-from kaedra.services.web import WebService
-from kaedra.services.wispr import WisprMonitor
-from kaedra.services.tts import TTSService
-from kaedra.services.visual import VisualService
-from kaedra.agents.kaedra import KaedraAgent
-from kaedra.core.config import PROJECT_ID, LOCATION, MODEL_LOCATION, AGENT_RESOURCE_NAME
-from kaedra.core.google_tools import GOOGLE_TOOLS
-from kaedra.core.tools import FreeToolsRegistry
-
-# Load environment variables
-load_dotenv()
+from kaedra.api.app_state import state, AppState
+from kaedra.core.config import PROJECT_ID, LOCATION, MODEL_LOCATION
 
 # Service metadata
 SERVICE_NAME = "kaedra-shadow-tactician"
@@ -95,14 +31,9 @@ app = FastAPI(
 )
 
 # Include Routers
-# Include Routers
 from . import lore, webhooks
 app.include_router(lore.router)
 app.include_router(webhooks.router)
-
-# Initialize Services
-from kaedra.services.slack_bot import SlackService
-slack_service = SlackService()
 
 # -------------------------------------------------------------------------
 # CORS MIDDLEWARE - Allow cross-origin requests
@@ -114,6 +45,9 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers
 )
+
+# Initialize Services Container (Lazy)
+slack_service = None # Will be initialized in startup
 
 # -------------------------------------------------------------------------
 # CONSTANTS & A2A CARD
@@ -128,12 +62,12 @@ A2A_CARD = {
     "icon": SERVICE_ICON,
     "capabilities": [
         "strategic_planning",
-        "intelligence_synthesis",
-        "shadow_operations",
-        "multi_agent_coordination",
-        "gemini-3-reasoning",
-        "voice_command_listener",
-        "visual_generation"
+        "narrative_design",
+        "visual_generation",
+        "autonomous_reasoning",
+        "global_routing_optimized",
+        "gemini-3-native-thinking",
+        "multi_agent_collaboration"
     ],
     "endpoints": {
         "chat": "/v1/chat/completions",
@@ -142,7 +76,8 @@ A2A_CARD = {
         "sync": "/sync",
         "generate_image": "/generate-image",
         "generate": "/generate",
-        "models": "/v1/models"
+        "models": "/v1/models",
+        "cowrite": "/cowrite"
     },
     "input_schema": {
         "type": "object",
@@ -203,56 +138,43 @@ async def handle_voice_command(command_text: str):
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize Kaedra agent on startup."""
-    print(f"[*] Initializing Kaedra Agent (Project: {PROJECT_ID})...")
-    try:
-        # Initialize services
-        prompt_service = PromptService(project=PROJECT_ID, location=MODEL_LOCATION)
-        memory_service = MemoryService() # Assumes default init is fine
+    """Initialize Kaedra agent in background to ensure fast server start."""
+    global slack_service
+    print(f"[*] Fast Startup: Server is online. Backgrounding service initialization...")
+    
+    # Deferred heavy lifting
+    asyncio.create_task(background_init())
 
-        # Initialize Services
+async def background_init():
+    """Heavy service initialization moved out of the request path."""
+    global slack_service
+    from kaedra.services.prompt import PromptService
+    from kaedra.services.memory import MemoryService
+    from kaedra.services.slack_bot import SlackService
+    from kaedra.agents.kaedra import KaedraAgent
+    from kaedra.services.research import ResearchService
+    from kaedra.services.web import WebService
+
+    try:
+        # Core prompt/memory
+        prompt_service = PromptService(project=PROJECT_ID, location=LOCATION)
+        memory_service = MemoryService()
+        
+        # Parallel initialization where possible
         state.web_service = WebService()
         state.research_service = ResearchService(prompt_service)
-
-        # Visual Service (New)
-        try:
-            state.visual_service = VisualService()
-            print("[+] Visual Service initialized.")
-        except Exception as ve:
-            print(f"[!] Visual Service failed to initialize: {ve}")
-
-        # TTS only works on local machines with audio output (not Cloud Run)
-        try:
-            state.tts_service = TTSService()
-        except Exception as tts_err:
-            print(f"[!] TTS unavailable (normal for Cloud Run): {tts_err}")
-            state.tts_service = None
-
-        # Initialize Agent
+        
         state.agent = KaedraAgent(prompt_service, memory_service)
-        print("[+] Kaedra Agent initialized successfully.")
-
-        # Initialize Slack Service
+        
+        # Slack starts last
+        slack_service = SlackService()
         slack_service.initialize(agent=state.agent)
-        state.slack_service = slack_service  # Expose to webhooks
-        asyncio.create_task(slack_service.start())
-
-        # Initialize Orchestrator (Autonomy Control Plane)
-        from kaedra.control.orchestrator import Orchestrator
-        state.orchestrator = Orchestrator(slack_service=slack_service)
-        print("[+] Orchestrator initialized.")
-
-        # Initialize Wispr Monitor
-        # Only start if on local Windows machine or appropriately configured environment
-        user_home = os.environ.get("USERPROFILE", "")
-        if "super" in user_home.lower(): # Simple check to only run on your local machine
-            print("[*] Starting Wispr Listener...")
-            state.wispr_monitor = WisprMonitor(callback=handle_voice_command)
-            await state.wispr_monitor.start()
-
+        state.slack_service = slack_service
+        await slack_service.start()
+        
+        print("[+] Background initialization complete.")
     except Exception as e:
-        print(f"[!] Failed to initialize Kaedra Agent: {e}")
-        # We don't raise here to allow the server to start, but agent endpoints will fail
+        print(f"[!] Background Init Error: {e}")
 
 # -------------------------------------------------------------------------
 # DATA MODELS
@@ -353,6 +275,33 @@ class WorldBuildResponse(BaseModel):
     quests: List[Dict[str, Any]]
     full_data: Dict[str, Any]
     export_path: Optional[str] = None
+
+# Autonomy Run Models (V2)
+class RunRequest(BaseModel):
+    """Request to start an autonomous run."""
+    task: str  # e.g. "Expand all Olympus Mons locations"
+    mode: str = "kaedra"  # professional, kaedra, unk, lore_scribe, command
+
+class RunResponse(BaseModel):
+    """Response for run creation."""
+    run_id: str
+    status: str
+    message: str
+
+class CowriteRequest(BaseModel):
+    """Request for multi-agent collaboration."""
+    prompt: str
+    context: Optional[str] = None
+    max_turns: Optional[int] = 3
+    mode: Optional[str] = "narrative"
+    thinking_level: Optional[str] = "low" # Minimal, Low, Medium, High
+
+class CowriteResponse(BaseModel):
+    """Collaboration response."""
+    content: str
+    turns_completed: int
+    participating_agents: List[str]
+    status: str
 
 
 # -------------------------------------------------------------------------
@@ -635,15 +584,33 @@ async def generate_world(request: WorldBuildRequest):
 
 @app.get("/v1/models")
 async def list_models_v1():
-    """List available models (OpenAI/Fleet compatible)."""
+    """List available models (OpenAI/Fleet compatible) via GLOBAL endpoint."""
     return {
         "object": "list",
-        "data": [
-            {"id": "gemini-3-flash-preview", "object": "model", "owned_by": "google"},
-            {"id": "gemini-3-pro-preview", "object": "model", "owned_by": "google"},
-            {"id": "gemini-2.5-flash-preview-tts:Kore", "object": "model", "owned_by": "google"},
-            {"id": "veo-3.1-generate-preview", "object": "model", "owned_by": "google"}
-        ]
+            # Google Models (Global)
+            {"id": "gemini-3-flash-preview", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+            {"id": "gemini-3-pro-preview", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+            {"id": "gemini-3-pro-image-preview", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+            {"id": "gemini-2.5-pro", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+            {"id": "gemini-2.5-flash", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+            {"id": "gemini-2.5-flash-lite", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+            {"id": "gemini-2.0-flash-001", "id_alias": "gemini-2.0-flash", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+            {"id": "gemini-2.0-flash-lite-001", "id_alias": "gemini-2.0-flash-lite", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+            
+            # Specialized Multi-Modal
+            {"id": "imagen-4.0-generate-001", "object": "model", "owned_by": "google"},
+            {"id": "veo-3.1-generate-001", "object": "model", "owned_by": "google"},
+            
+            # Partner Models (MaaS - Global)
+            {"id": "claude-4.5-opus", "object": "model", "owned_by": "anthropic", "endpoints": ["global"]},
+            {"id": "claude-4.5-sonnet", "object": "model", "owned_by": "anthropic", "endpoints": ["global"]},
+            {"id": "claude-4-opus", "object": "model", "owned_by": "anthropic", "endpoints": ["global"]},
+            {"id": "mistral-large-2407", "object": "model", "owned_by": "mistral", "endpoints": ["global"]},
+            
+            # Open Models (MaaS - Global)
+            {"id": "deepseek-r1-0528", "object": "model", "owned_by": "deepseek", "endpoints": ["global"]},
+            {"id": "llama-4-maverick-17b-128e-preview", "object": "model", "owned_by": "meta", "endpoints": ["global"]},
+            {"id": "qwen3-next-80b-thinking", "object": "model", "owned_by": "alibaba", "endpoints": ["global"]}
     }
 
 @app.get("/models")
@@ -661,6 +628,57 @@ async def get_config():
          "deploy_mode": "Cloud Run" if os.getenv("K_SERVICE") else "Local",
          "visual_enabled": state.visual_service is not None
     }
+
+# -------------------------------------------------------------------------
+# AUTONOMY ENDPOINTS (V2 - Ralph-style runs)
+# -------------------------------------------------------------------------
+
+@app.post("/runs", response_model=RunResponse)
+async def create_run(request: RunRequest):
+    """
+    Create and start an autonomous run.
+    Implements Ralph-style exit detection with dual conditions.
+    """
+    if not state.orchestrator:
+        raise HTTPException(status_code=503, detail="Orchestrator not initialized")
+    
+    try:
+        import asyncio
+        run_id = await state.orchestrator.run_manager.create_run(
+            task=request.task,
+            mode=request.mode
+        )
+        
+        # Start the loop in the background
+        asyncio.create_task(state.orchestrator.run_manager.execute_loop(run_id))
+        
+        return RunResponse(
+            run_id=run_id,
+            status="started",
+            message=f"Run {run_id} started: {request.task[:50]}..."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/runs")
+async def list_runs():
+    """List all autonomous runs with their status."""
+    if not state.orchestrator:
+        return {"runs": []}
+    
+    return {"runs": state.orchestrator.run_manager.list_runs()}
+
+@app.get("/runs/{run_id}")
+async def get_run(run_id: str):
+    """Get details for a specific run."""
+    if not state.orchestrator:
+        raise HTTPException(status_code=503, detail="Orchestrator not initialized")
+    
+    run = state.orchestrator.run_manager.get_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+    
+    return run
 
 @app.post("/search")
 async def fleet_search(request: SearchRequest):
@@ -716,6 +734,66 @@ async def get_research_status(task_id: str):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
+
+@app.post("/cowrite", response_model=CowriteResponse)
+async def cowrite_endpoint(request: CowriteRequest):
+    """
+    Back-and-forth collaboration between Kaedra and Rhea Noir.
+    """
+    # Wait for background_init if needed (but don't block startup)
+    if not state.agent:
+        # Try a quick wait if it just started
+        for _ in range(5):
+            if state.agent: break
+            await asyncio.sleep(1)
+            
+        if not state.agent:
+            raise HTTPException(status_code=503, detail="Agent still warming up in background.")
+
+    try:
+        from kaedra.story.components.co_writer import CoWriter
+        rhea = CoWriter(warmup=True)
+        
+        current_context = request.context or ""
+        history = []
+        
+        print(f"[COWRITE] Starting collaboration: {request.prompt[:50]}...")
+        
+        # 1. Kaedra (Shadow Tactician) refines/structures
+        k_res = await state.agent.run(f"Structure this request: {request.prompt}", current_context)
+        history.append(f"Kaedra: {k_res.content}")
+        
+        # 2. Rhea (Vibe/Prose)
+        # Use thinking level if provided
+        r_res = rhea.consult(
+            k_res.content, 
+            current_context + f"\nStructure: {k_res.content}",
+            thinking_level=request.thinking_level
+        )
+        history.append(f"Rhea: {r_res}")
+        
+        # Optional: Further turns if requested
+        if request.max_turns and request.max_turns > 2:
+            # Kaedra critiques or advances
+            k_res_2 = await state.agent.run(f"Advance the narrative or critique the vibe: {r_res}", current_context + f"\n{r_res}")
+            history.append(f"Kaedra: {k_res_2.content}")
+            
+            # Rhea finalizes
+            r_res_2 = rhea.consult(k_res_2.content, current_context + f"\n{k_res_2.content}")
+            history.append(f"Rhea: {r_res_2}")
+            final_content = r_res_2
+        else:
+            final_content = r_res
+            
+        return CowriteResponse(
+            content=final_content,
+            turns_completed=len(history),
+            participating_agents=["Kaedra", "Rhea Noir"],
+            status="completed"
+        )
+    except Exception as e:
+        print(f"[!] Cowrite error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/v1/embeddings")
 async def create_embeddings(request: EmbeddingRequest):

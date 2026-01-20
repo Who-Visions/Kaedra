@@ -12,9 +12,14 @@ except ImportError:
     pass
 
 try:
-    import google.genai as genai
+    from google import genai
 except ImportError:
     genai = None
+
+try:
+    from kaedra.story.ui import log
+except ImportError:
+    log = None
 
 # ══════════════════════════════════════════════════════════════════════════════
 # GCP CONFIGURATION
@@ -22,7 +27,8 @@ except ImportError:
 
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "gen-lang-client-0939852539")
 LOCATION = os.getenv("KAEDRA_LOCATION", "us-central1")
-MODEL_LOCATION = "global" # Gemini 3 Preview models require global endpoint for dynamic routing
+# Gemini 3 Preview models require global endpoint for dynamic routing
+MODEL_LOCATION = "global"
 
 # --- SHARED GEMINI CLIENT ---
 _SHARED_CLIENT = None
@@ -32,8 +38,12 @@ def get_gemini_client():
     global _SHARED_CLIENT
     if _SHARED_CLIENT is None:
         try:
-            _SHARED_CLIENT = genai.Client(vertexai=True, project=PROJECT_ID, location=MODEL_LOCATION)
-        except ImportError:
+            _SHARED_CLIENT = genai.Client(
+                vertexai=True,
+                project=PROJECT_ID,
+                location=MODEL_LOCATION
+            )
+        except (ImportError, RuntimeError, ValueError):
             pass
     return _SHARED_CLIENT
 AGENT_RESOURCE_NAME = os.getenv(
@@ -50,18 +60,24 @@ NOTION_TOKEN = os.getenv("NOTION_TOKEN", "")
 
 def validate_config():
     """Validates essential configuration and logs status."""
-    from kaedra.story.ui import log
     status = []
-    if NOTION_TOKEN: status.append("[green]📓 Notion[/]")
-    else: status.append("[red]📓 Notion (Missing)[/]")
+    if NOTION_TOKEN:
+        status.append("[green]📓 Notion[/]")
+    else:
+        status.append("[red]📓 Notion (Missing)[/]")
 
-    if LIFX_TOKEN: status.append("[green]💡 LIFX[/]")
-    else: status.append("[yellow]💡 LIFX (Missing)[/]")
+    if LIFX_TOKEN:
+        status.append("[green]💡 LIFX[/]")
+    else:
+        status.append("[yellow]💡 LIFX (Missing)[/]")
 
-    if PROJECT_ID: status.append("[green]🧠 Gemini[/]")
-    else: status.append("[red]🧠 Gemini (Check GCP Project)[/]")
+    if PROJECT_ID:
+        status.append("[green]🧠 Gemini[/]")
+    else:
+        status.append("[red]🧠 Gemini (Check GCP Project)[/]")
 
-    log.info(f"System Check: {' | '.join(status)}")
+    if log:
+        log.info(f"System Check: {' | '.join(status)}")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # INVOICE SERVICE CONFIGURATION (Stripe + Square)
@@ -76,19 +92,52 @@ SQUARE_ENVIRONMENT = os.getenv("SQUARE_ENVIRONMENT", "sandbox")  # or "productio
 # ══════════════════════════════════════════════════════════════════════════════
 
 MODELS = {
-    "flash": "gemini-3-flash-preview",           # Latest Flash V3 (Fast)
-    "pro": "gemini-3-pro-preview",             # Latest Pro V3 (Deep Reasoning)
-    "ultra": "gemini-3-pro-preview",           # Using Pro V3 for Ultra slot
-    "tts-flash": "gemini-2.5-flash-preview-tts:Kore", # Gemini 2.5 Flash TTS (Updated)
-    "tts-flash-lite": "gemini-2.5-flash-preview-tts:Kore", # Fallback to Flash for now
-    "tts-pro": "gemini-2.5-pro-preview-tts:Aoede",     # Gemini 2.5 Pro TTS (Updated)
-    "tts": "gemini-2.5-flash-preview-tts:Kore",        # Default to Native Gemini 2.5
-    "chirp-kore": "en-US-Chirp3-HD-Kore",      # Chirp 3 HD (US, Female) - Fast Stream
-    "hifi-kore": "gemini-2.5-flash-preview-tts:Kore", # High Fidelity (24kHz)
-    "hifi-pro": "gemini-2.5-pro-preview-tts:Aoede",    # Ultra High Detail (24kHz)
-    "lite-kore": "gemini-2.5-flash-lite-preview-tts:Kore", # Cost Efficient HiFi
-    "chirp-leda": "en-US-Chirp3-HD-Leda",      # Chirp 3 HD (US, Female)
-    "chirp-zephyr": "en-US-Chirp3-HD-Zephyr",  # Chirp 3 HD (US, Female)
+    # Gemini 3 (High Intelligence / Reasoning)
+    "pro": "gemini-3-pro-preview",
+    "pro-image": "gemini-3-pro-image-preview",
+    "flash": "gemini-3-flash-preview",
+    
+    # Gemini 2.5 (High Performance)
+    "gemini-2.5-pro": "gemini-2.5-pro",
+    "gemini-2.5-flash": "gemini-2.5-flash",
+    "gemini-2.5-flash-lite": "gemini-2.5-flash-lite",
+    "gemini-2.5-flash-preview": "gemini-2.5-flash-preview-09-2025",
+    "gemini-2.5-flash-lite-preview": "gemini-2.5-flash-lite-preview-09-2025",
+    "gemini-2.5-flash-image": "gemini-2.5-flash-image",
+    
+    # Gemini 2.0 (Modern Base)
+    "gemini-2.0-flash": "gemini-2.0-flash-001",
+    "gemini-2.0-flash-lite": "gemini-2.0-flash-lite-001",
+    
+    # Visual Models (Veo & Imagen)
+    "veo-3.1": "veo-3.1-generate-001",
+    "veo-3.1-fast": "veo-3.1-fast-generate-001",
+    "veo-3": "veo-3.0-generate-001",
+    "veo-2": "veo-2.0-generate-001",
+    "imagen-4": "imagen-4.0-generate-001",
+    "imagen-4-fast": "imagen-4.0-fast-generate-001",
+    "imagen-3": "imagen-3.0-generate-002",
+    "imagen-3-fast": "imagen-3.0-fast-generate-001",
+    
+    # Partner Models (MaaS - Global Endpoint)
+    "claude-4.5-opus": "publishers/anthropic/models/claude-4.5-opus",
+    "claude-4.5-sonnet": "publishers/anthropic/models/claude-4.5-sonnet",
+    "claude-4.5-haiku": "publishers/anthropic/models/claude-4.5-haiku",
+    "claude-4-opus": "publishers/anthropic/models/claude-4-opus",
+    "claude-4-sonnet": "publishers/anthropic/models/claude-4-sonnet",
+    "mistral-large": "publishers/mistralai/models/mistral-large-2407",
+    "mistral-small": "publishers/mistralai/models/mistral-small-2503",
+    
+    # Open Models (MaaS - Global Endpoint)
+    "deepseek-r1": "publishers/deepseek/models/deepseek-r1-0528",
+    "deepseek-v3.1": "publishers/deepseek/models/deepseek-v3.1",
+    "llama-4-maverick": "publishers/meta/models/llama-4-maverick-17b-128e-preview",
+    "qwen3-235b": "publishers/alibaba/models/qwen3-235b",
+    "qwen3-thinking": "publishers/alibaba/models/qwen3-next-80b-thinking",
+    
+    # Embeddings
+    "embedding": "text-embedding-004", # Optimized for global
+    "multimodal-embedding": "multimodalembedding@001"
 }
 
 MODEL_COSTS = {
@@ -177,18 +226,22 @@ class Colors:
 
     @classmethod
     def kaedra_tag(cls) -> str:
+        """Return a formatted KAEDRA tag."""
         return f"{cls.NEON_PINK}[KAEDRA]{cls.RESET}"
 
     @classmethod
     def blade_tag(cls) -> str:
+        """Return a formatted BLADE tag."""
         return f"{cls.NEON_RED}[BLADE]{cls.RESET}"
 
     @classmethod
     def nyx_tag(cls) -> str:
+        """Return a formatted NYX tag."""
         return f"{cls.SKY_BLUE}[NYX]{cls.RESET}"
 
     @classmethod
     def system_tag(cls) -> str:
+        """Return a formatted SYSTEM tag."""
         return f"{cls.GOLD}[SYSTEM]{cls.RESET}"
 
 
@@ -230,8 +283,11 @@ STARTUP_VIBES = [
 ]
 
 RANDOM_FACTS = [
-    "Did you know octopuses have three hearts? Two for the gills, one for the rest. Kinda like how I got multiple cores runnin'.",
-    "Honey never spoils. Archaeologists found that stuff in tombs, still good. My memory like that too.",
+    "Did you know octopuses have three hearts? Two for the gills, one for the rest. "
+    "Kinda like how I got multiple cores runnin'.",
+    "Honey never spoils. Archaeologists found that stuff in tombs, still good. "
+    "My memory like that too.",
     "Wombat poop is cube-shaped. Nature wild, ain't it?",
-    "Bananas are berries, but strawberries ain't. The classification system is messed up, just like some of this legacy code.",
+    "Bananas are berries, but strawberries ain't. The classification system is messed up, "
+    "just like some of this legacy code.",
 ]

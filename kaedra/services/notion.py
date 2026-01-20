@@ -1,23 +1,38 @@
+"""
+KAEDRA v1.0 - Notion Service Bridge
+Provides a 2-stage search pipeline (Local SQLite + Notion API) and high-level
+abstractions for managing the VeilVerse cinematic universe.
+"""
+
+import functools
+import random
 import re
 import time
-import random
-import functools
-from notion_client import Client, APIResponseError
+from datetime import datetime
 from typing import Optional, List, Any, Dict, Tuple
+
+import httpx
+from notion_client import Client, APIResponseError
+
 from kaedra.core.config import NOTION_TOKEN
+
+# Local SQLite Query Layer (Fast Path)
+try:
+    from kaedra.services.local_query import get_local_query_service
+    _LOCAL_QUERY = get_local_query_service()
+except ImportError:
+    _LOCAL_QUERY = None
+
+# Gold Standard IDs (Kaedra Rulebook) - Dav3's Space (Jan 2026)
+NOTION_API_BASE = "https://api.notion.com/v1"
+NOTION_VERSION = "2022-06-28"
+UNIVERSE_DB_ID = "2e5ca671-311e-811f-b3d7-c7f3b9150afe"  # VeilVerse Universe Best
+DATA_SOURCE_ID = "2e5ca671-311e-8182-abfc-000be91b3354"  # Data source for SQL
 
 # Logic Caches (v7.17)
 _SEARCH_CACHE: Dict[str, Tuple[float, List[str]]] = {}
 _LIST_CACHE: Dict[str, Tuple[float, List[str]]] = {}
-CACHE_TTL = 600 # 10 minutes
-
-import httpx
-
-# Gold Standard IDs (Kaedra Rulebook)
-NOTION_API_BASE = "https://api.notion.com/v1"
-NOTION_VERSION = "2022-06-28"
-UNIVERSE_DB_ID = "2d90b4b4-0f65-8001-98fe-cbf8a4a2146a"
-DATA_SOURCE_ID = "2d90b4b4-0f65-8018-9caa-000b653cd487"
+CACHE_TTL = 600  # 10 minutes
 
 # Global Init Flag
 _NOTION_INIT_LOGGED = False
@@ -37,16 +52,18 @@ def retry_with_backoff(initial_delay: float = 15.0, max_retries: int = 5):
                 except APIResponseError as e:
                     if e.status == 429:
                         wait = delay + random.uniform(0, 1)
-                        print(f"[!] Notion Rate Limit (429). Retrying in {wait:.1f}s... (Attempt {attempt+1}/{max_retries})")
+                        print(f"[!] Notion Rate Limit (429). Retrying in {wait:.1f}s... "
+                              f"(Attempt {attempt+1}/{max_retries})")
                         time.sleep(wait)
                         delay *= 2
                     else:
                         raise e
-                except Exception as e:
+                except (RuntimeError, ValueError, AttributeError) as e:
                     err_str = str(e).lower()
-                    if "429" in err_str or "resource_exhausted" in err_str or "rate limit" in err_str:
+                    if any(k in err_str for k in ["429", "resource_exhausted", "rate limit"]):
                         wait = delay + random.uniform(0, 1)
-                        print(f"[!] Rate Limit detected. Retrying in {wait:.1f}s... (Attempt {attempt+1}/{max_retries})")
+                        print(f"[!] Rate Limit detected. Retrying in {wait:.1f}s... "
+                              f"(Attempt {attempt+1}/{max_retries})")
                         time.sleep(wait)
                         delay *= 2
                     else:
@@ -56,6 +73,10 @@ def retry_with_backoff(initial_delay: float = 15.0, max_retries: int = 5):
     return decorator
 
 class NotionService:
+    """
+    Service for interacting with Notion databases and pages.
+    """
+    # pylint: disable=too-many-public-methods
     def __init__(self):
         global _NOTION_INIT_LOGGED
         self._client = None
@@ -76,8 +97,8 @@ class NotionService:
                 if not _NOTION_INIT_LOGGED:
                     print("[✅] Notion Service Initialized")
                     _NOTION_INIT_LOGGED = True
-            except Exception as e:
-                print(f"[!] Failed to initialize Notion Service: {e}")
+            except (RuntimeError, ValueError, AttributeError) as init_err:
+                print(f"[!] Failed to initialize Notion Service: {init_err}")
                 self._client = None
         return self._client
 
@@ -99,7 +120,8 @@ class NotionService:
 
     def normalize_query(self, query: str) -> str:
         """Normalize query for improved matching."""
-        if not query: return ""
+        if not query:
+            return ""
         # Lowercase, strip punctuation, replace -/_ with space, collapse whitespace
         q = query.lower().strip()
         q = re.sub(r"[-_]", " ", q)
@@ -107,21 +129,20 @@ class NotionService:
         q = re.sub(r"^(a|an|the|my|his|her|its|our|their)\s+", "", q)
         return " ".join(q.split())
 
-    def score_result(self, query: str, title: str, aliases: List[str] = None, category: str = "") -> float:
+    def score_result(self,
+                     query: str,
+                     title: str,
+                     aliases: List[str] = None,
+                     category: str = "") -> float:
         """
-        Industrial ranking logic:
-        1. Exact Match: 1.0
-        2. Alias Match: 0.95
-        3. Whole Word Match Bonus (+0.1)
-        4. Position Bonus (Earlier is better, up to +0.1)
-        5. Length Penalty (Shorter is more specific)
-        6. Category Boost (Character/Location > Event)
+        Industrial ranking logic based on exact matches, aliases, and word boundaries.
         """
         q = self.normalize_query(query)
         t = self.normalize_query(title)
         al = [self.normalize_query(a) for a in (aliases or [])]
 
-        if not q or not t: return 0.0
+        if not q or not t:
+            return 0.0
 
         # 1. Base Score
         score = 0.0
@@ -135,8 +156,10 @@ class NotionService:
 
             # Position Bonus (Earlier in title is better)
             pos = t.find(q)
-            if pos == 0: score += 0.1
-            elif pos < 15: score += 0.05
+            if pos == 0:
+                score += 0.1
+            elif pos < 15:
+                score += 0.05
 
             # Whole Word Bonus
             # Use regex to check for word boundaries or start/end
@@ -195,9 +218,9 @@ class NotionService:
                     start_cursor = data.get("next_cursor")
                     if not start_cursor: break
                 return results
-        except Exception as e:
-            print(f"[!] httpx query failed: {e}")
-            return results # Return whatever we got
+        except (httpx.HTTPStatusError, httpx.RequestError) as http_err:
+            print(f"[!] httpx query failed: {http_err}")
+            return results  # Return whatever we got
 
     def _build_token_filter(self, query: str) -> Dict:
         """Build an OR filter: full query exact, and token contains."""
@@ -217,13 +240,15 @@ class NotionService:
             token_filters.append({"property": "Description", "rich_text": {"contains": tok}})
             token_filters.append({"property": "Notes", "rich_text": {"contains": tok}})
 
-        if not token_filters: return {}
+        if not token_filters:
+            return {}
         return token_filters[0] if len(token_filters) == 1 else {"or": token_filters[:90]}
 
     @retry_with_backoff()
     def search_page(self, query: str, category_hint: str = None) -> Optional[str]:
-        """Search for a page ID using 2-stage pipeline: Scoped DB (httpx) -> Global Fallback (SDK)."""
-        if not self.client or not query: return None
+        """Search for a page ID using 2-stage pipeline: Scoped DB -> Global Fallback."""
+        if not self.client or not query:
+            return None
 
         norm_q = self.normalize_query(query)
         cache_key = f"search:{norm_q}:{category_hint or 'all'}"
@@ -235,7 +260,8 @@ class NotionService:
                 return val[0] if val else None
 
         tokens = [t for t in norm_q.split() if t]
-        if not tokens: return None
+        if not tokens:
+            return None
 
         candidates: List[Dict[str, Any]] = []
 
@@ -273,8 +299,8 @@ class NotionService:
                     candidates.append({"id": res["id"], "score": score, "title": title})
                     print(f"  [Candidate] '{title}' (Score: {score:.3f}) - [S1]")
 
-        except Exception as e:
-            print(f"[!] Scoped DB Search failed: {e}")
+        except (RuntimeError, ValueError, AttributeError) as s1_err:
+            print(f"[!] Scoped DB Search failed: {s1_err}")
 
         # STAGE 2: Global Search Fallback (Only if no high-confidence candidate)
         if not candidates or max(c["score"] for c in candidates) < 0.8:
@@ -304,8 +330,8 @@ class NotionService:
                     if score > 0.3:
                         candidates.append({"id": res["id"], "score": score, "title": title})
                         print(f"  [Candidate] '{title}' (Score: {score:.3f}) - [S2]")
-            except Exception as e:
-                print(f"[!] Global search fallback failed: {e}")
+            except (RuntimeError, ValueError, AttributeError) as s2_err:
+                print(f"[!] Global search fallback failed: {s2_err}")
 
         if not candidates:
             return None
@@ -327,7 +353,8 @@ class NotionService:
     @retry_with_backoff()
     def global_search(self, query: str, limit: int = 10) -> List[Dict[str, str]]:
         """Search across the entire workspace for pages or databases."""
-        if not self.client: return []
+        if not self.client:
+            return []
         try:
             print(f"[Notion] Global Workspace Search: '{query}'...")
             results = []
@@ -361,31 +388,36 @@ class NotionService:
                     title = title_list[0].get("plain_text", "Untitled DB") if title_list else "Untitled DB"
                     matches.append({"type": "DB", "title": title, "id": res["id"]})
             return matches
-        except Exception as e:
-            print(f"[!] Notion Global Search Error: {e}")
+        except (RuntimeError, ValueError, AttributeError) as glob_err:
+            print(f"[!] Notion Global Search Error: {glob_err}")
             return []
 
     @retry_with_backoff()
     def append_children(self, block_id: str, children: List[Any]):
         """Append blocks to a page or block."""
-        if not self.client: return
+        if not self.client:
+            return
         try:
             self.client.blocks.children.append(block_id=block_id, children=children)
             print(f"[Notion] Appended {len(children)} blocks to {block_id}")
-        except Exception as e:
-            print(f"[!] Notion Append Error: {e}")
+        except (RuntimeError, ValueError, AttributeError) as append_err:
+            print(f"[!] Notion Append Error: {append_err}")
 
     @retry_with_backoff()
-    def create_page(self, title: str, parent_page_id: str = None, content_blocks: List[Dict] = None) -> Optional[str]:
-        """Create a new page. If parent_page_id not provided, checks for 'Veil Verse' page as parent."""
-        if not self.client: return None
+    def create_page(self,
+                    title: str,
+                    parent_page_id: str = None,
+                    content_blocks: List[Dict] = None) -> Optional[str]:
+        """Create a new page with optional content."""
+        if not self.client:
+            return None
 
         try:
             # Resulting Parent ID
             target_parent_id = parent_page_id
 
-            # KNOWN IDs (Autodiscovered)
-            KNOWN_UNIVERSE_ID = "e2d725ad-17cd-4423-bddc-53620d3dc7d4"
+            # KNOWN IDs (Autodiscovered from Dav3's Space - Jan 2026)
+            KNOWN_UNIVERSE_ID = "2e5ca671-311e-811f-8229-d04a1f430059"  # Ai with Dav3 Cinematic Universe
 
             # If no parent specified, try to find the Root Universe Page
             if not target_parent_id:
@@ -428,14 +460,15 @@ class NotionService:
             print(f"[✅] Created Notion Page: '{title}' (ID: {page_id})")
             return page_id
 
-        except Exception as e:
-            print(f"[!] Notion Create Page Error: {e}")
+        except (RuntimeError, ValueError, AttributeError) as create_err:
+            print(f"[!] Notion Create Page Error: {create_err}")
             return None
 
     @retry_with_backoff()
     def create_database(self, parent_id: str, title: str, properties: Dict) -> Optional[str]:
         """Create a new database with specified properties."""
-        if not self.client: return None
+        if not self.client:
+            return None
         try:
             new_db = self.client.databases.create(
                 parent={"type": "page_id", "page_id": parent_id},
@@ -444,14 +477,15 @@ class NotionService:
             )
             print(f"[✅] Created Notion Database: '{title}'")
             return new_db["id"]
-        except Exception as e:
-            print(f"[!] Notion Create DB Error: {e}")
+        except (RuntimeError, ValueError, AttributeError) as db_err:
+            print(f"[!] Notion Create DB Error: {db_err}")
             return None
 
     @retry_with_backoff()
     def create_comment(self, page_id: str, text: str) -> Optional[str]:
         """Add a comment to a page."""
-        if not self.client: return None
+        if not self.client:
+            return None
         try:
             comment = self.client.comments.create(
                 parent={"page_id": page_id},
@@ -459,19 +493,21 @@ class NotionService:
             )
             print(f"[✅] Added Comment to {page_id}")
             return comment["id"]
-        except Exception as e:
-            print(f"[!] Notion Comment Error: {e}")
+        except (RuntimeError, ValueError, AttributeError) as comm_err:
+            print(f"[!] Notion Comment Error: {comm_err}")
             return None
 
     @retry_with_backoff()
     def get_users(self) -> List[Dict]:
         """List all users in the workspace."""
-        if not self.client: return []
+        if not self.client:
+            return []
         try:
             users = self.client.users.list().get("results", [])
-            return [{"id": u["id"], "name": u.get("name", "Unknown"), "type": u.get("type")} for u in users]
-        except Exception as e:
-            print(f"[!] Notion Get Users Error: {e}")
+            return [{"id": u["id"], "name": u.get("name", "Unknown"), "type": u.get("type")}
+                    for u in users]
+        except (RuntimeError, ValueError, AttributeError) as user_err:
+            print(f"[!] Notion Get Users Error: {user_err}")
             return []
 
     def log_universe_idea(self, text: str):
@@ -507,18 +543,15 @@ class NotionService:
 
     def _extract_id(self, text: str) -> Optional[str]:
         """Extract Notion UUID from URL or text (handles hyphenated and 32-char hex)."""
-        import re
         # Standardize: remove hyphens to check for 32-char hex
         clean_text = text.replace("-", "")
         # Check if the entire text is a valid UUID (fast path)
         if len(clean_text) == 32 and re.fullmatch(r"[a-f0-9]+", clean_text, re.IGNORECASE):
-            return text # Return original (client handles hyphens fine, or not? API actually prefers hyphenated usually)
+            return text  # Return original
 
         # Regex for 32-char hex within a URL
         match = re.search(r'([a-f0-9]{32})', clean_text)
         if match:
-            # Reconstruct with hyphens if needed? Notion API handles both usually, but let's trust the extraction.
-            # Actually, standardizing on the hyphenated version is safer for API calls.
             raw = match.group(1)
             return f"{raw[:8]}-{raw[8:12]}-{raw[12:16]}-{raw[16:20]}-{raw[20:]}"
         return None
@@ -587,11 +620,12 @@ class NotionService:
                             text_parts.append(f"[IMAGE FOUND: {url}]")
                 has_more = response.get("has_more", False)
                 start_cursor = response.get("next_cursor")
-                if not has_more: break
+                if not has_more:
+                    break
 
             return "\n".join(text_parts) if text_parts else "[Page is empty]"
-        except Exception as e:
-            return f"[Error reading page: {e}]"
+        except (RuntimeError, ValueError, AttributeError) as read_err:
+            return f"[Error reading page: {read_err}]"
 
     def _extract_prop_val(self, prop: Dict) -> str:
         """Helper to extract plain text using Rulebook null-safe patterns."""
@@ -619,9 +653,9 @@ class NotionService:
             elif dtype == "url":
                 return prop.get("url", "")
             elif dtype == "date":
-                d = prop.get("date")
-                return d.get("start", "") if d else ""
-        except Exception:
+                d_obj = prop.get("date")
+                return d_obj.get("start", "") if d_obj else ""
+        except (KeyError, IndexError, AttributeError):
             return ""
         return ""
 
@@ -679,8 +713,8 @@ class NotionService:
 
             _LIST_CACHE[parent_title] = (now, sub_items)
             return sub_items
-        except Exception as e:
-            print(f"[!] Error listing sub_items: {e}")
+        except (RuntimeError, ValueError, AttributeError) as list_err:
+            print(f"[!] Error listing sub_items: {list_err}")
             return []
 
     def get_universe_summary(self) -> str:
@@ -694,9 +728,11 @@ class NotionService:
         examples = {}
 
         for res in results:
-            cat = self._extract_prop_val(res.get("properties", {}).get("Category")) or "Uncategorized"
+            cat_prop = res.get("properties", {}).get("Category")
+            cat = self._extract_prop_val(cat_prop) or "Uncategorized"
             stats[cat] = stats.get(cat, 0) + 1
-            if cat not in examples: examples[cat] = []
+            if cat not in examples:
+                examples[cat] = []
             if len(examples[cat]) < 3:
                 examples[cat].append(self._get_title(res))
 
@@ -738,8 +774,8 @@ class NotionService:
         try:
             self.append_children(page_id, [paragraph_block])
             return f"[Updated '{page_identifier}' with new lore]"
-        except Exception as e:
-            return f"[Error updating page: {e}]"
+        except (RuntimeError, ValueError, AttributeError) as app_err:
+            return f"[Error updating page: {app_err}]"
 
     @retry_with_backoff()
     def ensure_script_index_database(self, parent_page_id: Optional[str] = None) -> Optional[str]:
@@ -754,10 +790,11 @@ class NotionService:
             ).get("results", [])
 
             for res in results:
-                if res.get("title", [{}])[0].get("plain_text") == "Master Script Index":
+                title_list = res.get("title", [{}])
+                if title_list[0].get("plain_text") == "Master Script Index":
                     return res["id"]
-        except Exception as e:
-            print(f"[!] Notion DB Search Error: {e}")
+        except (RuntimeError, ValueError, AttributeError) as sc_err:
+            print(f"[!] Notion DB Search Error: {sc_err}")
 
         # 2. Create if not found
         if not parent_page_id:
@@ -788,14 +825,15 @@ class NotionService:
             db_id = new_db["id"]
             print(f"[✅] Created Notion Database: 'Master Script Index' (ID: {db_id})")
             return db_id
-        except Exception as e:
-            print(f"[!] Notion DB Create Error: {e}")
+        except (RuntimeError, ValueError, AttributeError) as db_cr_err:
+            print(f"[!] Notion DB Create Error: {db_cr_err}")
             return None
 
     @retry_with_backoff()
     def list_all_databases(self) -> List[str]:
         """List all accessible databases in the workspace (Paginated)."""
-        if not self.client: return []
+        if not self.client:
+            return []
         try:
             results = []
             has_more = True
@@ -813,9 +851,10 @@ class NotionService:
                 if not start_cursor: break
 
             dbs = [r for r in results if r.get("object") == "database"]
-            return [f"[DB] {db['title'][0]['plain_text']} (ID: {db['id']})" for db in dbs if db.get("title")]
-        except Exception as e:
-            print(f"[!] Notion List DB Error: {e}")
+            return [f"[DB] {db['title'][0]['plain_text']} (ID: {db['id']})"
+                    for db in dbs if db.get("title")]
+        except (RuntimeError, ValueError, AttributeError) as list_db_err:
+            print(f"[!] Notion List DB Error: {list_db_err}")
             return []
 
     @retry_with_backoff()
@@ -853,7 +892,19 @@ class NotionService:
             return f"[Error syncing to Notion: {e}]"
 
     def find_entity(self, name: str, category: str = None) -> Optional[Dict]:
-        """Smart entity retrieval with fallback chain (Rulebook compliant)."""
+        """Smart entity retrieval with fallback chain (Rulebook compliant).
+        
+        Query Flow:
+        1. Local SQLite (fast, ~5ms)
+        2. Notion API (fallback, ~500ms)
+        """
+        # FAST PATH: Local SQLite first
+        if _LOCAL_QUERY and _LOCAL_QUERY.is_available():
+            local_result = _LOCAL_QUERY.find_entity(name, category)
+            if local_result:
+                return local_result
+        
+        # FALLBACK: Notion API
         if not self.client: return None
 
         # 1. Try category-specific if provided

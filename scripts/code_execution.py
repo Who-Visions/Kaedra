@@ -7,11 +7,9 @@ Supports: TypeScript, JavaScript, React, Next.js, Kotlin, Python, and more.
 
 import os
 import subprocess
-import json
 import tempfile
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 from datetime import datetime
-from pathlib import Path
 
 
 class CodeExecutor:
@@ -55,9 +53,13 @@ class CodeExecutor:
 
         try:
             # Create temporary file
+            suffix = f"_{filename}" if filename else ".ts"
+            if not suffix.endswith(".ts"):
+                suffix += ".ts"
+
             with tempfile.NamedTemporaryFile(
                 mode='w',
-                suffix='.ts',
+                suffix=suffix,
                 delete=False,
                 dir=self.working_dir
             ) as f:
@@ -70,7 +72,8 @@ class CodeExecutor:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                cwd=self.working_dir
+                cwd=self.working_dir,
+                check=False
             )
 
             result["stdout"] = process.stdout
@@ -85,7 +88,7 @@ class CodeExecutor:
             result["stderr"] = f"Execution timed out after {timeout}s"
             result["returncode"] = -1
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             result["status"] = "error"
             result["stderr"] = str(e)
             result["returncode"] = -1
@@ -95,7 +98,7 @@ class CodeExecutor:
             if 'temp_file' in locals():
                 try:
                     os.unlink(temp_file)
-                except:
+                except OSError:
                     pass
 
         self.execution_history.append(result)
@@ -129,9 +132,13 @@ class CodeExecutor:
 
         try:
             # Create temp file
+            suffix = f"_{filename}" if filename else ".js"
+            if not suffix.endswith(".js"):
+                suffix += ".js"
+
             with tempfile.NamedTemporaryFile(
                 mode='w',
-                suffix='.js',
+                suffix=suffix,
                 delete=False,
                 dir=self.working_dir
             ) as f:
@@ -144,7 +151,8 @@ class CodeExecutor:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                cwd=self.working_dir
+                cwd=self.working_dir,
+                check=False
             )
 
             result["stdout"] = process.stdout
@@ -154,7 +162,7 @@ class CodeExecutor:
             if process.returncode != 0:
                 result["status"] = "error"
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             result["status"] = "error"
             result["stderr"] = str(e)
             result["returncode"] = -1
@@ -163,7 +171,7 @@ class CodeExecutor:
             if 'temp_file' in locals():
                 try:
                     os.unlink(temp_file)
-                except:
+                except OSError:
                     pass
 
         self.execution_history.append(result)
@@ -196,9 +204,13 @@ class CodeExecutor:
         }
 
         try:
+            suffix = f"_{filename}" if filename else ".py"
+            if not suffix.endswith(".py"):
+                suffix += ".py"
+
             with tempfile.NamedTemporaryFile(
                 mode='w',
-                suffix='.py',
+                suffix=suffix,
                 delete=False,
                 dir=self.working_dir
             ) as f:
@@ -210,7 +222,8 @@ class CodeExecutor:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                cwd=self.working_dir
+                cwd=self.working_dir,
+                check=False
             )
 
             result["stdout"] = process.stdout
@@ -220,7 +233,7 @@ class CodeExecutor:
             if process.returncode != 0:
                 result["status"] = "error"
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             result["status"] = "error"
             result["stderr"] = str(e)
             result["returncode"] = -1
@@ -229,7 +242,7 @@ class CodeExecutor:
             if 'temp_file' in locals():
                 try:
                     os.unlink(temp_file)
-                except:
+                except OSError:
                     pass
 
         self.execution_history.append(result)
@@ -263,9 +276,13 @@ class CodeExecutor:
 
         try:
             # Create temp .kt file
+            suffix = f"_{filename}" if filename else ".kt"
+            if not suffix.endswith(".kt"):
+                suffix += ".kt"
+
             with tempfile.NamedTemporaryFile(
                 mode='w',
-                suffix='.kt',
+                suffix=suffix,
                 delete=False,
                 dir=self.working_dir
             ) as f:
@@ -278,7 +295,8 @@ class CodeExecutor:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                cwd=self.working_dir
+                cwd=self.working_dir,
+                check=False
             )
 
             if compile_process.returncode != 0:
@@ -292,7 +310,8 @@ class CodeExecutor:
                     capture_output=True,
                     text=True,
                     timeout=timeout,
-                    cwd=self.working_dir
+                    cwd=self.working_dir,
+                    check=False
                 )
 
                 result["stdout"] = run_process.stdout
@@ -302,7 +321,7 @@ class CodeExecutor:
                 if run_process.returncode != 0:
                     result["status"] = "error"
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             result["status"] = "error"
             result["stderr"] = str(e)
             result["returncode"] = -1
@@ -313,7 +332,7 @@ class CodeExecutor:
                 try:
                     os.unlink(temp_file)
                     os.unlink(f'{temp_file}.jar')
-                except:
+                except OSError:
                     pass
 
         self.execution_history.append(result)
@@ -359,7 +378,8 @@ class CodeExecutor:
                 capture_output=True,
                 text=True,
                 cwd=target_path,
-                timeout=300  # 5 minutes for installation
+                timeout=300,  # 5 minutes for installation
+                check=False
             )
 
             if process.returncode != 0:
@@ -375,7 +395,8 @@ class CodeExecutor:
                 capture_output=True,
                 text=True,
                 cwd=project_path,
-                timeout=60
+                timeout=60,
+                check=False
             )
 
             # Install exact React versions
@@ -384,7 +405,8 @@ class CodeExecutor:
                 capture_output=True,
                 text=True,
                 cwd=project_path,
-                timeout=120
+                timeout=120,
+                check=False
             )
 
             result["output"] = {
@@ -393,7 +415,7 @@ class CodeExecutor:
                 "react_install": react_install.stdout
             }
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             result["status"] = "error"
             result["error"] = str(e)
 
@@ -430,7 +452,8 @@ class CodeExecutor:
                 capture_output=True,
                 text=True,
                 cwd=target_path,
-                timeout=300
+                timeout=300,
+                check=False
             )
 
             result["output"] = process.stdout
@@ -439,7 +462,7 @@ class CodeExecutor:
                 result["status"] = "error"
                 result["error"] = process.stderr
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             result["status"] = "error"
             result["error"] = str(e)
 
@@ -477,7 +500,8 @@ class CodeExecutor:
                 capture_output=True,
                 text=True,
                 cwd=path,
-                timeout=timeout
+                timeout=timeout,
+                check=False
             )
 
             result["stdout"] = process.stdout
@@ -487,7 +511,7 @@ class CodeExecutor:
             if process.returncode != 0:
                 result["status"] = "error"
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             result["status"] = "error"
             result["error"] = str(e)
 
@@ -510,21 +534,21 @@ if __name__ == "__main__":
 
     # Test TypeScript
     print("Testing TypeScript execution...")
-    ts_code = """
+    TS_CODE = """
 console.log("Hello from TypeScript!");
 const version: string = "19.2";
 console.log(`React version: ${version}`);
 """
-    result = executor.execute_typescript(ts_code)
-    print(f"  Status: {result['status']}")
-    print(f"  Output: {result['stdout']}")
+    result_ts = executor.execute_typescript(TS_CODE)
+    print(f"  Status: {result_ts['status']}")
+    print(f"  Output: {result_ts['stdout']}")
 
     # Test Python
     print("\nTesting Python execution...")
-    py_code = """
+    PY_CODE = """
 print("Hello from Python!")
 print("Tech Stack: Next.js 16.0.3")
 """
-    result = executor.execute_python(py_code)
-    print(f"  Status: {result['status']}")
-    print(f"  Output: {result['stdout']}")
+    result_py = executor.execute_python(PY_CODE)
+    print(f"  Status: {result_py['status']}")
+    print(f"  Output: {result_py['stdout']}")

@@ -1,0 +1,68 @@
+# Notion Schema V2 (Upgrade)
+## New & Updated Properties
+- **Appears In** (multi_select)
+  - Options (Appended): ['Volume 1', 'Volume 2', 'Volume 3', 'Volume 4', 'Volume 5', 'Prologue Arc', 'Interlude Arc', 'Canon Registry', 'Pilot', 'Season 1', 'Season 2', 'DLC', 'Mainline', 'One Shot']
+- **Media Type** (multi_select)
+  - Options (Appended): ['Screenplay', 'Storyboard', 'Animatic', 'Visual Bible', 'Lore Bible', 'Music', 'Podcast', 'ARG', 'Tabletop', 'VR/XR', 'Interactive Fiction']
+- **Universe Era** (select)
+  - Options (Appended): ['Pre Collapse Era', 'Collapse Era', 'Reconstruction Era', 'Near Future Era', 'Far Future Era', 'Deep Time Era']
+- **Story Arc** (select)
+  - Options (Appended): ['Inciting Incident', 'Trials', 'Midpoint Shift', 'Dark Night', 'Finale', 'Aftermath', 'Flashback', 'Foreshadow Thread']
+- **Canon Status** (select)
+  - Options (Appended): ['Soft Canon', 'Pending Review', 'Contradicted', 'Replaced', 'Canon Locked']
+- **Power Level** (select)
+  - Options (Appended): ['Human Plus', 'City Level', 'Planetary', 'Multiversal']
+- **Category** (select)
+  - Options (Appended): ['Organization', 'Culture', 'Creature', 'Vehicle', 'Language', 'Religion', 'Planet', 'Dimension', 'System', 'Law', 'Scene', 'Symbol']
+- **Themes** (multi_select)
+  - Options (Appended): ['Control', 'Freedom', 'Class Divide', 'Surveillance', 'Trauma', 'Myth', 'Faith', 'Corruption', 'Loyalty', 'Memory', 'Destiny', 'Chaos']
+- **Species/Race** (multi_select)
+  - Options (Appended): ['Cyborg', 'Bio Engineered', 'Undead', 'Demon', 'Angelic', 'Fae', 'Djinn', 'Ancient Machine', 'Parasite Bonded', 'Veilborn']
+- **Tags** (multi_select)
+  - Options (Appended): ['Render Ready', 'Needs Visual', 'Needs Timeline', 'Needs Connections', 'Needs Powers', 'Continuity Risk', 'Retcon Candidate', 'Anchor Node', 'Scene Critical', 'Template Seed']
+- **Slug** (rich_text)
+- **Display Name** (rich_text)
+- **Entity Subtype** (multi_select)
+  - Options (Appended): ['Protagonist', 'Antagonist', 'Mentor', 'Courier', 'Assassin', 'Scientist', 'AI', 'Oracle', 'Warlord', 'City', 'District', 'Corridor', 'Market', 'Shrine', 'Vault', 'Museum', 'Slum', 'Sanctum', 'Transit Node', 'Syndicate', 'Resistance Cell', 'Cult', 'Corporation', 'Government', 'Mercenary Band', 'Weapon', 'Veil Shard', 'Relic', 'Key', 'Suit', 'Consumable', 'Contract Sigil', 'Heist', 'Uprising', 'Assassination', 'Collapse', 'Discovery', 'Trial', 'Betrayal', 'War', 'Protocol', 'Ritual', 'Interface', 'Engine', 'Binding', 'Surveillance Stack']
+- **Canon Weight** (select)
+  - Options (Appended): ['Prime', 'Core', 'Peripheral', 'Experimental', 'Alt Layer']
+- **Canon Confidence** (number)
+- **Continuity Notes** (rich_text)
+- **Continuity Flags** (multi_select)
+  - Options (Appended): ['Contradiction', 'Missing Source', 'Timeline Clash', 'Duplicate', 'Needs Retcon', 'Unclear Motive']
+- **Timeline Start Year** (number)
+- **Timeline End Year** (number)
+- **Timeline Precision** (select)
+  - Options (Appended): ['Exact', 'Estimated', 'Range', 'Mythic', 'Unknown']
+- **Era Detail** (select)
+  - Options (Appended): []
+- **Chronology Notes** (rich_text)
+- **Connection Type** (multi_select)
+  - Options (Appended): ['Ally', 'Enemy', 'Family', 'Mentor', 'Rival', 'Owner Of', 'Created By', 'Located In', 'Part Of', 'Leads', 'Serves', 'Seeks', 'Hunts', 'Protects', 'Betrayed By', 'Bound To']
+- **Connection Notes** (rich_text)
+- **Anchor Node** (checkbox)
+- **Node Tier** (select)
+  - Options (Appended): ['Tier 1', 'Tier 2', 'Tier 3', 'Background']
+- **Duplicate Of** (relation)
+- **Render Status** (status)
+- **Visual Brief** (rich_text)
+- **Prompt Pack** (rich_text)
+- **Negative Prompt** (rich_text)
+- **Model Target** (select)
+  - Options (Appended): ['Nano Banana Pro', 'Gemini Image', 'Midjourney', 'Firefly', 'Stable Diffusion', 'Practical Shoot']
+- **Aspect Ratio** (select)
+  - Options (Appended): ['1:1', '4:5', '16:9', '9:16', '3:2', '2:3']
+- **Mood Board Links** (url)
+- **Asset Folder** (url)
+- **Color Palette** (multi_select)
+  - Options (Appended): ['Neon', 'Ash', 'Gold', 'Crimson', 'Violet', 'Cyan', 'Obsidian', 'Bone', 'Rust', 'Emerald']
+- **Cinematography Tags** (multi_select)
+  - Options (Appended): ['Handheld', 'Dolly', 'Wide', 'Macro', 'Long Lens', 'Shallow DOF', 'Noir Contrast', 'Volumetric Haze']
+- **Veil Presence Level** (number)
+- **Veil Activation Trigger** (rich_text)
+- **Veil Primary Tell** (rich_text)
+- **Veil Secondary Tells** (rich_text)
+- **Veil Cost** (rich_text)
+- **Veil Failure Mode** (rich_text)
+- **Veil Consequences** (rich_text)
+- **Veil Rule Link** (relation)

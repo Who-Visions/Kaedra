@@ -1,5 +1,12 @@
+"""
+KAEDRA v1.0 - Transcription Service
+Local high-fidelity Speech-to-Text using Systran Faster-Whisper.
+"""
+
 import io
 import wave
+from typing import Optional
+
 try:
     import torch
     from faster_whisper import WhisperModel
@@ -12,9 +19,13 @@ class TranscriptionService:
     Systran Faster-Whisper Service for local high-fidelity STT.
     Optimized for speed and accuracy.
     """
-    def __init__(self, model_size: str = "distil-large-v3", device: str = None, compute_type: str = "int8"):
+    def __init__(self,
+                 model_size: str = "distil-large-v3",
+                 device: str = None,
+                 compute_type: str = "int8"):
+        """Initialize transcription model settings."""
         self.model_size = model_size
-        self.device = device # Resolved later if None
+        self.device = device  # Resolved later if None
         self.compute_type = compute_type
         self._model = None
 
@@ -29,9 +40,13 @@ class TranscriptionService:
 
             print(f"[*] Initializing Faster-Whisper ({self.model_size}) on {device}...")
             try:
-                self._model = WhisperModel(self.model_size, device=device, compute_type=self.compute_type)
-                print(f"[*] Faster-Whisper Loaded.")
-            except Exception as e:
+                self._model = WhisperModel(
+                    self.model_size,
+                    device=device,
+                    compute_type=self.compute_type
+                )
+                print("[*] Faster-Whisper Loaded.")
+            except (RuntimeError, ValueError, AttributeError) as e:
                 print(f"[!] Warning: Whisper init failed (Cloud environment?): {e}")
                 self._model = None
 
@@ -40,10 +55,12 @@ class TranscriptionService:
     def __getstate__(self):
         """Exclude model from pickling."""
         state = self.__dict__.copy()
-        if "_model" in state: del state["_model"]
+        if "_model" in state:
+            del state["_model"]
         return state
 
     def __setstate__(self, state):
+        """Restore service state."""
         self.__dict__.update(state)
         self._model = None
 
@@ -57,10 +74,10 @@ class TranscriptionService:
 
         wav_io = io.BytesIO()
         with wave.open(wav_io, 'wb') as wf:
-            wf.setnchannels(1)
-            wf.setsampwidth(2)
-            wf.setframerate(sample_rate)
-            wf.writeframes(audio_data)
+            wf.setnchannels(1)  # pylint: disable=no-member
+            wf.setsampwidth(2)  # pylint: disable=no-member
+            wf.setframerate(sample_rate)  # pylint: disable=no-member
+            wf.writeframes(audio_data)  # pylint: disable=no-member
 
         wav_io.seek(0)
 
@@ -68,9 +85,12 @@ class TranscriptionService:
         base_prompt = "Kaedra is a sharp, intelligent AI voice assistant based in New York. Conversational, modern slang."
 
         # Inject dynamic context if provided (Wispr Flow: Context-Conditioned ASR)
-        full_prompt = f"{base_prompt} Context: {context_prompt}" if context_prompt else base_prompt
+        if context_prompt:
+            full_prompt = f"{base_prompt} Context: {context_prompt}"
+        else:
+            full_prompt = base_prompt
 
-        segments, info = self.model.transcribe(
+        segments, _ = self.model.transcribe(
             wav_io,
             beam_size=5,
             initial_prompt=full_prompt

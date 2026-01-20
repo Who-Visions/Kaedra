@@ -1,17 +1,22 @@
+"""
+KAEDRA v1.0 - Utility Functions
+Common helpers for audio processing, tag extraction, and CLI command execution.
+"""
+
 import io
-import wave
-import re
 import json
-from typing import Optional
+import re
+import wave
+from typing import Optional, Tuple, Dict, Any, List
 
 def create_wav_buffer(audio_data: bytes, sample_rate: int = 16000) -> bytes:
     """Wrap raw PCM audio in WAV container."""
     buf = io.BytesIO()
     with wave.open(buf, 'wb') as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(2)
-        wf.setframerate(sample_rate)
-        wf.writeframes(audio_data)
+        wf.setnchannels(1)  # pylint: disable=no-member
+        wf.setsampwidth(2)  # pylint: disable=no-member
+        wf.setframerate(sample_rate)  # pylint: disable=no-member
+        wf.writeframes(audio_data)  # pylint: disable=no-member
     return buf.getvalue()
 
 def estimate_speech_duration(text: str, wps: float = 2.8) -> float:
@@ -19,16 +24,13 @@ def estimate_speech_duration(text: str, wps: float = 2.8) -> float:
     words = len(text.split())
     return max(1.0, min((words / wps) + 0.8, 15.0))
 
-def extract_all_metadata(response: str) -> dict:
+def extract_all_metadata(response: str) -> Dict[str, Any]:
     """
-    Unified extractor for all technical tags.
-    Returns {
-        'transcription': str,
-        'light_simple': str,
-        'light_json': list,
-        'exec_cmd': str,
-        'clean_text': str
-    }
+    Unified extractor for all technical tags within an agent response.
+    
+    Returns:
+        Dict containing transcription, light commands, notion logs, 
+        and the cleaned text for TTS.
     """
     result = {
         'transcription': "",
@@ -40,67 +42,65 @@ def extract_all_metadata(response: str) -> dict:
         'clean_text': response
     }
 
-    # 1. Extract [Heard: "..."]
-    heard_match = re.search(r'\[Heard:\s*(.*?)\]', result['clean_text'], re.IGNORECASE | re.DOTALL)
-    if heard_match:
-        raw = heard_match.group(1).strip().strip('"').strip("'")
-        result['transcription'] = raw
-        result['clean_text'] = re.sub(r'\[Heard:.*?\]', '', result['clean_text'], flags=re.DOTALL)
+    _extract_heard_tag(result)
+    _extract_exec_tag(result)
+    _extract_json_blocks(result)
+    
+    # Final light extraction and cleanup
+    simple, json_acts, cleaned = extract_light_command(result['clean_text'])
+    result.update({
+        'light_simple': simple,
+        'light_json': json_acts,
+        'clean_text': cleaned
+    })
 
-    # 2. Extract [EXEC: ...]
-    exec_match = re.search(r'\[EXEC:\s*(.*?)\]', result['clean_text'], re.IGNORECASE | re.DOTALL)
-    if exec_match:
-        result['exec_cmd'] = exec_match.group(1).strip()
-        result['clean_text'] = re.sub(r'\[EXEC:.*?\]', '', result['clean_text'], flags=re.DOTALL)
-
-    # 3. Extract JSON Actions (Lights & Notion)
-    # We now handle a general JSON block that can contain "actions" (lights) or "notion_log"
-    json_match = re.search(r'```json\s*(\{.*?\})\s*```', result['clean_text'], re.DOTALL)
-    if not json_match:
-        # Fallback for bare JSON
-        json_match = re.search(r'(\{(?:"actions"|"notion_log"|"notion_action"):\s*.*?\})', result['clean_text'], re.DOTALL)
-
-    if json_match:
-        try:
-            data = json.loads(json_match.group(1))
-
-            # Handle Light Actions
-            if "actions" in data:
-                # Reuse existing validation logic, just need to import or reimplement helper call
-                # Since extract_light_command parses JSON internally, we can either refactor or just call it
-                # for the "actions" part. But simpler to just validate here if possible or call helper.
-                # Let's rely on extract_light_command logic being refactored or just use it as is?
-                # Wait, extract_light_command does regex matching again. That's inefficient but safe.
-                pass
-
-            # Handle Notion
-            if "notion_log" in data:
-                result['notion_log'] = data["notion_log"]
-            elif "notion_action" in data:
-                result['notion_action'] = data["notion_action"]
-
-            # Remove JSON from clean text
-            result['clean_text'] = re.sub(r'```json\s*\{.*?\}\s*```', '', result['clean_text'], flags=re.DOTALL)
-            # Remove bare JSON if matched that way
-            result['clean_text'] = re.sub(r'(\{(?:"actions"|"notion_log"|"notion_action"):\s*.*?\})', '', result['clean_text'], flags=re.DOTALL)
-        except: pass
-
-    # Call original light extractor to handle "actions" key and specific [LIGHT:...] tags
-    # It will re-parse the JSON for "actions" if present.
-    # To avoid double removal issues, we should let `extract_light_command` handle the cleaning/extraction of lights.
-    simple_action, json_actions, cleaned = extract_light_command(result['clean_text'])
-    result['light_simple'] = simple_action
-    result['light_json'] = json_actions
-    result['clean_text'] = cleaned
-
-    # Final cleanup: Remove any remaining [...] or markdown code blocks
+    # Cleanup remaining tags/code
     result['clean_text'] = re.sub(r'```.*?```', '', result['clean_text'], flags=re.DOTALL)
     result['clean_text'] = re.sub(r'\[.*?\]', '', result['clean_text'], flags=re.DOTALL)
     result['clean_text'] = result['clean_text'].strip()
 
     return result
 
-def extract_light_command(response: str) -> tuple[Optional[str], Optional[list], str]:
+def _extract_heard_tag(result: Dict[str, Any]):
+    """Extract [Heard: "..."] tags."""
+    pattern = r'\[Heard:\s*(.*?)\]'
+    match = re.search(pattern, result['clean_text'], re.IGNORECASE | re.DOTALL)
+    if match:
+        result['transcription'] = match.group(1).strip().strip('"').strip("'")
+        cleaned = re.sub(pattern, '', result['clean_text'], flags=re.IGNORECASE | re.DOTALL)
+        result['clean_text'] = cleaned
+
+def _extract_exec_tag(result: Dict[str, Any]):
+    """Extract [EXEC: ...] tags."""
+    pattern = r'\[EXEC:\s*(.*?)\]'
+    match = re.search(pattern, result['clean_text'], re.IGNORECASE | re.DOTALL)
+    if match:
+        result['exec_cmd'] = match.group(1).strip()
+        cleaned = re.sub(pattern, '', result['clean_text'], flags=re.IGNORECASE | re.DOTALL)
+        result['clean_text'] = cleaned
+
+def _extract_json_blocks(result: Dict[str, Any]):
+    """Extract and parse JSON content from markdown or bare blocks."""
+    # Pattern for JSON blocks containing specific keys
+    keys = r"actions|notion_log|notion_action"
+    json_pat = rf'```json\s*({{.*?}})\s*```|({{+(?:"(?:{keys})"):\s*.*?}}+)'
+    
+    match = re.search(json_pat, result['clean_text'], re.DOTALL)
+    if match:
+        try:
+            content = match.group(1) or match.group(2)
+            data = json.loads(content)
+            if "notion_log" in data:
+                result['notion_log'] = data["notion_log"]
+            elif "notion_action" in data:
+                result['notion_action'] = data["notion_action"]
+            
+            # Remove from clean text
+            result['clean_text'] = re.sub(json_pat, '', result['clean_text'], flags=re.DOTALL)
+        except (json.JSONDecodeError, TypeError, KeyError, AttributeError):
+            pass
+
+def extract_light_command(response: str) -> Tuple[Optional[str], Optional[List], str]:
     """
     Extract light commands from response.
     Returns (simple_action, json_actions, cleaned_response).
@@ -128,10 +128,7 @@ def extract_light_command(response: str) -> tuple[Optional[str], Optional[list],
             data = json.loads(json_match.group(1))
             actions = data.get("actions", [])
 
-            # Note: validate_light_action needs to be defined or imported
-            # For this utility we'll leave it as a placeholder or import it
-            from kaedra.core.google_tools import validate_light_action # Assuming it exists there
-
+            # Use the locally defined validate_light_action
             validated_actions = []
             for action in actions:
                 validated = validate_light_action(action, DEVICE_MAP)
@@ -208,76 +205,85 @@ def validate_light_action(action: dict, device_map: dict) -> Optional[dict]:
 
 def execute_light_command(lifx, action: str) -> bool:
     """
-    Execute a light command.
-    Returns True if command was executed, False otherwise.
+    Execute a light command using a dispatch table to reduce branches.
+    Returns True if command was successfully routed, False otherwise.
     """
-    try:
-        parts = action.split()
-        cmd = parts[0] if parts else ""
-        args = parts[1:] if len(parts) > 1 else []
+    parts = action.split()
+    if not parts:
+        return False
+    cmd = parts[0].lower()
+    args = parts[1:]
 
-        if cmd in ["on", "turn on"]:
-            lifx.turn_on()
-        elif cmd in ["off", "turn off"]:
-            lifx.turn_off()
-        elif cmd == "toggle":
-            lifx.toggle()
-        elif cmd == "color" and args:
-            color = " ".join(args)
-            lifx.set_color("all", color)
+    # Dispatch Table for simple commands
+    dispatch = {
+        "on": lifx.turn_on,
+        "turn on": lifx.turn_on,
+        "off": lifx.turn_off,
+        "turn off": lifx.turn_off,
+        "toggle": lifx.toggle,
+        "brighter": lifx.brighter,
+        "dimmer": lifx.dimmer,
+        "warmer": lifx.warmer,
+        "cooler": lifx.cooler,
+        "effects_off": lifx.effects_off,
+    }
+
+    if cmd in dispatch:
+        try:
+            dispatch[cmd]()
+            return True
+        except (AttributeError, RuntimeError, ValueError):
+            return False
+
+    # Argument-based commands
+    return _handle_arg_commands(lifx, cmd, args)
+
+def _handle_arg_commands(lifx, cmd: str, args: List[str]) -> bool:
+    """Handle light commands that require arguments."""
+    try:
+        if cmd == "color" and args:
+            lifx.set_color("all", " ".join(args))
         elif cmd == "dim" and args:
-            try:
-                percent = int(args[0].replace("%", ""))
-                lifx.dim("all", percent)
-            except ValueError: pass
+            lifx.dim("all", int(args[0].replace("%", "")))
         elif cmd == "brightness" and args:
-            try:
-                level = float(args[0])
-                lifx.set_brightness("all", level)
-            except ValueError: pass
-        elif cmd == "brighter":
-            lifx.brighter()
-        elif cmd == "dimmer":
-            lifx.dimmer()
-        elif cmd == "warmer":
-            lifx.warmer()
-        elif cmd == "cooler":
-            lifx.cooler()
+            lifx.set_brightness("all", float(args[0]))
         elif cmd == "mode" and args:
-            mode = args[0]
-            if mode == "movie": lifx.movie_mode()
-            elif mode == "focus": lifx.focus_mode()
-            elif mode == "relax": lifx.relax_mode()
-            elif mode == "party": lifx.party_mode()
-            elif mode == "photo": lifx.photo_mode()
-            elif mode == "chill": lifx.chill_mode()
-            elif mode == "work": lifx.work_mode()
-            elif mode == "christmas": lifx.christmas_mode()
-            elif mode in ["ember", "warm"]: lifx.warm_ember()
+            _execute_mode(lifx, args[0])
         elif cmd == "bedroom":
-            sub_cmd = args[0] if args else "on"
-            if sub_cmd == "off": lifx.turn_off(lifx.BEDROOM)
-            else: lifx.turn_on(lifx.BEDROOM)
-        elif cmd in ["living", "livingroom"] or (cmd == "living" and args and args[0] == "room"):
-            sub_args = args[1:] if args and args[0] == "room" else args
-            sub_cmd = sub_args[0] if sub_args else "on"
-            if sub_cmd == "off": lifx.turn_off(lifx.LIVING_ROOM)
-            else: lifx.turn_on(lifx.LIVING_ROOM)
-        elif cmd == "breathe" and args:
-            lifx.breathe("all", " ".join(args))
-        elif cmd == "pulse" and args:
-            lifx.pulse("all", " ".join(args))
-        elif cmd == "sunrise":
-            lifx.sunrise("all", int(args[0]) if args else 300)
-        elif cmd == "sunset":
-            lifx.sunset("all", int(args[0]) if args else 300)
-        elif cmd == "effects" and args and args[0] == "off":
-            lifx.effects_off()
+            _execute_room(lifx, lifx.BEDROOM, args)
+        elif cmd in ["living", "livingroom"]:
+            _execute_room(lifx, lifx.LIVING_ROOM, args)
+        elif cmd in ["breathe", "pulse"] and args:
+            func = getattr(lifx, cmd)
+            func("all", " ".join(args))
+        elif cmd in ["sunrise", "sunset"]:
+            func = getattr(lifx, cmd)
+            func("all", int(args[0]) if args else 300)
         else:
             return False
         return True
-    except Exception:
+    except (ValueError, AttributeError, RuntimeError, IndexError):
         return False
+
+def _execute_mode(lifx, mode: str):
+    """Execute a specific named lighting mode."""
+    modes = {
+        "movie": lifx.movie_mode, "focus": lifx.focus_mode,
+        "relax": lifx.relax_mode, "party": lifx.party_mode,
+        "photo": lifx.photo_mode, "chill": lifx.chill_mode,
+        "work": lifx.work_mode, "christmas": lifx.christmas_mode,
+        "ember": lifx.warm_ember, "warm": lifx.warm_ember
+    }
+    if mode in modes:
+        modes[mode]()
+
+def _execute_room(lifx, room_id, args: List[str]):
+    """Execute power command for a specific room."""
+    sub = args[0] if args else "on"
+    if sub == "off":
+        lifx.turn_off(room_id)
+    else:
+        lifx.turn_on(room_id)
 
 def check_reset_intent(text: str) -> bool:
     """Check if user requested memory reset."""

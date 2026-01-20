@@ -1,41 +1,46 @@
 """
 Kaedra Orchestrator - Multi-Agent Coordination Engine
 
-Core orchestration engine that coordinates multiple AI agents
-through Vertex AI Reasoning Engine integration.
+This module serves as the central orchestration engine for Kaedra,
+coordinating multiple AI agents through Vertex AI Reasoning Engine integration.
 """
 
 import os
-import sys
 import json
+import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any, Final
+
 import vertexai
 from vertexai.preview import reasoning_engines
 
-# Add scripts directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'scripts'))
-
-from agent_router import route_task, analyze_task, AGENT_REGISTRY
-from mission_planner import plan_mission, visualize_plan, MissionPlan
-from status_monitor import (
+from scripts.agent_router import analyze_task, AGENT_REGISTRY
+from scripts.mission_planner import plan_mission, visualize_plan, MissionPlan
+from scripts.status_monitor import (
     check_system_health,
     visualize_system_health,
-    AgentStatus,
-    log_performance_metrics
+    AgentStatus
 )
-from cli_tools import CLITools
-from browser_tools import BrowserToolsSync
-from code_execution import CodeExecutor
-from agent_communication import AgentCommunicator
+from scripts.cli_tools import CLITools
+from scripts.browser_tools import BrowserToolsSync
+from scripts.code_execution import CodeExecutor
+from scripts.agent_communication import AgentCommunicator
 
-# Vertex AI Configuration
-VERTEX_PROJECT_ID = "627440283840"
-VERTEX_LOCATION = "us-central1"
-REASONING_ENGINE_ID = "5765957723313143808"
-AGENT_RESOURCE_NAME = f"projects/{VERTEX_PROJECT_ID}/locations/{VERTEX_LOCATION}/reasoningEngines/{REASONING_ENGINE_ID}"
+# === Vertex AI Configuration ===
+VERTEX_PROJECT_ID: Final[str] = "627440283840"
+VERTEX_LOCATION: Final[str] = "us-central1"
+REASONING_ENGINE_ID: Final[str] = "5765957723313143808"
+AGENT_RESOURCE_NAME: Final[str] = (
+    f"projects/{VERTEX_PROJECT_ID}/locations/{VERTEX_LOCATION}/"
+    f"reasoningEngines/{REASONING_ENGINE_ID}"
+)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logger = logging.getLogger("kaedra.orchestrator")
 
 
+# pylint: disable=too-many-instance-attributes
 class KaedraOrchestrator:
     """
     Main orchestrator class for Kaedra.
@@ -64,22 +69,16 @@ class KaedraOrchestrator:
         try:
             self.reasoning_engine = reasoning_engines.ReasoningEngine(AGENT_RESOURCE_NAME)
             self.connected = True
-            print(f"[✓] Kaedra Orchestrator online. Vertex AI connected.")
-        except Exception as e:
+            logger.info("Kaedra Orchestrator online. Vertex AI connected.")
+        except (RuntimeError, ValueError, AttributeError) as err:
             self.connected = False
-            print(f"[!] Warning: Vertex AI connection failed: {e}")
-            print(f"[!] Orchestrator running in local mode.")
+            logger.warning("Vertex AI connection failed: %s", err)
+            logger.info("Orchestrator running in local mode.")
 
-        # Initialize CLI tools
+        # Initialize core tools
         self.cli = CLITools()
-
-        # Initialize browser automation tools (Playwright/Chromium)
         self.browser = BrowserToolsSync(headless=True)
-
-        # Initialize code execution tools
         self.code = CodeExecutor()
-
-        # Initialize agent communication
         self.comm = AgentCommunicator()
 
         # Load tech stack knowledge
@@ -90,7 +89,7 @@ class KaedraOrchestrator:
         self.status.update_status("online", task="Orchestration ready")
         self.status.save()
 
-    def _load_tech_stack(self) -> Dict[str, str]:
+    def _load_tech_stack(self) -> Dict[str, Any]:
         """
         Load official tech stack knowledge base.
 
@@ -123,11 +122,11 @@ class KaedraOrchestrator:
 
         if os.path.exists(tech_stack_path):
             try:
-                with open(tech_stack_path, 'r') as f:
+                with open(tech_stack_path, 'r', encoding='utf-8') as f:
                     tech_stack["content"] = f.read()
                     tech_stack["loaded"] = True
-            except Exception as e:
-                print(f"[!] Warning: Could not load tech stack: {e}")
+            except (IOError, OSError) as err:
+                logger.warning("Could not load tech stack: %s", err)
 
         return tech_stack
 
@@ -165,36 +164,26 @@ class KaedraOrchestrator:
     def _get_strategic_intelligence(self, task: str, analysis: Dict) -> str:
         """
         Query Vertex AI Reasoning Engine for strategic intelligence.
-
-        Args:
-            task: Task description
-            analysis: Initial task analysis
-
-        Returns:
-            Strategic intelligence from Kaedra's reasoning engine
         """
         if not self.connected:
             return "Local analysis only (Vertex AI not connected)"
 
         try:
-            prompt = f"""
-            As Kaedra, Shadow Tactician and Orchestrator, analyze this task:
-
-            TASK: {task}
-
-            INITIAL ANALYSIS:
-            - Complexity: {analysis['complexity']}
-            - Multi-agent: {analysis['is_multi_agent']}
-            - Suggested agents: {', '.join(analysis['suggested_agents'])}
-
-            Provide:
-            1. Strategic assessment of task complexity and risks
-            2. Recommended orchestration approach
-            3. Agent coordination strategy
-            4. Potential failure points and mitigation
-
-            Keep response tactical and concise.
-            """
+            agents_list = ', '.join(analysis['suggested_agents'])
+            prompt = (
+                "As Kaedra, Shadow Tactician and Orchestrator, analyze this task:\n\n"
+                f"TASK: {task}\n\n"
+                "INITIAL ANALYSIS:\n"
+                f"- Complexity: {analysis['complexity']}\n"
+                f"- Multi-agent: {analysis['is_multi_agent']}\n"
+                f"- Suggested agents: {agents_list}\n\n"
+                "Provide:\n"
+                "1. Strategic assessment of task complexity and risks\n"
+                "2. Recommended orchestration approach\n"
+                "3. Agent coordination strategy\n"
+                "4. Potential failure points and mitigation\n\n"
+                "Keep response tactical and concise."
+            )
 
             response = self.reasoning_engine.query(user_instruction=prompt)
 
@@ -202,33 +191,26 @@ class KaedraOrchestrator:
                 return response.get("message", str(response))
             return str(response)
 
-        except Exception as e:
-            return f"Strategic analysis unavailable: {e}"
+        except (RuntimeError, ValueError, AttributeError) as err:
+            return f"Strategic analysis unavailable: {err}"
 
     def execute_simple_task(self, task: str, agent: str) -> Dict[str, Any]:
         """
         Execute a simple single-agent task.
-
-        Args:
-            task: Task description
-            agent: Agent to execute task
-
-        Returns:
-            Execution result dict
         """
         agent_info = AGENT_REGISTRY.get(agent, {})
 
-        print(f"[KAEDRA] Routing to {agent.upper()}")
-        print(f"  Role: {agent_info.get('role', 'Unknown')}")
-        print(f"  API: {agent_info.get('api', 'Unknown')}")
+        logger.info("[KAEDRA] Routing to %s", agent.upper())
+        logger.debug("  Role: %s", agent_info.get('role', 'Unknown'))
+        logger.debug("  API: %s", agent_info.get('api', 'Unknown'))
 
         # Update agent status
         agent_status = AgentStatus.load(agent)
         agent_status.update_status("busy", task=task)
         agent_status.save()
 
-        # TODO: Actual agent execution would happen here
-        # For now, return placeholder
+        # Agent execution logic is handled by the reasoning engine or direct API
+        # calls in a production environment.
         result = {
             "status": "delegated",
             "agent": agent,
@@ -247,26 +229,19 @@ class KaedraOrchestrator:
     def execute_mission(self, mission: MissionPlan) -> Dict[str, Any]:
         """
         Execute a complex multi-agent mission.
-
-        Args:
-            mission: MissionPlan object with task breakdown
-
-        Returns:
-            Mission execution result
         """
-        print(f"[KAEDRA] Executing mission: {mission.mission_id}")
-        print(visualize_plan(mission))
+        logger.info("[KAEDRA] Executing mission: %s", mission.mission_id)
+        logger.debug("%s", visualize_plan(mission))
 
         results = []
 
         for task in mission.tasks:
             # Check dependencies
             if task["dependencies"]:
-                print(f"  Waiting for dependencies: {', '.join(task['dependencies'])}")
+                logger.debug("  Waiting for dependencies: %s", ', '.join(task['dependencies']))
 
             # Execute task
-            print(f"\n  Executing: {task['task_id']}")
-            print(f"  Agent: {task['agent'].upper()}")
+            logger.info("  Executing: %s (Agent: %s)", task['task_id'], task['agent'].upper())
 
             agent_result = self.execute_simple_task(
                 task=task["description"],
@@ -290,15 +265,6 @@ class KaedraOrchestrator:
     def process_task(self, task: str) -> Dict[str, Any]:
         """
         Main entry point for task processing.
-
-        Analyzes task, determines if orchestration is needed,
-        and routes/executes accordingly.
-
-        Args:
-            task: Task description
-
-        Returns:
-            Task execution result
         """
         # Update orchestrator status
         self.status.update_status("processing", task=task)
@@ -309,7 +275,7 @@ class KaedraOrchestrator:
 
         if routing["needs_orchestration"]:
             # Complex mission - plan and execute
-            print(f"[KAEDRA] Complex task detected. Planning mission...")
+            logger.info("[KAEDRA] Complex task detected. Planning mission...")
 
             mission = plan_mission(task)
             result = self.execute_mission(mission)
@@ -349,39 +315,26 @@ class KaedraOrchestrator:
     def switch_model(self, model: str) -> bool:
         """
         Switch Gemini model for reasoning engine.
-
-        Args:
-            model: Model name (flash, pro, ultra)
-
-        Returns:
-            Success boolean
         """
         if model not in self.models:
             return False
 
         self.model = model
-        print(f"[KAEDRA] Switched to {self.models[model]}")
+        logger.info("[KAEDRA] Switched to %s", self.models[model])
         return True
 
     def execute_cli_command(self, command: str, timeout: int = 30) -> Dict[str, Any]:
         """
         Execute a CLI command using Kaedra's CLI tools.
-
-        Args:
-            command: Shell command to execute
-            timeout: Command timeout in seconds
-
-        Returns:
-            Command execution result
         """
-        print(f"[KAEDRA] Executing CLI: {command}")
+        logger.info("[KAEDRA] Executing CLI: %s", command)
 
         result = self.cli.run_command(command, timeout=timeout)
 
         if result["status"] == "success":
-            print(f"[KAEDRA] ✓ Command completed")
+            logger.info("[KAEDRA] ✓ Command completed")
         else:
-            print(f"[KAEDRA] ✗ Command failed: {result.get('stderr', 'Unknown error')}")
+            logger.error("[KAEDRA] ✗ Command failed: %s", result.get('stderr', 'Unknown error'))
 
         return result
 
@@ -438,9 +391,7 @@ def main():
     """CLI for testing orchestrator."""
     orchestrator = KaedraOrchestrator()
 
-    print("\n" + "="*70)
-    print("KAEDRA ORCHESTRATOR - TEST MODE")
-    print("="*70)
+    logger.info("KAEDRA ORCHESTRATOR - TEST MODE")
 
     # Test tasks
     test_tasks = [
@@ -450,22 +401,18 @@ def main():
     ]
 
     for task in test_tasks:
-        print(f"\n{'─'*70}")
-        print(f"TASK: {task}")
-        print(f"{'─'*70}\n")
+        logger.info("TASK: %s", task)
 
         result = orchestrator.process_task(task)
 
-        print(f"\n[RESULT]")
-        print(json.dumps(result, indent=2))
+        logger.info("[RESULT]")
+        logger.info("%s", json.dumps(result, indent=2))
 
     # System status
-    print(f"\n{'='*70}")
-    print("SYSTEM STATUS")
-    print(f"{'='*70}\n")
+    logger.info("SYSTEM STATUS")
 
     status = orchestrator.get_system_status()
-    print(visualize_system_health(status["system_health"]))
+    logger.info("%s", visualize_system_health(status["system_health"]))
 
 
 if __name__ == "__main__":

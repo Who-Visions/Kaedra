@@ -1,19 +1,28 @@
-import sys
-import os
+"""
+Kaedra Local CLI - Shadow Tactician Interface
+
+Entry point for local interaction with the Kaedra Orchestrator.
+Provides a command-line interface for multi-agent coordination.
+"""
+
+from typing import Dict, Final, Any
+
 import vertexai
 from vertexai.preview import reasoning_engines
 
-# Import orchestrator
 from orchestrator import KaedraOrchestrator
 from scripts.status_monitor import visualize_system_health
+from scripts.agent_router import AGENT_REGISTRY
+from scripts.mission_planner import plan_mission, visualize_plan
 
-# ══════════════════════════════════════════════════════════════
-# 🔴 CONFIGURATION
-# ══════════════════════════════════════════════════════════════
-AGENT_RESOURCE_NAME = "projects/627440283840/locations/us-central1/reasoningEngines/5765957723313143808"
+# === Configuration ===
+AGENT_RESOURCE_NAME: Final[str] = (
+    "projects/627440283840/locations/us-central1/"
+    "reasoningEngines/5765957723313143808"
+)
 
 # Model shortcuts
-MODELS = {
+MODELS: Final[Dict[str, str]] = {
     "flash": "gemini-3-flash-preview",
     "pro": "gemini-3-pro-preview",
     "ultra": "gemini-3-pro-preview",
@@ -57,15 +66,17 @@ If the user is just chatting or asking for creative writing, you can say:
 # HELPERS
 # ══════════════════════════════════════════════════════════════
 
-# ANSI Color Codes
+# pylint: disable=too-few-public-methods
 class Colors:
-    PINK = '\033[95m'      # Magenta/Pink
-    YELLOW = '\033[93m'    # Yellow
-    CYAN = '\033[96m'      # Cyan
-    RESET = '\033[0m'      # Reset
-    BOLD = '\033[1m'       # Bold
+    """ANSI Color Codes for CLI."""
+    PINK: Final[str] = '\033[95m'      # Magenta/Pink
+    YELLOW: Final[str] = '\033[93m'    # Yellow
+    CYAN: Final[str] = '\033[96m'      # Cyan
+    RESET: Final[str] = '\033[0m'      # Reset
+    BOLD: Final[str] = '\033[1m'       # Bold
 
-def print_banner():
+def print_banner() -> None:
+    """Print the Kaedra CLI banner."""
     print(f"""
 {Colors.PINK}██╗  ██╗ █████╗ ███████╗██████╗ ██████╗  █████╗
 ██║ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔══██╗
@@ -78,7 +89,9 @@ def print_banner():
     {Colors.YELLOW}Who Visions LLC | Cloud-Based Intelligence{Colors.RESET}
     """)
 
-def print_help():
+
+def print_help() -> None:
+    """Print the command reference."""
     print("""
 ╔══════════════════════════════════════════════════════════════╗
 ║  KAEDRA ORCHESTRATOR - COMMAND REFERENCE v4.1               ║
@@ -129,7 +142,150 @@ def build_instruction(user_input: str, current_model: str) -> str:
 # KAEDRA LOCAL EXECUTOR v4.0
 # ══════════════════════════════════════════════════════════════
 
+def handle_system_command(cmd: str, orchestrator: KaedraOrchestrator) -> None:
+    """Handle system diagnostic commands."""
+    if cmd in ["/models", "/status"]:
+        print("[KAEDRA] Processing status probe...")
+        status = orchestrator.get_system_status()
+        print("\n[ORCHESTRATOR]")
+        print(f"  Status: {status['orchestrator']['status']}")
+        is_conn = status['orchestrator']['vertex_ai_connected']
+        print(f"  Vertex AI: {'Connected' if is_conn else 'Disconnected'}")
+        print(f"  Model: {status['orchestrator']['model']}")
+        print("\n[AGENTS]")
+        for agent_name, details in status['system_health']['agent_details'].items():
+            print(f"  {agent_name.upper()}: {details['status']}")
+    elif cmd == "/health":
+        print("[KAEDRA] Generating system health report...")
+        status = orchestrator.get_system_status()
+        print(visualize_system_health(status['system_health']))
+    elif cmd == "/agents":
+        print("\n[AGENT REGISTRY]\n")
+        for agent_id, info in AGENT_REGISTRY.items():
+            print(f"  {agent_id.upper()}")
+            print(f"    Role: {info['role']}")
+            print(f"    API: {info['api']}")
+            print(f"    Capabilities: {', '.join(info['capabilities'][:3])}...")
+            print()
+
+
+def handle_mission_command(cmd: str, orchestrator: KaedraOrchestrator) -> None:
+    """Handle routing and mission planning."""
+    if cmd == "/route":
+        route_task = input("  Enter task to analyze: ").strip()
+        if route_task:
+            routing = orchestrator.analyze_and_route(route_task)
+            print("\n[ROUTING ANALYSIS]")
+            print(f"  Task Type: {routing['analysis']['task_type']}")
+            print(f"  Complexity: {routing['analysis']['complexity']}")
+            print(f"  Multi-Agent: {routing['is_multi_agent']}")
+            agent_list = [a.upper() for a in routing['analysis']['suggested_agents']]
+            print(f"  Suggested Agents: {', '.join(agent_list)}")
+            print(f"  Needs Orchestration: {routing['needs_orchestration']}")
+    elif cmd == "/plan":
+        plan_task = input("  Enter mission to plan: ").strip()
+        if plan_task:
+            print("\n[KAEDRA] Planning mission...")
+            mission = plan_mission(plan_task)
+            print(visualize_plan(mission))
+
+
+def handle_tech_command(cmd: str, orchestrator: KaedraOrchestrator) -> None:
+    """Handle technical stack and tools info."""
+    if cmd == "/tools":
+        print("\n[KAEDRA] Local Tools & Capabilities:\n")
+        tools = orchestrator.get_cli_capabilities()
+        for i, tool in enumerate(tools, 1):
+            print(f"  {i}. {tool}")
+        print("\n[TECH STACK]")
+        tech_ref = orchestrator.get_tech_stack_reference()
+        print(f"  Status: {tech_ref['status']}")
+        print("  Path: TECH_STACK.md")
+        print("\n  Critical Rules:")
+        for rule in tech_ref['critical_rules']:
+            print(f"    - {rule}")
+    elif cmd == "/stack":
+        tech_ref = orchestrator.get_tech_stack_reference()
+        print("\n[WHO VISIONS LLC - OFFICIAL TECH STACK v1.3]\n")
+        print("  Core:")
+        print(f"    Node.js: {tech_ref['versions']['nodejs']}")
+        print(f"    React: {tech_ref['versions']['react']}")
+        print(f"    Next.js: {tech_ref['versions']['nextjs']}")
+        print(f"    TypeScript: {tech_ref['versions']['typescript']}")
+        print("\n  Styling & UI (Web):")
+        print(f"    Tailwind CSS: {tech_ref['versions']['tailwind']}")
+        print(f"    Shadcn UI: {tech_ref['versions']['shadcn']} (standard)")
+        print(f"    NyxUI: {tech_ref['versions']['nyxui']} (future-forward)")
+        print(f"    ReactBits: {tech_ref['versions']['reactbits']} (animations)")
+        print("\n  Mobile:")
+        print(f"    Expo: {tech_ref['versions']['expo']}")
+        print(f"    NativeWind: {tech_ref['versions']['nativewind']}")
+        print(f"    Kotlin: {tech_ref['versions']['kotlin']}")
+        print("\n  3D & Graphics:")
+        print(f"    Three.js: {tech_ref['versions']['threejs']}")
+        print("\n  Full documentation: See TECH_STACK.md")
+
+
+def handle_communication_command(cmd: str, orchestrator: KaedraOrchestrator) -> None:
+    """Handle inter-agent communication."""
+    if cmd == "/talk":
+        agent_list = "blade/claude/gemini/vision/antigravity/codex"
+        agent_name = input(f"  Which agent? ({agent_list}): ").strip().lower()
+        message = input("  Message: ").strip()
+        if agent_name and message:
+            print(f"\n[KAEDRA] Sending message to {agent_name.upper()}...")
+            response = orchestrator.comm.send_message(agent_name, message)
+            print(f"\n[{agent_name.upper()}] {response.get('response', 'No')}")
+            if response['status'] != 'success':
+                print(f"  Error: {response.get('error', 'Unknown error')}")
+    elif cmd == "/list":
+        print("\n[AVAILABLE AGENTS]\n")
+        agents = orchestrator.comm.list_available_agents()
+        if agents:
+            for agent in agents:
+                print(f"  ✓ {agent.upper()}")
+        else:
+            print("  No agents found")
+
+
+def process_cloud_query(user_input: str, current_model: str, agent: Any) -> None:
+    """Send user input to cloud reasoning engine."""
+    print(f"[KAEDRA] Processing with {MODELS[current_model]}...")
+    full_instruction = build_instruction(user_input, current_model)
+
+    # pylint: disable=no-member
+    response = agent.query(user_instruction=full_instruction)
+
+    if isinstance(response, dict):
+        message = response.get("message", str(response))
+        print(f"\n{message}")
+        if "RENDER" in message.upper():
+            print("\n[SYSTEM] ⚙️  Initiating Render Protocol...")
+    else:
+        print(f"\n{response}")
+
+
+def handle_model_switch(cmd: str) -> str:
+    """Handle model switching logic."""
+    if cmd == "/flash":
+        model = "flash"
+        print(f"[SYSTEM] ⚡ Model switched to: {MODELS[model]}")
+        print("         Cost: ~$0.008 per query (cheapest)")
+    elif cmd == "/pro":
+        model = "pro"
+        print(f"[SYSTEM] 🎯 Model switched to: {MODELS[model]}")
+        print("         Cost: ~$0.031 per query (balanced)")
+    elif cmd == "/ultra":
+        model = "ultra"
+        print(f"[SYSTEM] 🔥 Model switched to: {MODELS[model]}")
+        print("         Cost: ~$0.038 per query (most powerful)")
+    else:
+        model = ""
+    return model
+
+
 def main():
+    """Main CLI execution loop."""
     print_banner()
 
     # Initialize connection
@@ -142,9 +298,9 @@ def main():
     try:
         orchestrator = KaedraOrchestrator(model=current_model)
         agent = reasoning_engines.ReasoningEngine(AGENT_RESOURCE_NAME)
-        print(f"[✓] LINK ESTABLISHED. KAEDRA ORCHESTRATOR ONLINE.")
+        print("[✓] LINK ESTABLISHED. KAEDRA ORCHESTRATOR ONLINE.")
         print(f"[✓] Current Model: {MODELS[current_model]}")
-        print(f"[✓] Listening to: BLADE (Razor 15) + Who_Art (ProArt 13')")
+        print("[✓] Listening to: BLADE (Razor 15) + Who_Art (ProArt 13')")
         print("    Type /help for commands\n")
 
         while True:
@@ -153,165 +309,44 @@ def main():
                 if not user_input:
                     continue
 
-                # === LOCAL COMMANDS ===
                 cmd = user_input.lower()
-
                 if cmd == "/exit":
                     print("[KAEDRA] Severing link. Goodbye, Commander.")
                     break
-
                 if cmd == "/help":
                     print_help()
                     continue
 
-                if cmd == "/flash":
-                    current_model = "flash"
-                    print(f"[SYSTEM] ⚡ Model switched to: {MODELS[current_model]}")
-                    print("         Cost: ~$0.008 per query (cheapest)")
+                if cmd in ["/flash", "/pro", "/ultra"]:
+                    current_model = handle_model_switch(cmd) or current_model
                     continue
 
-                if cmd == "/pro":
-                    current_model = "pro"
-                    print(f"[SYSTEM] 🎯 Model switched to: {MODELS[current_model]}")
-                    print("         Cost: ~$0.031 per query (balanced)")
+                if cmd in ["/models", "/status", "/health", "/agents"]:
+                    handle_system_command(cmd, orchestrator)
                     continue
 
-                if cmd == "/ultra":
-                    current_model = "ultra"
-                    print(f"[SYSTEM] 🔥 Model switched to: {MODELS[current_model]}")
-                    print("         Cost: ~$0.038 per query (most powerful)")
+                if cmd in ["/route", "/plan"]:
+                    handle_mission_command(cmd, orchestrator)
                     continue
 
-                if cmd in ["/models", "/status"]:
-                    print("[KAEDRA] Processing status probe...")
-                    status = orchestrator.get_system_status()
-                    print(f"\n[ORCHESTRATOR]")
-                    print(f"  Status: {status['orchestrator']['status']}")
-                    print(f"  Vertex AI: {'Connected' if status['orchestrator']['vertex_ai_connected'] else 'Disconnected'}")
-                    print(f"  Model: {status['orchestrator']['model']}")
-                    print(f"\n[AGENTS]")
-                    for agent_name, details in status['system_health']['agent_details'].items():
-                        print(f"  {agent_name.upper()}: {details['status']}")
+                if cmd in ["/tools", "/stack"]:
+                    handle_tech_command(cmd, orchestrator)
                     continue
 
-                if cmd == "/health":
-                    print("[KAEDRA] Generating system health report...")
-                    status = orchestrator.get_system_status()
-                    print(visualize_system_health(status['system_health']))
+                if cmd in ["/talk", "/list"]:
+                    handle_communication_command(cmd, orchestrator)
                     continue
 
-                if cmd == "/agents":
-                    from scripts.agent_router import AGENT_REGISTRY
-                    print("\n[AGENT REGISTRY]\n")
-                    for agent, info in AGENT_REGISTRY.items():
-                        print(f"  {agent.upper()}")
-                        print(f"    Role: {info['role']}")
-                        print(f"    API: {info['api']}")
-                        print(f"    Capabilities: {', '.join(info['capabilities'][:3])}...")
-                        print()
-                    continue
-
-                if cmd == "/route":
-                    route_task = input("  Enter task to analyze: ").strip()
-                    if route_task:
-                        routing = orchestrator.analyze_and_route(route_task)
-                        print(f"\n[ROUTING ANALYSIS]")
-                        print(f"  Task Type: {routing['analysis']['task_type']}")
-                        print(f"  Complexity: {routing['analysis']['complexity']}")
-                        print(f"  Multi-Agent: {routing['is_multi_agent']}")
-                        print(f"  Suggested Agents: {', '.join([a.upper() for a in routing['analysis']['suggested_agents']])}")
-                        print(f"  Needs Orchestration: {routing['needs_orchestration']}")
-                    continue
-
-                if cmd == "/plan":
-                    plan_task = input("  Enter mission to plan: ").strip()
-                    if plan_task:
-                        from scripts.mission_planner import plan_mission, visualize_plan
-                        print("\n[KAEDRA] Planning mission...")
-                        mission = plan_mission(plan_task)
-                        print(visualize_plan(mission))
-                    continue
-
-                if cmd == "/tools":
-                    print("\n[KAEDRA] Local Tools & Capabilities:\n")
-                    tools = orchestrator.get_cli_capabilities()
-                    for i, tool in enumerate(tools, 1):
-                        print(f"  {i}. {tool}")
-                    print(f"\n[TECH STACK]")
-                    tech_ref = orchestrator.get_tech_stack_reference()
-                    print(f"  Status: {tech_ref['status']}")
-                    print(f"  Path: TECH_STACK.md")
-                    print(f"\n  Critical Rules:")
-                    for rule in tech_ref['critical_rules']:
-                        print(f"    - {rule}")
-                    continue
-
-                if cmd == "/stack":
-                    tech_ref = orchestrator.get_tech_stack_reference()
-                    print(f"\n[WHO VISIONS LLC - OFFICIAL TECH STACK v1.3]\n")
-                    print(f"  Core:")
-                    print(f"    Node.js: {tech_ref['versions']['nodejs']}")
-                    print(f"    React: {tech_ref['versions']['react']}")
-                    print(f"    Next.js: {tech_ref['versions']['nextjs']}")
-                    print(f"    TypeScript: {tech_ref['versions']['typescript']}")
-                    print(f"\n  Styling & UI (Web):")
-                    print(f"    Tailwind CSS: {tech_ref['versions']['tailwind']}")
-                    print(f"    Shadcn UI: {tech_ref['versions']['shadcn']} (standard)")
-                    print(f"    NyxUI: {tech_ref['versions']['nyxui']} (future-forward)")
-                    print(f"    ReactBits: {tech_ref['versions']['reactbits']} (animations)")
-                    print(f"\n  Mobile:")
-                    print(f"    Expo: {tech_ref['versions']['expo']}")
-                    print(f"    NativeWind: {tech_ref['versions']['nativewind']}")
-                    print(f"    Kotlin: {tech_ref['versions']['kotlin']}")
-                    print(f"\n  3D & Graphics:")
-                    print(f"    Three.js: {tech_ref['versions']['threejs']}")
-                    print(f"\n  Full documentation: See TECH_STACK.md")
-                    continue
-
-                if cmd == "/talk":
-                    agent = input("  Which agent? (blade/claude/gemini/vision/antigravity/codex): ").strip().lower()
-                    message = input("  Message: ").strip()
-                    if agent and message:
-                        print(f"\n[KAEDRA] Sending message to {agent.upper()}...")
-                        response = orchestrator.comm.send_message(agent, message)
-                        print(f"\n[{agent.upper()}] {response.get('response', 'No response')}")
-                        if response['status'] != 'success':
-                            print(f"  Error: {response.get('error', 'Unknown error')}")
-                    continue
-
-                if cmd == "/list":
-                    print("\n[AVAILABLE AGENTS]\n")
-                    agents = orchestrator.comm.list_available_agents()
-                    if agents:
-                        for agent in agents:
-                            print(f"  ✓ {agent.upper()}")
-                    else:
-                        print("  No agents found")
-                    continue
-
-                # === SEND TO CLOUD BRAIN WITH KAEDRA BEHAVIOR ===
-                print(f"[KAEDRA] Processing with {MODELS[current_model]}...")
-                full_instruction = build_instruction(user_input, current_model)
-                response = agent.query(user_instruction=full_instruction)
-
-                # Handle response
-                if isinstance(response, dict):
-                    message = response.get("message", str(response))
-                    print(f"\n{message}")
-
-                    # Optional hook if you want her to trigger local actions
-                    if "RENDER" in message.upper():
-                        print("\n[SYSTEM] ⚙️  Initiating Render Protocol...")
-                else:
-                    print(f"\n{response}")
+                process_cloud_query(user_input, current_model, agent)
 
             except KeyboardInterrupt:
                 print("\n[KAEDRA] Interrupt detected. Severing link.")
                 break
 
-    except Exception as e:
-        print(f"\n[!] CONNECTION FAILED: {e}")
-        print("    Try running: gcloud auth application-default login")
+    except vertexai.errors.VertexAIError as v_err:
+        print(f"\n[!] VERTEX AI ERROR: {v_err}")
+    except RuntimeError as r_err:
+        print(f"\n[!] RUNTIME ERROR: {r_err}")
 
 if __name__ == "__main__":
     main()
