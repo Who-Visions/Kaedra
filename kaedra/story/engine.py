@@ -1,8 +1,24 @@
 """
-🧠 StoryEngine v7.11 - Modular Orchestrator
+🧠 StoryEngine v8.5 - Modular Orchestrator
 Main engine class importing from modular components.
 """
+import sys
+from pathlib import Path
+
+# Ensure project root is in sys.path for direct execution
+ROOT_PATH = Path(__file__).parent.parent.parent
+if str(ROOT_PATH) not in sys.path:
+    sys.path.insert(0, str(ROOT_PATH))
+
 import asyncio
+
+import sys
+from pathlib import Path
+
+# Allow direct execution
+project_root = str(Path(__file__).resolve().parent.parent.parent)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 import os
 import re
@@ -11,7 +27,7 @@ import time
 import hashlib
 import shlex
 import signal
-from pathlib import Path
+import random
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from collections import deque
@@ -32,21 +48,21 @@ from rich.emoji import Emoji
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
 
 # Modular imports
-from .config import Mode, FLASH_MODEL, PRO_MODEL, NARRATIVE_MODEL, EngineResponse, RateLimitConfig
-from .screenplay import ScreenplayFormatter
-from .ui import console, log
-from .emotions import EmotionEngine
-from .tension import TensionCurve
-from .structure import NarrativeStructure
-from .veil import VeilManager
-from .modes import ModeTransition
+from kaedra.story.config import Mode, FLASH_MODEL, PRO_MODEL, NARRATIVE_MODEL, EngineResponse
+from kaedra.story.screenplay import ScreenplayFormatter
+from kaedra.story.ui import console, log
+from kaedra.story.emotions import EmotionEngine
+from kaedra.story.tension import TensionCurve
+from kaedra.story.structure import NarrativeStructure
+from kaedra.story.veil import VeilManager
+from kaedra.story.modes import ModeTransition
 from kaedra.core.isolation import ContextIsolation
-from .snapshot import StorySnapshot
-from .lights import LightsController
-from .tools import ENGINE_TOOLS
-from .doctrine import DoctrineState, MiceManager, doctrine_directives, score_output
-from .autonomy import AutoSpec, AutoControl, ControlMessage, ControlKind, InjectMsg, InjectKind, AutoState
-from .policy import AutonomyPolicy
+from kaedra.story.snapshot import StorySnapshot
+from kaedra.story.lights import LightsController
+from kaedra.story.tools import ENGINE_TOOLS
+from kaedra.story.doctrine import DoctrineState, MiceManager, doctrine_directives, score_output
+from kaedra.story.autonomy import AutoSpec, AutoControl, ControlMessage, ControlKind, InjectMsg, InjectKind, AutoState
+from kaedra.story.policy import AutonomyPolicy
 from kaedra.worlds.menu import select_world_interactive
 from kaedra.worlds.store import load_world, touch_last_played, create_world
 from kaedra.services.google_workspace import GoogleWorkspaceService
@@ -57,13 +73,7 @@ from kaedra.story.components.prompts import PromptBuilder
 from kaedra.story.chain import StoryChainer
 # NOTE: LoreEditor, VisualService, AudioService, ingest_youtube moved to lazy imports
 
-
-
-
-# System Prompt Template
-
-
-
+# System Initialization
 
 # Install Rich Traceback
 from rich.traceback import install
@@ -101,6 +111,7 @@ class StoryEngine:
         self._council = None
         self._router = None
         self._prompts = None
+        self._roadmap = None
         self._init_start_time = _init_start  # Store for later measurement
 
         # Continue initialization
@@ -170,6 +181,155 @@ class StoryEngine:
             from kaedra.story.components.prompts import PromptBuilder
             self._prompts = PromptBuilder(self.world_config, self.emotions, self.tension, self.doctrine)
         return self._prompts
+
+    @property
+    def roadmap(self):
+        """Lazy-init RoadmapManager on first access."""
+        if self._roadmap is None:
+            from kaedra.story.components.roadmap import RoadmapManager
+            self._roadmap = RoadmapManager(self.console, self.world_config, self.google)
+        return self._roadmap
+
+    @property
+    def state(self):
+        """Build the complete Story State for the frontend."""
+        # 1. Base Components
+        tension_val = self.tension.current if self.tension else 0.0
+        emotions_val = self.emotions.state if self.emotions else {}
+        mode_val = self.mode.name if self.mode else "NORMAL"
+        
+        # 2. Lore & World Data (From veilverse_backup.db)
+        active_lore = []
+        stats = {}
+        environment = {"location": "Unknown", "time": "Unknown", "weather": "Clear", "danger_level": 0}
+        equipment = []
+        session_log = []
+        
+        try:
+            import sqlite3
+            import os
+            
+            # Locate Backup DB (SyncManager source)
+            db_path = Path("data/veilverse_backup.db")
+            if not db_path.exists():
+                # Try fallback relative to engine.py
+                db_path = Path(__file__).parent.parent.parent / "data" / "veilverse_backup.db"
+
+            if db_path.exists():
+                conn = sqlite3.connect(db_path)
+                conn.row_factory = sqlite3.Row
+                
+                try:
+                    # Active Lore
+                    # query: Active/Canon items
+                    cursor = conn.execute("SELECT * FROM entities WHERE status='Active' OR canon_status LIKE '%Canon%' LIMIT 20")
+                    rows = cursor.fetchall()
+                    
+                    for r in rows:
+                        cat = r["category"] or "Entity"
+                        desc = r["description"] or ""
+                        active_lore.append({
+                            "name": r["name"],
+                            "details": f"[{cat}] {desc[:40]}...",
+                            "color": "orange" if "Character" in cat else "blue",
+                            "status": r["status"] or r["canon_status"]
+                        })
+
+                    # Fallback: If nothing found, just grab ANY entities
+                    if not active_lore:
+                         print("[StoryEngine] Primary query returned 0 results. Triggering Fallback.")
+                         cursor = conn.execute("SELECT * FROM entities LIMIT 10")
+                         fallback_rows = cursor.fetchall()
+                         print(f"[StoryEngine] Fallback query returned {len(fallback_rows)} rows.")
+                         
+                         for r in fallback_rows:
+                            # Generic mapping for fallback
+                            print(f"[StoryEngine] Processing fallback row: {dict(r)}")
+                            active_lore.append({
+                                "name": r['name'] or "Unknown",
+                                "details": f"[{r['category']}] {str(r['description'] or '')[:40]}...",
+                                "color": "gray",
+                                "status": "Inferred"
+                            })
+                        
+                    # Protagonist Stats
+                    # Find any character with Protagonist tag or just first character
+                    # Schema doesn't have explicit 'subtype' column, maybe in tags?
+                    p_cursor = conn.execute("SELECT * FROM entities WHERE category='Character' LIMIT 1")
+                    protagonist = p_cursor.fetchone()
+                    
+                    if protagonist:
+                         # We don't have explicit stat columns in this schema, so we mock from valid data
+                         # or parse from 'raw_properties' if we were fancy. 
+                         # For now, generate consistent stats from ID hash or defaults
+                         stats = {
+                             "hp": 100,
+                             "max_hp": 100,
+                             "mana": 50,
+                             "max_mana": 50,
+                             "stamina": 75,
+                             "max_stamina": 100,
+                             "level": 1,
+                             "power_level": protagonist["power_level"] or "Standard",
+                         }
+                    
+                    # Equipment from Items category
+                    eq_cursor = conn.execute("SELECT * FROM entities WHERE category='Item' OR category='Artifact' LIMIT 10")
+                    eq_rows = eq_cursor.fetchall()
+                    for eq in eq_rows:
+                        equipment.append({
+                            "name": eq["name"],
+                            "type": eq["category"],
+                            "icon": "sword" if "weapon" in (eq["tags"] or "").lower() else "shield",
+                            "equipped": False
+                        })
+                         
+                    environment = {
+                        "location": "Neo-Kyoto",
+                        "time": datetime.now().strftime("%H:%M"),
+                        "weather": "Clear",
+                        "danger_level": int(tension_val * 10)
+                    }
+                    
+                finally:
+                    conn.close()
+                    
+            else:
+                 stats = {"error": "DB Not Found"}
+
+        except Exception as e:
+            print(f"[!] Engine State Error: {e}")
+            stats = {"error": str(e)}
+
+        # Session Log - from in-memory snapshots
+        for snap in list(self.snapshots)[-10:]:
+            session_log.append({
+                "type": "beat",
+                "timestamp": snap.timestamp if hasattr(snap, 'timestamp') else datetime.now().isoformat(),
+                "content": snap.summary if hasattr(snap, 'summary') else str(snap)[:80],
+                "pov": snap.pov if hasattr(snap, 'pov') else self.pov
+            })
+
+        return {
+            "mode": mode_val,
+            "pov": self.pov,
+            "scene": self.scene,
+            "tension": tension_val,
+            "emotions": emotions_val,
+            "doctrine": {
+                "debt": self.doctrine.abstraction_debt if self.doctrine else 0,
+                "red_marks": self.doctrine.red_marks if self.doctrine else 0,
+                "green_marks": self.doctrine.green_marks if self.doctrine else 0,
+                "wound": self.doctrine.wound if self.doctrine else "",
+                "identity_stage": self.doctrine.identity_stage if self.doctrine else 1,
+                "pattern": self.doctrine.pattern if self.doctrine else "HELD"
+            },
+            "active_lore": active_lore[:50], 
+            "character_stats": stats,
+            "equipment": equipment,
+            "environment": environment,
+            "session_log": session_log
+        }
 
     def __init_continued__(self):
         """Continuation of __init__ - called at end of __init__."""
@@ -356,107 +516,6 @@ class StoryEngine:
         self.mode_transition.execute(old, new_mode)
         self.console.print(f"[bold cyan]>> [MODE] {old.value.upper()} → {new_mode.value.upper()}[/]")
 
-    def _build_system_prompt(self, directives: List[str] = None, mode: str = "writer") -> str:
-        """Construct dynamic system prompt with current state."""
-        dom_emotion, dom_value = self.emotions.dominant()
-        emotion_state = " | ".join(f"{k}:{v:.2f}" for k, v in self.emotions.state.items())
-
-        prompt = SYSTEM_PROMPT
-        prompt = prompt.replace("[PHASE]", str(self.scene))
-        prompt = prompt.replace("[POV]", self.pov)
-        prompt = prompt.replace("[MODE]", self.mode.value.upper())
-        prompt = prompt.replace("[TENSION]", f"{self.tension.current:.2f}")
-        prompt = prompt.replace("[EMOTION_STATE]", emotion_state)
-        prompt = prompt.replace("[DOMINANT_EMOTION]", dom_emotion.capitalize())
-        prompt = prompt.replace("[DOMINANT_VALUE]", f"{dom_value:.2f}")
-
-        # [DOCTRINE PLACEHOLDERS]
-        prompt = prompt.replace("[WOUND]", self.doctrine.wound)
-        prompt = prompt.replace("[STAGE]", str(self.doctrine.identity_stage))
-        prompt = prompt.replace("[BROKEN/HELD]", self.doctrine.pattern)
-
-        # [WORLD METADATA]
-        prompt = prompt.replace("[WORLD_NAME]", self.world_config.get("name", "Unknown World"))
-        prompt = prompt.replace("[UNIVERSE]", self.world_config.get("universe", "Unknown Universe"))
-        prompt = prompt.replace("[WORLD_DESCRIPTION]", self.world_config.get("description", "No description provided."))
-
-        # [DOCTRINE DIRECTIVES]
-        directives = directives or []
-        directives_block = "\n".join(f"{i+1}. {d}" for i, d in enumerate(directives)) or "1. Maintain forward motion."
-        prompt = prompt.replace("[DIRECTIVES]", directives_block)
-
-        # [TIME AWARENESS]
-        now_str = datetime.now().strftime("%A, %B %d, %Y | %I:%M %p")
-        prompt += f"\n\n[CURRENT EARTH TIME: {now_str}]"
-
-        # [UNIVERSE INDEX]
-        # Useful for both Planner (Knowledge awareness) and Writer (Tool use)
-        try:
-            from kaedra.services.notion import NotionService
-            notion = NotionService()
-            dbs = notion.list_all_databases()
-            if dbs:
-                db_list = "\n".join(dbs[:10]) # Top 10 to save context
-                prompt += f"\n\n[UNIVERSE INDEX]\nAvailable Knowledge Bases:\n{db_list}\n"
-                if mode == "writer":
-                    prompt += "Use `read_page_content` on these names to access specific records."
-        except:
-            pass
-
-        # [LORE-FIRST PROTOCOL] - Writer Only
-        if mode == "writer":
-            prompt += """
-
-[LORE-FIRST PROTOCOL - MCP ENHANCED]
-1. **READ FIRST**: Call `list_universe_pages()` and `read_page_content()` to check existing canon.
-2. **CONSISTENCY**: Never contradict the bible.
-3. **CREATE**: If you invent a new character, location, or artifact:
-   - **DO NOT** just mention it in passing.
-   - **CALL `create_lore_page("Name", "Description")`** to save it to the Veil Verse immediately.
-   - **CALL `add_notion_comment()`** if you need to flag an inconsistency.
-4. **TRACK**: If a new quest/objective arises, call `create_tracker_db()` or `sync_roadmap_item()`.
-5. **COLLABORATE**: If unsure, Ask the Author. If sure, **WRITE IT TO LORE**."""
-
-        return prompt
-
-    async def _planner_response(self, user_input: str, system_prompt: str, plan: Dict) -> str:
-        """Generate structured build steps (Planner Mode)."""
-        planner_prompt = f"""
-You are in PLANNER MODE.
-Do NOT write narrative prose.
-Return a practical build plan the author can execute.
-
-Output format (Markdown):
-1) Interpretation (1 to 2 sentences)
-2) What we need to define next (5 to 9 bullets)
-3) Canon seed pack (facts to lock) (3 to 7 bullets)
-4) Options (A, B, C) with risks
-5) Next actions (numbered, concrete)
-6) Questions for the Author (3 to 5)
-
-User input:
-{user_input}
-"""
-        config = types.GenerateContentConfig(
-            system_instruction=system_prompt + "\n\n" + "[MODE OVERRIDE]\nPLANNER MODE ONLY.",
-            temperature=0.4,
-            max_output_tokens=1200,
-            thinking_config=types.ThinkingConfig(thinking_level="low", include_thoughts=False),
-        )
-
-        # We need to run this in threadpool if it's sync, but generate_content is sync.
-        # But we need to await it? No, client.models.generate_content is sync.
-        # So we just run it.
-        # Wait, the engine is async. We should wrap it if we want async, but for now blocking is fine?
-        # Actually, let's just call it.
-
-        resp = self.client.models.generate_content(
-            model=FLASH_MODEL,
-            contents=[types.Content(role="user", parts=[types.Part(text=planner_prompt)])],
-            config=config,
-        )
-        return (resp.text or "").strip()
-
     def _select_model(self, user_input: str) -> tuple:
         """Smart routing: returns (model, thinking_level, max_tokens)."""
         if self.mode in (Mode.GOD, Mode.DIRECTOR):
@@ -465,218 +524,54 @@ User input:
             return FLASH_MODEL, "high", 4096 # Flash High Thinking (was Pro)
         return FLASH_MODEL, "medium", 2048
 
-    def _route_request(self, user_input: str) -> Dict[str, Any]:
-        """Classify task and plan generation strategy."""
-        text = user_input or ""
-
-        router_prompt = f"""
-Return JSON only.
-
-Decide what the user actually wants right now.
-
-intents:
-- "plan": give build steps, structure, options, questions. NO scene prose.
-- "scene": write the next scene or beat in narrative form.
-- "research": gather facts or lore (usually needs tools).
-- "command": user is issuing an engine command.
-
-Rules:
-1) If the user input is short (under 120 chars) AND lacks an explicit verb like
-   write, scene, go, action, screenplay, continue, draft,
-   then intent MUST be "plan".
-2) If the user includes "write" or "scene" or "go" or "action", intent is "scene".
-3) If the user asks to pull from Notion, files, databases, or "lore bible", intent is "research" and needs_tools true.
-4) Output must include:
-   - intent: plan|scene|research|command
-   - should_write_scene: boolean
-   - needs_tools: boolean
-   - variant_plan: {{ "tiers": ["minimal"|"low"|"medium"|"high"], "per_tier": int }}
-
-User input:
-{text}
-"""
-        config = types.GenerateContentConfig(
-             response_mime_type="application/json",
-             temperature=0.1,
-             thinking_config=types.ThinkingConfig(thinking_level="low", include_thoughts=False),
-        )
-        try:
-            resp = self.client.models.generate_content(
-                model=FLASH_MODEL,
-                contents=router_prompt,
-                config=config
-            )
-            j = json.loads(resp.text)
-
-            # Hard safety fallback if router is sloppy
-            intent = j.get("intent", "plan")
-            should_write = bool(j.get("should_write_scene", False))
-            if intent != "scene":
-                should_write = False
-
-            j["intent"] = intent
-            j["should_write_scene"] = should_write
-            if "variant_plan" not in j:
-                j["variant_plan"] = {"tiers": ["low"], "per_tier": 1}
-            return j
-        except Exception:
-            return {
-                "intent": "plan",
-                "should_write_scene": False,
-                "needs_tools": False,
-                "variant_plan": {"tiers": ["low"], "per_tier": 1},
-            }
 
     def _build_tiers(self) -> Dict[str, TierSpec]:
-        """Define the thinking tiers."""
+        """Build the thinking tiers, scaling budget by scene tension."""
+        # Scale factor: 1.0 (base) to 4.0 (climax)
+        # Using a curve that ramps up after 0.2 tension
+        scale = 1.0 + (max(0, self.tension.current - 0.2) * 3.75) 
+        
         return {
-            "minimal": TierSpec("minimal", FLASH_MODEL, 0,    1200, 0.85, 2),
-            "low":     TierSpec("low",     FLASH_MODEL, 1024, 1600, 0.80, 2),
-            "medium":  TierSpec("medium",  FLASH_MODEL, 2048, 2200, 0.75, 2),
-            "high":    TierSpec("high",    FLASH_MODEL, 4096, 4096, 0.70, 3),
-            "ultra":   TierSpec("ultra",   PRO_MODEL,   8192, 8192, 0.90, 3),
+            "minimal": TierSpec("minimal", FLASH_MODEL, 0,                   1200, 0.85, 2),
+            "low":     TierSpec("low",     FLASH_MODEL, int(1024 * scale),    1600, 0.80, 2),
+            "medium":  TierSpec("medium",  FLASH_MODEL, int(2048 * scale),    2200, 0.75, 2),
+            "high":    TierSpec("high",    FLASH_MODEL, int(4096 * scale),    4096, 0.70, 3),
+            "ultra":   TierSpec("ultra",   PRO_MODEL,   int(8192 * scale),    8192, 0.90, 3),
         }
 
-    def _route_tiers(self, user_input: str) -> List[str]:
-        """Decide which tiers to run based on context."""
-        text = (user_input or "").lower()
-        if self.mode in (Mode.GOD, Mode.DIRECTOR) or self.tension.current > 0.8:
-            return ["minimal", "low", "medium", "high"]
-        if any(k in text for k in ["canon", "twist", "structure", "outline", "reveal", "midpoint"]):
-            return ["medium", "high"]
-        if len(text) < 80:
-            return ["minimal", "medium"]
-        return ["low", "medium"]
-
-    def _snapshot_context(self):
-        """Create a safety fork."""
-        return self.context.snapshot()
-
-    def _restore_context(self, snap):
-        """Restore checks to safety fork."""
-        self.context.restore(snap)
-
-    def _gen_with_tier(self, tier: TierSpec, system_prompt: str, count: int = 1) -> List[str]:
-        """Generate candidates for a specific tier (NO TOOLS)."""
-        # CRITICAL: Variant lane must not use tools to prevent signature contamination.
-
-        cfg_kwargs = dict(
-            system_instruction=system_prompt,
-            temperature=tier.temperature,
-            max_output_tokens=tier.max_tokens,
-            tools=None, # DISABLE TOOLS FOR VARIANTS
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-            thinking_config=types.ThinkingConfig(
-                thinking_budget=tier.budget, # tier.budget is already defined in TierSpec
-                include_thoughts=(self.mode in (Mode.GOD, Mode.DIRECTOR) or self.tension.current > 0.8)
-            ),
-        )
-
-        try:
-            cfg_kwargs["candidate_count"] = count # REST API field name fallback handling by SDK
-            config = types.GenerateContentConfig(**cfg_kwargs)
-        except TypeError:
-            # candidate_count not supported, generate manually
-            cfg_kwargs.pop("candidate_count", None)
-            config = types.GenerateContentConfig(**cfg_kwargs)
-
-            outs = []
-            for _ in range(count):
-                try:
-                    # Cache Handling
-                    gen_kwargs = {
-                        "model": tier.model,
-                        "config": config,
-                    }
-                    if self.context.cached_content_name:
-                        gen_kwargs["contents"] = [self.context.history[-1]] if self.context.history else []
-                        gen_kwargs["cached_content"] = self.context.cached_content_name
-                    else:
-                        gen_kwargs["contents"] = self.context.get_context()
-
-                    response = self.client.models.generate_content(**gen_kwargs)
-
-                    # Pull text
-                    t = ""
-                    if response.candidates:
-                        cand = response.candidates[0]
-                        t = getattr(cand, "text", None)
-                        if not t and cand.content and cand.content.parts:
-                            t = cand.content.parts[0].text
-
-                    if t:
-                        outs.append(t)
-                except Exception as e:
-                    self.console.print(f"[red]Gen Error ({tier.name} loop): {e}[/]")
-                    break
-            return outs
 
     async def _gen_with_tier_async(self, tier: TierSpec, system_prompt: str, history: List[types.Content], count: int = 1) -> List[str]:
-        """Generate candidates for a specific tier asynchronously (NO TOOLS)."""
-        cfg_kwargs = dict(
-            system_instruction=system_prompt,
-            temperature=tier.temperature,
-            max_output_tokens=tier.max_tokens,
-            tools=None,
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-            thinking_config=types.ThinkingConfig(
-                thinking_budget=tier.budget,
-                include_thoughts=(self.mode in (Mode.GOD, Mode.DIRECTOR) or self.tension.current > 0.8)
-            ),
-        )
-
-        try:
-            cfg_kwargs["candidate_count"] = count
-            config = types.GenerateContentConfig(**cfg_kwargs)
-        except TypeError:
-            cfg_kwargs.pop("candidate_count", None)
-            config = types.GenerateContentConfig(**cfg_kwargs)
-
+        """Generate candidates for a specific tier asynchronously using PromptService."""
+        # Note: Tiered budget scaling is now handled by the tier object's properties
+        # which were built in _build_tiers based on tension.
+        
+        # We need a PromptService instance. 
+        # Since StoryEngine doesn't have a direct one, we'll use a temporary one or initialize it.
+        from kaedra.services.prompt import PromptService
+        prompt_svc = PromptService(project=self.client.vertexai.project if self.client else None)
+        
+        # We need to convert history to string for PromptService or adapt PromptService
+        # For now, let's just use the last user message as the prompt and history as context
+        last_msg = history[-1].parts[0].text if history else ""
+        
         outs = []
         for _ in range(count):
             try:
-                gen_kwargs = {
-                    "model": tier.model,
-                    "config": config,
-                }
-                if self.context.cached_content_name:
-                    gen_kwargs["contents"] = [history[-1]] if history else []
-                    gen_kwargs["cached_content"] = self.context.cached_content_name
-                else:
-                    gen_kwargs["contents"] = history
-
-                response = await self.client.aio.models.generate_content(**gen_kwargs)
-
-                t = ""
-                if response.candidates:
-                    cand = response.candidates[0]
-                    t = getattr(cand, "text", None)
-                    if not t and cand.content and cand.content.parts:
-                        t = cand.content.parts[0].text
-                
-                if t: outs.append(t)
+                # Use PromptService.generate_async to benefit from 6s fallback/1s baseline
+                result = await prompt_svc.generate_async(
+                    prompt=last_msg,
+                    model_key="flash" if "flash" in tier.model else "pro",
+                    system_instruction=system_prompt,
+                    temperature=tier.temperature,
+                    max_tokens=tier.max_tokens,
+                    thinking_level=tier.name if tier.name in ["minimal", "low", "medium", "high"] else "high"
+                )
+                if result.text:
+                    outs.append(result.text)
             except Exception as e:
-                log.error(f"Async Gen Error ({tier.name}): {e}")
+                log.error(f"StoryEngine PromptService Error ({tier.name}): {e}")
         return outs
 
-        try:
-            response = self.client.models.generate_content(
-                model=tier.model,
-                contents=self.context.get_context(),
-                config=config,
-            )
-            # Pull text
-            outs = []
-            for cand in (response.candidates or []):
-                t = getattr(cand, "text", None)
-                if not t and cand.content and cand.content.parts:
-                    t = cand.content.parts[0].text
-                if t:
-                    outs.append(t)
-            return outs
-        except Exception as e:
-            self.console.print(f"[red]Gen Error ({tier.name}): {e}[/]")
-            return []
 
     def _judge_candidates(self, user_input: str, candidates: List[dict]) -> Dict[str, Any]:
         """Run the Director Pass to rank candidates."""
@@ -691,8 +586,7 @@ Score each candidate 0-100 using:
 Output:
 {
   "ranked":[{"id":"...", "score":0, "notes":"..."}],
-  "best_id":"...",
-  "canon_injection":"<use the best candidate text, optionally with tiny edits>"
+  "best_id":"..."
 }
 """
         judge_contents = [
@@ -712,9 +606,9 @@ Output:
             )
             return json.loads(j.text)
         except Exception as e:
-            self.console.print(f"[red]Judge Error: {e}[/]")
+            log.error(f"Judge Error: {e}")
             # Fallback
-            return {"best_id": candidates[0]["id"], "canon_injection": candidates[0]["text"]}
+            return {"best_id": candidates[0]["id"]}
 
     # === COMMAND LANE ===
     def _parse_kv(self, tokens: List[str]) -> Dict[str, str]:
@@ -1170,7 +1064,8 @@ Output:
             progress.advance(director_task)
 
         # Winner
-        winner_text = judged.get("canon_injection", all_candidates[0]["text"])
+        best_id = judged.get("best_id", all_candidates[0]["id"])
+        winner_text = next((c["text"] for c in all_candidates if c["id"] == best_id), all_candidates[0]["text"])
 
         # Restore context to base state before injecting winner (Critical for hygiene)
         ContextIsolation.restore_fork(self.context, base_fork)
@@ -1266,7 +1161,17 @@ Output:
             return EngineResponse(text=final_text)
 
         # Standard WRITER prompt for Scene/Tools
-        system_prompt = self.prompts.build(self.scene, self.pov, self.mode.value, directives=merged_directives, mode_arg="writer")
+        # Determine Focalization focus
+        is_div = "DIV" in [d.upper() for d in merged_directives] or self.mode == Mode.ZOOM
+        
+        # Standard WRITER prompt for Scene/Tools
+        system_prompt = self.prompts.build(
+            self.scene, 
+            self.pov, 
+            self.mode.value, 
+            directives=merged_directives, 
+            mode_arg="writer" if not is_div else "div"
+        )
 
         # POLICY: Interactive Tool Synthesis
         if needs_tools:
@@ -2243,327 +2148,7 @@ OUTPUT (Markdown):
             return True
 
         if cmd == "roadmap":
-            from .docs_export import DRIVE_LOCAL_PATH, DRIVE_MOUNTED, get_local_path
-            import shutil
-            from datetime import datetime, timedelta
-
-            parts = args.split(maxsplit=1) if args else []
-            subcmd = parts[0] if parts else "help"
-            title = parts[1] if len(parts) > 1 else None
-
-            if subcmd == "new":
-                if not title:
-                    self.console.print("[yellow]Usage: :roadmap new [project title][/]")
-                    return True
-
-                if not DRIVE_MOUNTED:
-                    self.console.print("[red]❌ Google Drive not mounted at I:[/]")
-                    return True
-
-                # Copy template to new project file
-                template_path = DRIVE_LOCAL_PATH / "Lore" / "Screenplay_Outline_Template.md"
-                safe_title = title.replace(" ", "_")
-                filename = f"{safe_title}_Outline.md"
-                project_path = DRIVE_LOCAL_PATH / "Lore" / filename
-
-                if template_path.exists():
-                    shutil.copy2(str(template_path), str(project_path))
-                    self.console.print(f"[green]✅ Created: {project_path.name}[/]")
-                    self.console.print(f"[dim]{project_path}[/]")
-
-                    # Sync to Notion
-                    self.console.print("[yellow]🔗 Wiring to Notion & Drive...[/]")
-                    try:
-                        from .docs_export import get_file_link
-                        from .tools.notion import sync_roadmap_item
-
-                        # Drive Link (File name must match exactly on Drive)
-                        drive_url = get_file_link(filename)
-                        if drive_url:
-                            res = sync_roadmap_item(title, drive_url)
-                            self.console.print(f"[green]✅ {res}[/]")
-                        else:
-                            self.console.print("[red]❌ Failed to resolve Drive link. Is the file synced?[/]")
-                    except Exception as e:
-                        self.console.print(f"[red]❌ Sync failed: {e}[/]")
-                else:
-                    self.console.print("[red]❌ Template not found. Run template creation first.[/]")
-                return True
-
-            elif subcmd == "sync":
-                # Rescan Lore folder and update Notion
-                if not DRIVE_MOUNTED:
-                    self.console.print("[red]❌ Google Drive not mounted at I:[/]")
-                    return True
-
-                lore_dir = DRIVE_LOCAL_PATH / "Lore"
-                if not lore_dir.exists():
-                    self.console.print("[red]❌ Lore directory not found.[/]")
-                    return True
-
-                self.console.print("[yellow]🔄 Auditing Lore folder vs Notion Index...[/]")
-                files = list(lore_dir.glob("*_Outline.md"))
-
-                for f in files:
-                    p_title = f.name.replace("_Outline.md", "").replace("_", " ")
-                    self.console.print(f"[dim]• Found: {f.name}[/]")
-
-                    from .docs_export import get_file_link
-                    from .tools.notion import sync_roadmap_item
-
-                    url = get_file_link(f.name)
-                    if url:
-                        res = sync_roadmap_item(p_title, url)
-                        self.console.print(f"  [green]✅ {res}[/]")
-                    else:
-                        self.console.print(f"  [red]❌ Could not resolve link for {f.name}[/]")
-
-                self.console.print("\n[bold green]🚀 Sync Audit Complete![/]")
-                return True
-
-            elif subcmd == "tasks":
-                # ... [Existing task generation logic] ...
-                # Generate Google Tasks for Lane A (momentum) timeline
-                lane = title or "A"
-                self.console.print(f"[dim]>> Generating tasks for Lane {lane}...[/]")
-
-                today = datetime.now()
-                tasks = []
-
-                if lane.upper() == "A":
-                    # Lane A: Momentum First (10-14 weeks)
-                    tasks = [
-                        ("Gate 1-5: Outline Complete", today + timedelta(weeks=2)),
-                        ("Draft Phase Start", today + timedelta(weeks=3)),
-                        ("Draft Complete (no rewrites)", today + timedelta(weeks=6)),
-                        ("Rewrite: Structure & Clarity", today + timedelta(weeks=9)),
-                        ("Polish: Dialogue & Tighten", today + timedelta(weeks=12)),
-                        ("Feedback Rewrite", today + timedelta(weeks=14)),
-                    ]
-                elif lane.upper() == "SPRINT":
-                    # DiBlasi Sprint: 30 Days (Direct Drafting)
-                    tasks = [
-                        ("Days 1-5: Pages 1-30", today + timedelta(days=5)),
-                        ("Days 6-10: Pages 31-60", today + timedelta(days=10)),
-                        ("Days 11-15: Pages 61-90", today + timedelta(days=15)),
-                        ("Days 16-20: Pages 91-120", today + timedelta(days=20)),
-                        ("Days 21-30: Structural Polish & Fixes", today + timedelta(days=30)),
-                    ]
-                else:
-                    # Lane B: Depth First (6+ months)
-                    tasks = [
-                        ("Research Phase Complete", today + timedelta(weeks=12)),
-                        ("Outline & Scene Map", today + timedelta(weeks=24)),
-                        ("Draft Complete", today + timedelta(weeks=36)),
-                        ("Rewrite Cycle 1", today + timedelta(weeks=44)),
-                    ]
-
-                # Display tasks (Google Tasks API integration would go here)
-                self.console.print(f"\n[bold cyan]📅 LANE {lane.upper()} MILESTONES[/]")
-                for task_title, due in tasks:
-                    self.console.print(f"  • {task_title}: [dim]{due.strftime('%Y-%m-%d')}[/]")
-
-                self.console.print("\n[dim]Add to Google Tasks with :calendar add[/]")
-                # Store for :calendar add
-                self._last_tasks = tasks
-
-                # Sync milestones to Notion
-                try:
-                    from .docs_export import get_file_link
-                    from .tools.notion import sync_roadmap_item
-
-                    # Assume title is the project name or use current context
-                    # If no project title provided in :roadmap tasks [lane],
-                    # we might need to prompt or look at the last created project.
-                    # For now, we'll use a placeholder or try to infer from the world name.
-                    project_title = self.world_config.get("name", "Active Project")
-                    filename = f"{project_title.replace(' ', '_')}_Outline.md"
-
-                    self.console.print(f"[yellow]🔗 Syncing milestones to Notion...[/]")
-                    url = get_file_link(filename)
-                    if url:
-                        ms_text = "\n".join([f"• {t}: {d.strftime('%Y-%m-%d')}" for t, d in tasks])
-                        res = sync_roadmap_item(project_title, url, milestones=ms_text)
-                        self.console.print(f"[green]✅ {res}[/]")
-                except Exception as e:
-                    self.console.print(f"[dim]Notion milestone sync skipped: {e}[/]")
-
-                return True
-
-            elif subcmd == "add":
-                if not hasattr(self, "_last_tasks") or not self._last_tasks:
-                    self.console.print("[red]❌ No tasks generated. Run :roadmap tasks first.[/]")
-                    return True
-
-                self.console.print("[yellow]📅 Pushing milestones to Google Tasks...[/]")
-                try:
-                    from tools.google_auth import authenticate
-                    from googleapiclient.discovery import build
-
-                    creds = authenticate()
-                    if not creds:
-                        self.console.print("[red]❌ Authentication failed.[/]")
-                        return True
-
-                    service = build('tasks', 'v1', credentials=creds)
-
-                    # Create or find a Task List for this project
-                    tasklists = service.tasklists().list().execute()
-                    list_name = f"Roadmap: {datetime.now().strftime('%Y-%m-%d')}"
-                    target_list_id = None
-
-                    for tl in tasklists.get('items', []):
-                        if tl['title'] == list_name:
-                            target_list_id = tl['id']
-                            break
-
-                    if not target_list_id:
-                        new_tl = service.tasklists().insert(body={'title': list_name}).execute()
-                        target_list_id = new_tl['id']
-                        self.console.print(f"[green]✅ Created Task List: {list_name}[/]")
-
-                    # Add milestones
-                    for title, due in self._last_tasks:
-                        task_body = {
-                            'title': title,
-                            'due': due.isoformat() + "Z", # RFC3339
-                            'notes': "Generated via Kaedra Story Engine Roadmap"
-                        }
-                        service.tasks().insert(tasklist=target_list_id, body=task_body).execute()
-                        self.console.print(f"  [dim]• Added: {title} ({due.strftime('%Y-%m-%d')})[/]")
-
-                    self.console.print(f"\n[bold green]🚀 Successfully pushed {len(self._last_tasks)} milestones to Google Tasks![/]")
-
-                except Exception as e:
-                    self.console.print(f"[red]❌ Error syncing to Google Tasks: {e}[/]")
-
-                return True
-
-
-            elif subcmd == "diag":
-                self.console.print("\n[bold yellow]🕵️ ROADBLOCK DIAGNOSIS[/]")
-                self.console.print("[dim]Reflecting on Kidd, Walter, and Kaplan...[/]")
-
-                # Check for characters
-                self.console.print("\n[white]1. THE CARE TEST (Evan Kidd):[/]")
-                self.console.print("   > [italic]Do you actually care about these characters right now?[/] If you don't care, they won't.")
-
-                self.console.print("\n[white]2. THE PROTAGONIST PIVOT (Richard Walter):[/]")
-                self.console.print("   > [italic]Is the 'hero' actually a secondary character?[/] Maybe the 'black kid' is more interesting than the social worker.")
-
-                self.console.print("\n[white]3. THE COMEDY TRUTH (Steve Kaplan):[/]")
-                self.console.print("   > [italic]Is this a beautiful lie or a ridiculous truth?[/] If it's flat, make them act inexpertly.")
-
-                self.console.print("\n[white]4. THE JUMP (Anthony DiBlasi):[/]")
-                self.console.print("   > [italic]Stuck on Page 40?[/] Jump to Page 80. Write what you KNOW happens later.")
-
-                self.console.print("\n[white]5. THE FOIL CHECK (StudioBinder):[/]")
-                self.console.print("   > [italic]Is your hero flat?[/] Add a Foil (Wise, Ethical, or Emotional) to accentuate their traits through contrast.")
-
-                self.console.print("\n[white]6. THE MOTIVATION ENGINE (Maslow):[/]")
-                self.console.print("   > [italic]Are they just 'doing stuff'?[/] Check the Hierarchy: Is it Survival? Safety? Love? Esteem? Self-Actualization?")
-
-                self.console.print("\n[white]7. IDENTITY VS. ESSENCE (Michael Hauge):[/]")
-                self.console.print("   > [italic]Is the arc flat?[/] Is the hero stuck in their 'Identity' (the mask) and afraid to risk their 'Essence' (the truth)?")
-
-                self.console.print("\n[white]8. THE FINISHING GLITCH (The Finishing Protocol):[/]")
-                self.console.print("   > [italic]Is your brain holding you back?[/]")
-                self.console.print("   > [dim]- Identify the Glitch (Negative thoughts).[/]")
-                self.console.print("   > [dim]- Flip the Script ('Screenwriting is easy').[/]")
-                self.console.print("   > [dim]- Detach from the Outcome (10 reasons screenwriting might suck).[/]")
-
-                self.console.print("\n[white]9. THE CONVENIENCE CHECK (7 Years Protocol):[/]")
-                self.console.print("   > [italic]Did something lucky happen to your hero?[/] If yes, kill it. Luck is only for bad things.")
-
-                self.console.print("\n[white]10. THE 3-PILLAR PULSE (7 Years Protocol):[/]")
-                self.console.print("   > [italic]What do they want? Why can't they have it? What do they actually need?[/]")
-
-                self.console.print("\n[white]11. THE 10-PAGE HOOK (StudioBinder):[/]")
-                self.console.print("   > [italic]Are the first 10 pages dragging?[/] Audit for: Tone, Character Intro, Setting, Theme, and Stakes.")
-
-                self.console.print("\n[white]12. THE ARRIVAL RULE (Film Riot):[/]")
-                self.console.print("   > [italic]Is the scene boring?[/] Arrive Late, Leave Early. Cut the 'entering the room' filler.")
-
-                self.console.print("\n[white]13. THE INFO DUMP DETECTOR (Film Riot):[/]")
-                self.console.print("   > [italic]Are characters explaining the plot?[/] Stop the info dump. Reveal information in trickles.")
-
-                self.console.print("\n[white]14. THE PILLAR CHECK (10 Must-Dos):[/]")
-                self.console.print("   > [italic]Check your first 10 pages for:[/]")
-                self.console.print("   > [dim]- Grounding familiarity before the deep end.[/]")
-                self.console.print("   > [dim]- White Space (Breezy read).[/]")
-                self.console.print("   > [dim]- Page-turn cliffhangers (Pg 1/2).[/]")
-                self.console.print("   > [dim]- Teaching the Reader (Consistent unique formatting).[/]")
-
-                self.console.print("\n[white]15. THE SCAFFOLD TEST (Paul Guyot):[/]")
-                self.console.print("   > [italic]Are your characters serving the 'Beats' or the 'Truth'?[/] If the formula makes them act weird, KILL the formula.")
-
-                self.console.print("\n[white]16. EMOTIONAL FORMATTING (Paul Guyot):[/]")
-                self.console.print("   > [italic]Are you writing for the rules or the reader?[/] Use bold, italics, or size to elicit a SNAP response.")
-
-                self.console.print("\n[white]17. THE ES SOUP AUDIT (8-Sequence Model):[/]")
-                self.console.print("   > [italic]Is your Act 2 a saggy mess?[/] Ensure you have distinct shifts at Sequences 4 (Midpoint) and 6 (All Is Lost).")
-                self.console.print("   > [dim]Aim for ~5 beats per sequence. Use 'Villain Check-ins' if Sequence 5 feels thin.[/]")
-
-                self.console.print("\n[white]18. PINCH POINT PRESSURE (KM Weiland):[/]")
-                self.console.print("   > [italic]Is the belief transition believable?[/]")
-                self.console.print("   > [dim]- 1st Pinch: Suffering for the Lie (1/4 Act 2).[/]")
-                self.console.print("   > [dim]- 2nd Pinch: Experiencing the Truth (3/4 Act 2).[/]")
-
-                self.console.print("\n[white]19. THE EAA TRIAD (N. Graham Davis):[/]")
-                self.console.print("   > [italic]Is the hero movie-worthy?[/] Audit for Empathetic (Wound), Active (Choices), and Authentic (Consistency).")
-                self.console.print("   > [dim]- Does their emotional flaw make the plot goal feel impossible?[/]")
-
-                self.console.print("\n[white]20. THE PURSUIT ENGINE (Joe Webb):[/]")
-                self.console.print("   > [italic]Is Act 2 leading to a 'Renewal'?[/] Audit for 'No Progress' in the first half and 'Realization' in the second.")
-                self.console.print("   > [dim]- Did the hero face the specific challenge they feared in Act 1?[/]")
-
-                self.console.print("\n[white]21. THE BRIDGE TEST (Scott Myers):[/]")
-                self.console.print("   > [italic]Stuck at page 60?[/] Treat Act 2 like the Chesapeake Bridge. Land is gone; trust your map.")
-                self.console.print("   > [dim]- Subplot Check: Is every primary relationship serving a subplot arc?[/]")
-                self.console.print("   > [dim]- Theme Check: Are you in Deconstruction or Reconstruction?[/]")
-
-                self.console.print("\n[white]22. THE FINISHING PIVOT (Naomi Beaty):[/]")
-                self.console.print("   > [italic]Does this concept actually 'sing' in the outline?[/] If your 5-page outline isn't entertaining, the script won't be either.")
-                self.console.print("   > [dim]- Feedback Check: Are you looking for praise or structural help? Choose readers with the 'medium' experience.[/]")
-
-                self.console.print("\n[white]23. THE PRODUCER'S REALITY CHECK (Jay Silverman):[/]")
-                self.console.print("   > [italic]Are the goals intersecting?[/] If the Protagonist wants a banana and the Antagonist wants an orange, there is NO MOVIE.")
-                self.console.print("   > [dim]- Is your hero intro'd by Page 10? Are your locations and cast count realistic for the budget?[/]")
-
-                self.console.print("\n[white]24. THE FASTEST PLANNING STEP (Jake/Professional Script):[/]")
-                self.console.print("   > [italic]Story first, Character second?[/] Build the sequences (7-15 scenes) that serve the story, then reverse engineer the character arc.")
-                self.console.print("   > [dim]- Arc Spectrum: How far is the hero from their ending point? (e.g., Grumpy vs. Joyful).[/]")
-
-                self.console.print("\n[white]25. THE INDIE PRO PATH (Joe Webb):[/]")
-                self.console.print("   > [italic]Are you writing for what you have?[/] Audit for resourcefulness (Cast/Locations) and Spec Power (Writing for the future, not just the commission).")
-                self.console.print("   > [dim]- Indentation Trick: Are you grinding through the obstacles with creative persistence?[/]")
-
-                self.console.print("\n[bold cyan]Action:[/] Describe your specific block to Kaedra for an AI-powered audit.")
-                return True
-
-            elif subcmd == "names":
-                loc = title or "USA/Modern"
-                self.console.print(f"\n[bold green]🎭 CHARACTER NAMES ({loc})[/]")
-                self.console.print("[dim]Generating statistically authentic suggestions...[/]")
-
-                self.console.print("\n[white]Authenticity Check (DiBlasi/Botto Protocol):[/]")
-                self.console.print(f"• Location: {loc}")
-                self.console.print("• Rule: Avoid 'too creative' names. Use common names for a sense of reality.")
-                self.console.print("• Research: Look up 10 most popular names for that zip code/year.")
-
-                self.console.print("\n[bold cyan]Pro-tip:[/] Use `:research characters popular names 1980s London` to get real data.")
-                return True
-
-            else:
-                self.console.print("""
-[bold]Roadmap Commands:[/]
-  :roadmap new [title]   Create new project from template
-  :roadmap tasks [type]  Generate milestones (A|B|SPRINT)
-  :roadmap add           Add generated milestones to Google Tasks
-  :roadmap diag          Diagnose story/character roadblocks
-  :roadmap names [loc]   Generate authentic character names
-""")
-                return True
+            return await self.roadmap.handle_command(args)
 
         if cmd == "email":
             emails = self.google.list_emails(max_results=5)
@@ -2654,7 +2239,7 @@ OUTPUT (Markdown):
 
         self.console.print(Rule(style="bold #D700FF"))
         self.console.print(Panel.fit(
-            "[bold #D700FF]🎬 KAEDRA STORYENGINE v7.15[/]\n[story.lore]Martian Frontier | Elite Stream | Absolute Persistence[/]",
+            "[bold #D700FF]🎬 KAEDRA STORYENGINE v8.5[/]\n[story.lore]Martian Frontier | Elite Stream | Absolute Persistence[/]",
             border_style="#D700FF",
             padding=(1, 4)
         ))

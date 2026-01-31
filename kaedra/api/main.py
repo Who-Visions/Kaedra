@@ -8,17 +8,113 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import sys
-try:
-    import nest_asyncio
-    nest_asyncio.apply()  # Allow nested event loops for sync-in-async compatibility
-except ImportError:
-    print("⚠️ [Kaedra API] nest_asyncio not found. Continuing without nested loop support.")
+import shutil
+from fastapi import UploadFile, File
+from fastapi.staticfiles import StaticFiles
+# try:
+#     import nest_asyncio
+#     nest_asyncio.apply()  # Allow nested event loops for sync-in-async compatibility
+#     import nest_asyncio
+#     nest_asyncio.apply()  # Allow nested event loops for sync-in-async compatibility
+# except ImportError:
+#     pass
+
+import firebase_admin
+from firebase_admin import credentials
+
+# Global Config Import (Moved up for init)
+from kaedra.core.config import PROJECT_ID, LOCATION, MODEL_LOCATION, AGENT_RESOURCE_NAME
+
+# -------------------------------------------------------------------------
+# LAZY FIREBASE INITIALIZATION (Reduces cold start from 60s to ~5s)
+# -------------------------------------------------------------------------
+_firebase_initialized = False
+_cred = None
+db = None
+db_memory = None
+
+def _ensure_firebase():
+    """Lazy init Firebase on first use, not at import time."""
+    global _firebase_initialized, _cred, db, db_memory
+    
+    if _firebase_initialized:
+        return
+    
+    try:
+        _cred = credentials.Certificate("kaedra/secrets/service_account.json")
+        firebase_admin.initialize_app(_cred)
+        
+        from google.cloud import firestore as gc_firestore
+        
+        # 1. Chat DB
+        db = gc_firestore.Client(
+            project=PROJECT_ID,
+            credentials=_cred.get_credential(),
+            database="kaedra-chat"
+        )
+        
+        # 2. Memory DB
+        try:
+            db_memory = gc_firestore.Client(
+                project=PROJECT_ID,
+                credentials=_cred.get_credential(),
+                database="kaedra-memory"
+            )
+            print(f"[+] Firebase lazy-init: Chat & Memory databases connected.")
+        except Exception as e_mem:
+            print(f"[!] Failed to connect to kaedra-memory: {e_mem}")
+            db_memory = None
+            
+    except Exception as e:
+        print(f"[!] Firebase init failed: {e}")
+        db = None
+        db_memory = None
+    
+    _firebase_initialized = True
+
+def get_db():
+    """Get Firestore Chat DB (lazy init)."""
+    _ensure_firebase()
+    return db
+
+def get_db_memory():
+    """Get Firestore Memory DB (lazy init)."""
+    _ensure_firebase()
+    return db_memory
+
+
+# -------------------------------------------------------------------------
+# ACTIVITY LOGGING SERVICE (Simple In-Memory)
+# -------------------------------------------------------------------------
+class ActivityLogService:
+    def __init__(self):
+        self._activities = []
+    
+    def log(self, action: str, detail: str, icon: str = "info"):
+        """Add an activity to the log."""
+        entry = {
+            "action": action,
+            "detail": detail,
+            "icon": icon,
+            "timestamp": time.time(),
+            "timeAgo": "just now" # Computed by client usually, but good fallback
+        }
+        self._activities.insert(0, entry)
+        # Keep last 50
+        self._activities = self._activities[:50]
+        
+    def get_activities(self):
+        return self._activities
+
+# Initialize global activity log
+activity_log = ActivityLogService()
 
 # -------------------------------------------------------------------------
 # GLOBAL STATE & CONFIG
 # -------------------------------------------------------------------------
+memory_service = None  # Global placeholder
 from kaedra.api.app_state import state, AppState
-from kaedra.core.config import PROJECT_ID, LOCATION, MODEL_LOCATION, AGENT_RESOURCE_NAME
+# PROJECT_ID etc already imported above
 from kaedra.core.tools import FreeToolsRegistry
 try:
     from kaedra.core.google_tools import GOOGLE_TOOLS
@@ -39,9 +135,10 @@ app = FastAPI(
 )
 
 # Include Routers
-from . import lore, webhooks
+from . import lore, webhooks, story
 app.include_router(lore.router)
 app.include_router(webhooks.router)
+app.include_router(story.router)
 
 @app.get("/")
 async def root():
@@ -61,6 +158,27 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers
 )
+
+# Uploads Configuration
+UPLOAD_DIR = Path("kaedra/api/uploads")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    """Upload a file and return its URL."""
+    try:
+        # Sanitize filename (basic)
+        safe_filename = file.filename.replace(" ", "_").replace("/", "").replace("\\", "")
+        file_path = UPLOAD_DIR / safe_filename
+        
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # Return full URL if possible, or relative
+        return {"url": f"{CLOUD_RUN_URL}/uploads/{safe_filename}", "filename": safe_filename}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 # Initialize Services Container (Lazy)
 slack_service = None # Will be initialized in startup
@@ -170,34 +288,83 @@ async def background_init():
     from kaedra.agents.kaedra import KaedraAgent
     from kaedra.services.research import ResearchService
     from kaedra.services.web import WebService
+    from kaedra.services.bigquery_memory import BigQueryMemoryService
+    from kaedra.services.context import ConfuciusContextProvider
+    from kaedra.services.stores import FirestoreMessageStore
 
     try:
-        # Core prompt/memory
+        # 1. Core Services
+        print("[*] Init: Core Services...")
         prompt_service = PromptService(project=PROJECT_ID, location=LOCATION)
-        memory_service = MemoryService()
+        
+        # 2. Memory Services (New Columnar + Thread Stores)
+        print("[*] Init: Memory Services...")
+        state.bq_memory = BigQueryMemoryService(prompt_service)
+        state.message_store = FirestoreMessageStore(db=db_memory if 'db_memory' in globals() and db_memory else db)
+        
+        # 3. Context & Reflection Loop (Hierarchical)
+        print("[*] Init: Context & Reflection...")
+        from kaedra.services.engram_service import EngramService
+        state.engram_service = EngramService()
+        state.context_provider = ConfuciusContextProvider(state.bq_memory, engram_service=state.engram_service)
         
         # Parallel initialization where possible
+        print("[*] Init: Web & Research...")
         state.web_service = WebService()
         state.research_service = ResearchService(prompt_service)
         
-        state.agent = KaedraAgent(prompt_service, memory_service)
+        # 4. Agent (Shadow Tactician with Confucius Scaffolding)
+        print("[*] Init: Agent...")
+        state.agent = KaedraAgent(prompt_service=prompt_service)
+        state.agent.context_provider = state.context_provider
         
-        # Slack starts last
+        # 5. Connect Slack
+        print("[*] Init: Slack...")
         slack_service = SlackService()
         slack_service.initialize(agent=state.agent)
         state.slack_service = slack_service
+        # await slack_service.start() # Commenting out potential blocker for now or keep it?
+        # Keeping it but formatted
         await slack_service.start()
         
-        print("[+] Background initialization complete.")
+        # 6. Initialize StoryEngine (Modular + Reactive)
+        print("[*] Init: StoryEngine...")
+        from kaedra.story.engine import StoryEngine
+        state.story_engine = StoryEngine()
+        
+        # 7. Initialize MCP Client (Notion MCP Tools)
+        print("[*] Init: MCP Client...")
+        from kaedra.services.mcp_client import NotionMCPClient
+        state.mcp_client = NotionMCPClient()
+        await state.mcp_client.initialize()
+        
+        print("[+] Production Background initialization complete (BQ + Confucius + Story + MCP).")
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"[!] Background Init Error: {e}")
 
 # -------------------------------------------------------------------------
-# DATA MODELS
+# DEBUG ENDPOINT
 # -------------------------------------------------------------------------
+@app.get("/debug/init")
+async def manual_init():
+    """Manually trigger initialization to see errors."""
+    try:
+        if state.story_engine:
+            return {"status": "Already initialized"}
+            
+        print("[DEBUG] Manual init triggered")
+        await background_init()
+        return {"status": "success", "message": "Manual init complete"}
+    except Exception as e:
+        import traceback
+        return {"status": "error", "error": str(e), "traceback": traceback.format_exc()}
+
 
 class ChatRequest(BaseModel):
     message: str
+    thread_id: Optional[str] = None
     context: Optional[str] = None
 
 class ChatResponse(BaseModel):
@@ -206,6 +373,7 @@ class ChatResponse(BaseModel):
     model: str
     latency_ms: float
     timestamp: float
+    thread_id: Optional[str] = None
 
 # OpenAI-Compatible Models
 class OpenAIMessage(BaseModel):
@@ -235,8 +403,9 @@ class OpenAIChatCompletionResponse(BaseModel):
 class GenerateRequest(BaseModel):
     prompt: str
     model: Optional[str] = "gemini-3-flash-preview"
-    temperature: float = 0.7
+    temperature: float = 1.0
     use_grounding: bool = True
+    thinking_level: Optional[str] = None # minimal, low, medium, high
 
 class GenerateResponse(BaseModel):
     response: str
@@ -259,7 +428,7 @@ class ResearchRequest(BaseModel):
 
 class EmbeddingRequest(BaseModel):
     text: str
-    model: str = "text-embedding-004"
+    model: str = "gemini-embedding-001"
 
 # Visual Request Models
 class ImageRequest(BaseModel):
@@ -320,6 +489,29 @@ class CowriteResponse(BaseModel):
     status: str
 
 
+@app.get("/activity")
+async def get_activity_log():
+    """Get recent system activities."""
+    return {"items": activity_log.get_activities()}
+
+@app.post("/v1/generate")
+async def v1_generate(request: GenerateRequest):
+    """V1 Text Generation with Thinking Level support."""
+    if not state.agent:
+        raise HTTPException(status_code=503, detail="Agent warming up.")
+    
+    result = await state.agent.prompt_service.generate_async(
+        prompt=request.prompt,
+        model_key=request.model,
+        thinking_level=request.thinking_level
+    )
+    
+    return GenerateResponse(
+        response=result.text,
+        model_used=result.model,
+        grounded=result.grounded
+    )
+
 # -------------------------------------------------------------------------
 # ENDPOINTS
 # -------------------------------------------------------------------------
@@ -362,28 +554,43 @@ async def v1_api_info():
 @app.post("/v1/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     """
-    Chat with Kaedra (Legacy Endpoint).
+    Chat with Kaedra (Production Endpoint with Hierarchical Memory).
     """
-    # Wait for background_init if needed
     if not state.agent:
-        for _ in range(10):
-            if state.agent: break
-            await asyncio.sleep(1)
-        if not state.agent:
-            raise HTTPException(status_code=503, detail="Agent still warming up in background.")
+        raise HTTPException(status_code=503, detail="Agent warming up.")
 
     try:
-        # Use run_sync logic but inside an async wrapper if needed,
-        # but KaedraAgent.run is async, so we await it.
-        # Note: KaedraAgent.run returns AgentResponse object
-        result = await state.agent.run(request.message, request.context)
+        # Load or Create Thread
+        thread_id = request.thread_id
+        thread = None
+        if thread_id and state.message_store:
+            thread = await state.message_store.load_thread(thread_id)
+        
+        if not thread:
+            from kaedra.core.agent_types import AgentThread
+            thread = AgentThread(thread_id=thread_id)
+
+        # Run Agent
+        result = await state.agent.run(request.message, thread=thread, context=request.context)
+
+        # Save Thread State
+        if state.message_store:
+            await state.message_store.save_thread(thread)
+
+        # Log Activity
+        activity_log.log(
+            action="User Chat",
+            detail=f"Kaedra (Hierarchical) replied: {result.content[:30]}...",
+            icon="psychology"
+        )
 
         return ChatResponse(
             response=result.content,
             agent_name=result.agent_name,
             model=result.model,
             latency_ms=result.latency_ms,
-            timestamp=time.time()
+            timestamp=time.time(),
+            thread_id=thread.thread_id # Added to response
         )
     except Exception as e:
         print(f"[!] Chat error: {e}")
@@ -405,32 +612,24 @@ def _extract_text(content: Union[str, List[Any]]) -> str:
 @app.post("/v1/chat/completions", response_model=OpenAIChatCompletionResponse)
 async def openai_chat_endpoint(request: OpenAIChatCompletionRequest):
     """
-    OpenAI-compatible chat endpoint for Fleet usage.
+    OpenAI-compatible chat endpoint.
+    Leverages thread persistence even via completions API.
     """
-    # Wait for background_init if needed
     if not state.agent:
-        for _ in range(10):
-            if state.agent: break
-            await asyncio.sleep(1)
-        if not state.agent:
-            raise HTTPException(status_code=503, detail="Agent still warming up in background.")
+        raise HTTPException(status_code=503, detail="Agent warming up.")
 
     try:
-        # Extract last message as the prompt
+        # For completions, we treat it as a transient thread unless 
+        # thread_id meta is passed (custom extension)
+        from kaedra.core.agent_types import AgentThread
+        thread = AgentThread() # Transient by default for completions
+        
+        # Extract last message
         last_content = request.messages[-1].content
         last_message = _extract_text(last_content)
 
-        # Build context from previous messages if any
-        context_str = ""
-        if len(request.messages) > 1:
-            context_entries = []
-            for m in request.messages[:-1]:
-                m_text = _extract_text(m.content)
-                context_entries.append(f"{m.role}: {m_text}")
-            context_str = "\n".join(context_entries)
-
         # Run agent
-        result = await state.agent.run(last_message, context_str)
+        result = await state.agent.run(last_message, thread=thread)
 
         return OpenAIChatCompletionResponse(
             id=f"chatcmpl-{int(time.time())}",
@@ -473,6 +672,13 @@ async def fleet_generate(request: GenerateRequest):
         prompt=request.prompt,
         model_key=request.model or "flash" # Default to Flash for speed
     )
+    
+    activity_log.log(
+        action="System Generate",
+        detail=f"Generated text for: {request.prompt[:30]}...",
+        icon="edit"
+    )
+    
     return GenerateResponse(
         response=result.text,
         model_used=result.model,
@@ -508,6 +714,15 @@ async def generate_image(request: ImageRequest):
         buffered = io.BytesIO()
         image_obj.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+        image_obj.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+        activity_log.log(
+            action="System Visual",
+            detail=f"Generated image: {request.prompt[:30]}...",
+            icon="image"
+        )
 
         return {
             "status": "success",
@@ -631,6 +846,12 @@ async def list_models_v1():
             {"id": "gemini-2.0-flash-001", "id_alias": "gemini-2.0-flash", "object": "model", "owned_by": "google", "endpoints": ["global"]},
             {"id": "gemini-2.0-flash-lite-001", "id_alias": "gemini-2.0-flash-lite", "object": "model", "owned_by": "google", "endpoints": ["global"]},
             
+            # Gemma 3 (Global)
+            {"id": "gemma-3-27b", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+            {"id": "gemma-3-12b", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+            {"id": "gemma-3-4b", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+            {"id": "gemma-3-1b", "object": "model", "owned_by": "google", "endpoints": ["global"]},
+
             # Specialized Multi-Modal
             {"id": "imagen-4.0-generate-001", "object": "model", "owned_by": "google"},
             {"id": "veo-3.1-generate-001", "object": "model", "owned_by": "google"},
@@ -638,13 +859,17 @@ async def list_models_v1():
             # Partner Models (MaaS - Global)
             {"id": "claude-4.5-opus", "object": "model", "owned_by": "anthropic", "endpoints": ["global"]},
             {"id": "claude-4.5-sonnet", "object": "model", "owned_by": "anthropic", "endpoints": ["global"]},
+            {"id": "claude-4.5-haiku", "object": "model", "owned_by": "anthropic", "endpoints": ["global"]},
             {"id": "claude-4-opus", "object": "model", "owned_by": "anthropic", "endpoints": ["global"]},
             {"id": "mistral-large-2407", "object": "model", "owned_by": "mistral", "endpoints": ["global"]},
             
             # Open Models (MaaS - Global)
             {"id": "deepseek-r1-0528", "object": "model", "owned_by": "deepseek", "endpoints": ["global"]},
+            {"id": "deepseek-v3.1", "object": "model", "owned_by": "deepseek", "endpoints": ["global"]},
             {"id": "llama-4-maverick-17b-128e-preview", "object": "model", "owned_by": "meta", "endpoints": ["global"]},
-            {"id": "qwen3-next-80b-thinking", "object": "model", "owned_by": "alibaba", "endpoints": ["global"]}
+            {"id": "llama-4-scout-17b-16e-preview", "object": "model", "owned_by": "meta", "endpoints": ["global"]},
+            {"id": "qwen3-next-80b-thinking", "object": "model", "owned_by": "alibaba", "endpoints": ["global"]},
+            {"id": "qwen3-235b", "object": "model", "owned_by": "alibaba", "endpoints": ["global"]}
         ]
     }
 
@@ -1150,83 +1375,200 @@ class StoryGenerateRequest(BaseModel):
 
 @app.get("/story/sessions")
 async def list_story_sessions():
-    """List all available story sessions."""
-    from pathlib import Path
+    """List all available story sessions from Firestore."""
+    if not db:
+        return {"sessions": [], "error": "Database not initialized"}
     
-    sessions_dir = Path(__file__).parent.parent.parent / "lore" / "sessions"
-    if not sessions_dir.exists():
-        return {"sessions": []}
-    
-    sessions = []
-    for session_dir in sessions_dir.iterdir():
-        if session_dir.is_dir():
-            meta_file = session_dir / "session.json"
-            if meta_file.exists():
-                import json
-                try:
-                    meta = json.loads(meta_file.read_text(encoding="utf-8"))
-                    sessions.append({
-                        "id": session_dir.name,
-                        "world_id": meta.get("world_id", "unknown"),
-                        "mode": meta.get("mode", "writer"),
-                        "created": meta.get("created", ""),
-                        "word_count": meta.get("word_count", 0)
-                    })
-                except Exception:
-                    sessions.append({"id": session_dir.name, "world_id": "unknown"})
-    
-    return {"sessions": sessions}
+    try:
+        docs = db.collection("sessions").stream()
+        sessions = []
+        for doc in docs:
+            data = doc.to_dict()
+            data["id"] = doc.id
+            sessions.append(data)
+        return {"sessions": sessions}
+    except Exception as e:
+        return {"sessions": [], "error": str(e)}
 
 @app.post("/story/session")
 async def create_story_session(request: StorySessionRequest):
-    """Create a new story session."""
-    from pathlib import Path
-    import json
+    """Create a new story session in Firestore."""
+    if not db:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+
     import uuid
     from datetime import datetime
     
     session_id = f"session_{uuid.uuid4().hex[:8]}"
-    sessions_dir = Path(__file__).parent.parent.parent / "lore" / "sessions"
-    session_dir = sessions_dir / session_id
-    session_dir.mkdir(parents=True, exist_ok=True)
     
     meta = {
         "id": session_id,
+        "title": "New Session",
         "world_id": request.world_id,
         "mode": request.mode,
         "created": datetime.now().isoformat(),
-        "word_count": 0
+        "word_count": 0,
+        "content": "" 
     }
     
-    (session_dir / "session.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
-    (session_dir / "draft.md").write_text("", encoding="utf-8")
-    
-    return {"session_id": session_id, "status": "created", "meta": meta}
+    try:
+        db.collection("sessions").document(session_id).set(meta)
+        return {"session_id": session_id, "status": "created", "meta": meta}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/story/session/{session_id}")
 async def get_story_session(session_id: str):
-    """Get story session details and content."""
-    from pathlib import Path
-    import json
+    """Get story session details and chat history from Firestore."""
+    if not db:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+        
+    try:
+        doc_ref = db.collection("sessions").document(session_id)
+        doc = doc_ref.get()
+        
+        if not doc.exists:
+             raise HTTPException(status_code=404, detail="Session not found")
+             
+        meta = doc.to_dict()
+        content = meta.get("content", "")
+        
+        # Get Messages Subcollection
+        messages_docs = doc_ref.collection("messages").order_by("timestamp").stream()
+        messages = [m.to_dict() for m in messages_docs]
+        
+        return {"meta": meta, "content": content, "messages": messages}
+    except Exception as e:
+        print(f"Error fetching session: {e}")
+        # Fallback to empty if error (or raise)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.patch("/story/session/{session_id}")
+async def update_story_session(session_id: str, request: Request):
+    """Update session metadata (e.g. title)."""
+    if not db:
+        raise HTTPException(status_code=503, detail="Database not initialized")
     
-    session_dir = Path(__file__).parent.parent.parent / "lore" / "sessions" / session_id
-    
-    if not session_dir.exists():
-        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
-    
-    meta_file = session_dir / "session.json"
-    draft_file = session_dir / "draft.md"
-    
-    meta = {}
-    content = ""
-    
-    if meta_file.exists():
-        meta = json.loads(meta_file.read_text(encoding="utf-8"))
-    
-    if draft_file.exists():
-        content = draft_file.read_text(encoding="utf-8")
-    
-    return {"meta": meta, "content": content}
+    try:
+        data = await request.json()
+        doc_ref = db.collection("sessions").document(session_id)
+        doc_ref.update(data)
+        return {"status": "updated", "data": data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/story/session/{session_id}")
+async def delete_story_session(session_id: str):
+    """Delete a story session and its messages."""
+    if not db:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+        
+    try:
+        doc_ref = db.collection("sessions").document(session_id)
+        # Delete messages subcollection (not atomic, but sufficient for now)
+        msgs = doc_ref.collection("messages").list_documents()
+        for m in msgs:
+            m.delete()
+            
+        doc_ref.delete()
+        return {"status": "deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/story/session/{session_id}/export")
+async def export_story_session(session_id: str):
+    """Export session chat history as Markdown."""
+    if not db:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+        
+    try:
+        doc_ref = db.collection("sessions").document(session_id)
+        meta = doc_ref.get().to_dict()
+        msgs = doc_ref.collection("messages").order_by("timestamp").stream()
+        
+        md_content = f"# {meta.get('title', 'Session Export')}\n\n"
+        for m in msgs:
+            d = m.to_dict()
+            role = d.get('role', 'unknown').capitalize()
+            content = d.get('content', '')
+            md_content += f"**{role}**: {content}\n\n"
+            
+        return {"markdown": md_content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/system/memories")
+async def get_system_memories(limit: int = 10):
+    """Debug endpoint to list recent memories."""
+    if not memory_service:
+         raise HTTPException(status_code=503, detail="Memory service not initialized")
+    return {"memories": memory_service.list_recent(limit=limit)}
+
+class ChatMessagePayload(BaseModel):
+    role: str
+    content: str
+    timestamp: float = 0.0
+
+@app.post("/story/session/{session_id}/message")
+async def append_session_message(session_id: str, message: ChatMessagePayload):
+    """Append a message to the session chat history in Firestore."""
+    if not db:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+        
+    try:
+        import time
+        msg_data = message.dict()
+        if msg_data["timestamp"] == 0.0:
+            msg_data["timestamp"] = time.time()
+            
+        doc_ref = db.collection("sessions").document(session_id)
+        
+        # Auto-Title Logic
+        if message.role == "user":
+            meta = doc_ref.get().to_dict() or {}
+            current_title = meta.get("title", "New Session")
+            
+            if current_title == "New Session" and state.agent:
+                # Generate a short title
+                try:
+                    prompt = f"Summarize this user request into a specific, short 3-5 word title (no quotes): {message.content}"
+                    resp = await state.agent.prompt_service.generate_async(prompt, model_key="flash")
+                    new_title = resp.text.strip().replace('"', '')
+                    doc_ref.update({"title": new_title})
+                except Exception as e:
+                    print(f"[!] Auto-title failed: {e}")
+
+        # Add to subcollection
+        doc_ref.collection("messages").add(msg_data)
+        
+        return {"status": "saved"}
+    except Exception as e:
+         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/lore/entry")
+async def add_lore_entry(request: Request):
+    """Add a new entry to the Lore database (Firestore)."""
+    if not db:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+        
+    try:
+        data = await request.json()
+        content = data.get("content", "")
+        
+        if not content:
+            raise HTTPException(status_code=400, detail="Content required")
+            
+        doc_ref = db.collection("lore").document()
+        doc_ref.set({
+            "content": content,
+            "created": time.time(),
+            "source": "chat_action",
+            "tags": ["manual_save"]
+        })
+        
+        return {"status": "saved", "id": doc_ref.id}
+    except Exception as e:
+         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/story/generate")
 async def generate_story_content(request: StoryGenerateRequest):
