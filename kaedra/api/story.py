@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from kaedra.api.app_state import state
-from kaedra.story.config import Mode, BeatResponse
+from kaedra.story import Mode, BeatResponse
 
 router = APIRouter(prefix="/story", tags=["StoryEngine"])
 
