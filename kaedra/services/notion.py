@@ -25,7 +25,7 @@ except ImportError:
 
 # Gold Standard IDs (Kaedra Rulebook) - Dav3's Space (Jan 2026)
 NOTION_API_BASE = "https://api.notion.com/v1"
-NOTION_VERSION = "2022-06-28"
+NOTION_VERSION = "2025-09-03"
 UNIVERSE_DB_ID = "2e5ca671-311e-811f-b3d7-c7f3b9150afe"  # VeilVerse Universe Best
 DATA_SOURCE_ID = "2e5ca671-311e-8182-abfc-000be91b3354"  # Data source for SQL
 
@@ -196,7 +196,7 @@ class NotionService:
             "Content-Type": "application/json"
         }
 
-    def _query_database_httpx(self, database_id: str, filter_obj: dict = None, limit: int = 100) -> List[Dict]:
+    def _query_database_httpx(self, database_id: str, filter_obj: dict = None, sorts: List[Dict] = None, limit: int = 100) -> List[Dict]:
         """Query a Notion database using httpx with pagination support."""
         url = f"{NOTION_API_BASE}/databases/{database_id}/query"
         results = []
@@ -208,6 +208,7 @@ class NotionService:
                 while has_more and len(results) < limit:
                     payload = {"page_size": min(limit - len(results), 100)}
                     if filter_obj: payload["filter"] = filter_obj
+                    if sorts: payload["sorts"] = sorts
                     if start_cursor: payload["start_cursor"] = start_cursor
 
                     response = client.post(url, headers=self._get_notion_headers(), json=payload)
@@ -393,29 +394,33 @@ class NotionService:
             return []
 
     @retry_with_backoff()
-    def append_children(self, block_id: str, children: List[Any]):
-        """Append blocks to a page or block."""
-        if not self.client:
-            return
+    def delete_block(self, block_id: str) -> bool:
+        """Archive (delete) a block or page."""
+        if not self.client: return False
         try:
-            self.client.blocks.children.append(block_id=block_id, children=children)
-            print(f"[Notion] Appended {len(children)} blocks to {block_id}")
-        except (RuntimeError, ValueError, AttributeError) as append_err:
-            print(f"[!] Notion Append Error: {append_err}")
+            self.client.blocks.delete(block_id=block_id)
+            print(f"[✅] Deleted (Archived) Block: {block_id}")
+            return True
+        except (RuntimeError, ValueError, AttributeError) as del_err:
+            print(f"[!] Notion Delete Error: {del_err}")
+            return False
 
     @retry_with_backoff()
     def create_page(self,
                     title: str,
-                    parent_page_id: str = None,
-                    content_blocks: List[Dict] = None) -> Optional[str]:
-        """Create a new page with optional content."""
+                    parent_id: str = None, # Generic parent (Page or DB)
+                    parent_type: str = "page_id", # "page_id" or "database_id"
+                    properties: Dict = None,
+                    content_blocks: List[Dict] = None,
+                    parent_page_id: str = None) -> Optional[str]: # Backwards compatibility
+        """Create a new page with optional content and properties."""
         if not self.client:
             return None
 
         try:
-            # Resulting Parent ID
-            target_parent_id = parent_page_id
-
+            # Handle Backwards Compatibility
+            target_parent_id = parent_id or parent_page_id
+            
             # KNOWN IDs (Autodiscovered from Dav3's Space - Jan 2026)
             KNOWN_UNIVERSE_ID = "2e5ca671-311e-811f-8229-d04a1f430059"  # Ai with Dav3 Cinematic Universe
 
@@ -431,29 +436,45 @@ class NotionService:
                 # 2. Key Parent Search
                 if not target_parent_id:
                     target_parent_id = self.search_page("Veil Verse") or self.search_page("Ai with Dav3 Cinematic Universe")
+                    if target_parent_id:
+                        parent_type = "page_id"
 
             if not target_parent_id:
                 print("[!] Cannot create page: No parent page found.")
                 return None
 
-            # Default Content if none provided
-            children = content_blocks if content_blocks else [
-                {
-                    "object": "block",
-                    "type": "heading_1",
-                    "heading_1": {
-                        "rich_text": [{"type": "text", "text": {"content": f"Welcome to {title}"}}]
-                    }
+            # Construct Parent Object
+            parent_obj = {parent_type: target_parent_id}
+
+            # Construct Properties
+            # If properties dict is provided, use it. Otherwise default to Title.
+            page_props = properties if properties else {}
+            
+            # Ensure Title is set if not present
+            if "title" not in page_props and "Name" not in page_props:
+                # Page parent uses "title", DB parent uses properties like "Name" usually
+                prop_name = "title" if parent_type == "page_id" else "Name"
+                page_props[prop_name] = {
+                    "title": [{"text": {"content": title}}]
                 }
-            ]
+
+            # Default Content if none provided
+            children = content_blocks if content_blocks else []
+            # Only add default greeting if absolutely no content and no properties (simple usage)
+            if not children and not properties:
+                 children = [
+                    {
+                        "object": "block",
+                        "type": "heading_1",
+                        "heading_1": {
+                            "rich_text": [{"type": "text", "text": {"content": f"Welcome to {title}"}}]
+                        }
+                    }
+                ]
 
             new_page = self.client.pages.create(
-                parent={"page_id": target_parent_id},
-                properties={
-                    "title": {
-                        "title": [{"text": {"content": title}}]
-                    }
-                },
+                parent=parent_obj,
+                properties=page_props,
                 children=children
             )
             page_id = new_page["id"]
@@ -465,21 +486,255 @@ class NotionService:
             return None
 
     @retry_with_backoff()
-    def create_database(self, parent_id: str, title: str, properties: Dict) -> Optional[str]:
-        """Create a new database with specified properties."""
-        if not self.client:
-            return None
+    def create_database(self, 
+                        parent_id: str, 
+                        title: str, 
+                        properties: Dict,
+                        is_inline: bool = False,
+                        description: str = None) -> Optional[str]:
+        """
+        Create a new database in Notion.
+        
+        Args:
+            parent_id: ID of the parent page (workspace parent not fully supported via simple ID).
+            title: Title of the database.
+            properties: Schema definition for the database.
+            is_inline: Whether the DB is inline.
+            description: Description of the DB.
+        """
+        if not self.client: return None
         try:
-            new_db = self.client.databases.create(
-                parent={"type": "page_id", "page_id": parent_id},
-                title=[{"type": "text", "text": {"content": title}}],
-                properties=properties
-            )
-            print(f"[✅] Created Notion Database: '{title}'")
-            return new_db["id"]
-        except (RuntimeError, ValueError, AttributeError) as db_err:
-            print(f"[!] Notion Create DB Error: {db_err}")
+            parent_obj = {"page_id": parent_id}
+            
+            title_obj = [{"type": "text", "text": {"content": title}}]
+            
+            payload = {
+                "parent": parent_obj,
+                "title": title_obj,
+                "properties": properties,
+                "is_inline": is_inline
+            }
+
+            if description:
+                 payload["description"] = [{"type": "text", "text": {"content": description}}]
+
+            new_db = self.client.databases.create(**payload)
+            db_id = new_db["id"]
+            print(f"[✅] Created Database: '{title}' (ID: {db_id})")
+            return db_id
+        except Exception as e:
+            print(f"[!] Error creating database: {e}")
             return None
+
+    @retry_with_backoff()
+    def update_database(self, 
+                        database_id: str, 
+                        title: str = None, 
+                        properties: Dict = None,
+                        description: str = None) -> bool:
+        """Update a database's title, description, or properties."""
+        if not self.client: return False
+        try:
+            payload = {}
+            if title:
+                payload["title"] = [{"type": "text", "text": {"content": title}}]
+            if description:
+                payload["description"] = [{"type": "text", "text": {"content": description}}]
+            if properties:
+                payload["properties"] = properties
+            
+            if not payload:
+                return False
+
+            self.client.databases.update(database_id=database_id, **payload)
+            print(f"[✅] Updated Database: {database_id}")
+            return True
+        except Exception as e:
+            print(f"[!] Error updating database: {e}")
+            return False
+
+    @retry_with_backoff()
+    def retrieve_database(self, database_id: str) -> Optional[Dict]:
+        """Retrieve a database object."""
+        if not self.client: return None
+        try:
+            return self.client.databases.retrieve(database_id=database_id)
+        except Exception as e:
+            print(f"[!] Error retrieving database: {e}")
+            return None
+
+    @retry_with_backoff()
+    def query_database(self, 
+                       database_id: str, 
+                       filter_obj: Dict = None, 
+                       sorts: List[Dict] = None, 
+                       limit: int = 100) -> List[Dict]:
+        """
+        Query a database to retrieve pages.
+        Wrapper around _query_database_httpx for public access.
+        """
+        if not self.client: return []
+        return self._query_database_httpx(database_id, filter_obj, sorts, limit)
+
+    @retry_with_backoff()
+    def create_comment(self, 
+                       rich_text: List[Dict], 
+                       page_id: str = None, 
+                       block_id: str = None, 
+                       discussion_id: str = None) -> Optional[Dict]:
+        """
+        Create a comment on a page, block, or discussion.
+        One of page_id, block_id, or discussion_id must be provided.
+        """
+        if not self.client: return None
+        
+        payload = {"rich_text": rich_text}
+        if page_id:
+            payload["parent"] = {"page_id": page_id}
+        elif block_id:
+            payload["parent"] = {"block_id": block_id}
+        elif discussion_id:
+            payload["discussion_id"] = discussion_id
+        else:
+            print("[!] Create comment failed: No parent specified")
+            return None
+
+        try:
+            return self.client.comments.create(**payload)
+        except Exception as e:
+            print(f"[!] Notion create_comment failed: {e}")
+            return None
+
+    @retry_with_backoff()
+    def retrieve_comment(self, comment_id: str) -> Optional[Dict]:
+        """Retrieve a specific comment by ID."""
+        if not self.client: return None
+        try:
+            return self.client.comments.retrieve(comment_id=comment_id)
+        except Exception as e:
+            print(f"[!] Notion retrieve_comment failed: {e}")
+            return None
+
+    @retry_with_backoff()
+    def list_comments(self, block_id: str, start_cursor: str = None, page_size: int = 100) -> List[Dict]:
+        """List comments for a block or page."""
+        if not self.client: return []
+        try:
+            kwargs = {"block_id": block_id, "page_size": page_size}
+            if start_cursor:
+                kwargs["start_cursor"] = start_cursor
+            return self.client.comments.list(**kwargs).get("results", [])
+        except Exception as e:
+            print(f"[!] Notion list_comments failed: {e}")
+            return []
+
+    # -------------------------------------------------------------------------
+    # File Upload API (New)
+    # -------------------------------------------------------------------------
+    
+    def create_file_upload(self, filename: str, content_type: str, content_length: int) -> Optional[Dict]:
+        """
+        Initiate a file upload session (POST /v1/file_uploads).
+        Returns the upload URL and file_upload_id.
+        """
+        if not self.client: return None
+        try:
+            # Note: valid as of 2025-09-03 API version for Agent/Bot uploads
+            return self.client.request(
+                path="file_uploads",
+                method="POST",
+                body={
+                    "filename": filename,
+                    "content_type": content_type,
+                    "content_length": content_length
+                }
+            )
+        except Exception as e:
+            print(f"[!] Notion create_file_upload failed: {e}")
+            return None
+
+    def complete_file_upload(self, file_upload_id: str, parts: Dict) -> Optional[Dict]:
+        """
+        Finalize a file upload (POST /v1/file_uploads/{id}/complete).
+        parts example: {"parts": [{"part_number": 1, "etag": "..."}]}
+        """
+        if not self.client: return None
+        try:
+            return self.client.request(
+                path=f"file_uploads/{file_upload_id}/complete",
+                method="POST",
+                body=parts
+            )
+        except Exception as e:
+            print(f"[!] Notion complete_file_upload failed: {e}")
+            return None
+
+    def retrieve_file_upload(self, file_upload_id: str) -> Optional[Dict]:
+        """Retrieve file upload details."""
+        if not self.client: return None
+        try:
+            return self.client.request(
+                path=f"file_uploads/{file_upload_id}",
+                method="GET"
+            )
+        except Exception as e:
+            print(f"[!] Notion retrieve_file_upload failed: {e}")
+            return None
+
+    def list_file_uploads(self, 
+                         status: str = None, 
+                         start_cursor: str = None, 
+                         page_size: int = 100) -> List[Dict]:
+        """List file uploads."""
+        if not self.client: return []
+        try:
+            params = {}
+            if status: params["status"] = status
+            if start_cursor: params["start_cursor"] = start_cursor
+            if page_size: params["page_size"] = page_size
+            
+            return self.client.request(
+                path="file_uploads",
+                method="GET",
+                query=params
+            ).get("results", [])
+        except Exception as e:
+            print(f"[!] Notion list_file_uploads failed: {e}")
+            return []
+
+    # -------------------------------------------------------------------------
+    # User API (New)
+    # -------------------------------------------------------------------------
+
+    def list_users(self, start_cursor: str = None, page_size: int = 100) -> List[Dict]:
+        """List all users in the workspace."""
+        if not self.client: return []
+        try:
+            return self.client.users.list(start_cursor=start_cursor, page_size=page_size).get("results", [])
+        except Exception as e:
+            print(f"[!] Notion list_users failed: {e}")
+            return []
+
+    def retrieve_user(self, user_id: str) -> Optional[Dict]:
+        """Retrieve a specific user."""
+        if not self.client: return None
+        try:
+            return self.client.users.retrieve(user_id=user_id)
+        except Exception as e:
+            print(f"[!] Notion retrieve_user failed: {e}")
+            return None
+
+    def retrieve_bot_user(self) -> Optional[Dict]:
+        """Retrieve the bot user associated with the token (users/me)."""
+        if not self.client: return None
+        try:
+            return self.client.users.me()
+        except Exception as e:
+            print(f"[!] Notion retrieve_bot_user (me) failed: {e}")
+            return None
+
+
+
 
     @retry_with_backoff()
     def create_comment(self, page_id: str, text: str) -> Optional[str]:

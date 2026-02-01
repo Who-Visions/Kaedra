@@ -109,6 +109,12 @@ MODELS = {
     "gemini-2.0-flash": "gemini-2.0-flash-001",
     "gemini-2.0-flash-lite": "gemini-2.0-flash-lite-001",
     
+    # Gemma 3 (Open Models - Multimodal)
+    "gemma-3-27b": "publishers/google/models/gemma-3-27b-it",
+    "gemma-3-12b": "publishers/google/models/gemma-3-12b-it",
+    "gemma-3-4b": "publishers/google/models/gemma-3-4b-it",
+    "gemma-3-1b": "publishers/google/models/gemma-3-1b-it",
+    
     # Visual Models (Veo & Imagen)
     "veo-3.1": "veo-3.1-generate-001",
     "veo-3.1-fast": "veo-3.1-fast-generate-001",
@@ -131,9 +137,13 @@ MODELS = {
     # Open Models (MaaS - Global Endpoint)
     "deepseek-r1": "publishers/deepseek/models/deepseek-r1-0528",
     "deepseek-v3.1": "publishers/deepseek/models/deepseek-v3.1",
+    "deepseek-ocr": "publishers/deepseek/models/deepseek-ocr",
     "llama-4-maverick": "publishers/meta/models/llama-4-maverick-17b-128e-preview",
+    "llama-4-scout": "publishers/meta/models/llama-4-scout-17b-16e-preview",
     "qwen3-235b": "publishers/alibaba/models/qwen3-235b",
+    "qwen3-coder": "publishers/alibaba/models/qwen3-coder",
     "qwen3-thinking": "publishers/alibaba/models/qwen3-next-80b-thinking",
+    "qwen3-instruct": "publishers/alibaba/models/qwen3-next-80b-instruct",
     
     # Embeddings
     "embedding": "text-embedding-004", # Optimized for global
@@ -180,10 +190,11 @@ MEMORY_DIR = KAEDRA_HOME / "memory"
 PROFILES_DIR = KAEDRA_HOME / "profiles"
 CONFIG_DIR = KAEDRA_HOME / "config"
 VIDEO_DIR = KAEDRA_HOME / "videos"
+LORE_DIR = KAEDRA_HOME / "lore"
 
 # Create directories on import
 try:
-    for dir_path in [KAEDRA_HOME, CHAT_LOGS_DIR, MEMORY_DIR, PROFILES_DIR, CONFIG_DIR, VIDEO_DIR]:
+    for dir_path in [KAEDRA_HOME, CHAT_LOGS_DIR, MEMORY_DIR, PROFILES_DIR, CONFIG_DIR, VIDEO_DIR, LORE_DIR]:
         dir_path.mkdir(parents=True, exist_ok=True)
 except Exception as e:
     # If we fail to create dirs (e.g. read-only fs), just warn

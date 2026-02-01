@@ -4,16 +4,6 @@ Main engine class importing from modular components.
 """
 import sys
 from pathlib import Path
-
-# sys.path manipulation removed for production stability
-
-import asyncio
-
-import sys
-from pathlib import Path
-
-# sys.path manipulation removed for production stability
-
 import os
 import re
 import json
@@ -26,6 +16,8 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 from collections import deque
 from dataclasses import dataclass, field
+
+from kaedra.core.config import KAEDRA_HOME
 
 from google import genai
 from google.genai import types
@@ -74,8 +66,9 @@ from rich.traceback import install
 install(show_locals=True)
 
 # System Paths
+# Standardizing on KAEDRA_HOME for global cloud compatibility
 ROOT = Path(__file__).parent.parent
-LORE_DIR = ROOT / "lore"
+LORE_DIR = KAEDRA_HOME / "lore"
 SESSION_DIR = LORE_DIR / "sessions"
 WORLD_ROOT = LORE_DIR / "worlds"
 QUEUE_FILE = LORE_DIR / ".message_queue.json"
@@ -402,7 +395,9 @@ class StoryEngine:
 
         # Modular Components
         self.ui = EngineUI(self.console)
-        self.ui.init_log(Path(f"kaedra/logs/{self.world_config.get('world_id', 'default')}"))
+        # Standardized logging to KAEDRA_HOME
+        log_dir = KAEDRA_HOME / "logs" / self.world_config.get('world_id', 'default')
+        self.ui.init_log(log_dir)
         # self.council, self.router, self.prompts now lazy properties
 
         # Autonomous State (v9.2)

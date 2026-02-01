@@ -2,8 +2,17 @@
 StoryEngine Notion Tools
 Read and write to Notion pages.
 """
+from typing import Dict, Optional
 from kaedra.services.notion import NotionService
 from ..ui import console
+
+
+def _get_service() -> Optional[NotionService]:
+    """Get a NotionService instance."""
+    try:
+        return NotionService()
+    except Exception:
+        return None
 
 
 def index_full_universe(grep_query: str = "") -> str:
@@ -533,3 +542,88 @@ def _query_entity(name: str, category: str = None) -> str:
 
 
 
+
+def delete_entity(block_id: str) -> bool:
+    """
+    Delete (archive) a Notion block or page by ID.
+    
+    Args:
+        block_id: The UUID of the block/page to delete.
+        
+    Returns:
+        bool: True if successful, False otherwise.
+    """
+    service = _get_service()
+    if not service:
+        print("[!] Notion Service not available")
+        return False
+        
+    return service.delete_block(block_id)
+
+
+def create_database_tool(parent_page_id: str, 
+                         title: str, 
+                         properties: Dict,
+                         is_inline: bool = False,
+                         description: str = None) -> Optional[str]:
+    """
+    Create a new database in Notion.
+    
+    Args:
+        parent_page_id: The ID of the parent page.
+        title: The title of the new database.
+        properties: The schema/properties definition (JSON dict).
+        is_inline: Whether the database should be inline.
+        description: Optional description for the database.
+        
+    Returns:
+        str: The ID of the created database, or None if failed.
+    """
+    service = _get_service()
+    if not service:
+        print("[!] Notion Service not available")
+        return None
+        
+    return service.create_database(parent_page_id, title, properties, is_inline, description)
+
+
+def update_database_tool(database_id: str, 
+                         title: str = None, 
+                         properties: Dict = None,
+                         description: str = None) -> bool:
+    """
+    Update an existing Notion database.
+    
+    Args:
+        database_id: The ID of the database to update.
+        title: New title (optional).
+        properties: New schema/properties (optional).
+        description: New description (optional).
+        
+    Returns:
+        bool: True if successful, False otherwise.
+    """
+    service = _get_service()
+    if not service:
+        print("[!] Notion Service not available")
+        return False
+        
+    return service.update_database(database_id, title, properties, description)
+
+
+def retrieve_database_tool(database_id: str) -> Optional[Dict]:
+    """
+    Retrieve a Notion database object.
+    
+    Args:
+        database_id: The ID of the database to retrieve.
+        
+    Returns:
+        Dict: The database object, or None if failed.
+    """
+    service = _get_service()
+    if not service:
+        print("[!] Notion Service not available")
+        return None
+        
+    return service.retrieve_database(database_id)

@@ -106,13 +106,9 @@ class LightsController:
     def init(self) -> bool:
         """Initialize lighting services (Razer + LIFX)."""
         try:
-            # 1. Init Razer (Hardware)
-            from kaedra.services.razer import RazerService
-            self.razer = RazerService()
-            if self.razer.connect():
-                log.info("Razer Chroma linked.")
-            else:
-                log.warning("Razer Synapse not found (Hardware skipped)")
+            # 1. Init Razer (Hardware) - DEACTIVATED FOR NOW
+            log.info("Razer Chroma deactivated per user request.")
+            self.razer = None
 
             # 2. Init LIFX Service (Silent if disabled)
             self.lifx = LIFXService()

@@ -28,22 +28,28 @@ async def test_parallel_generation():
         }
     }
 
-    print(f"Starting parallel generation of {plan['variant_plan']['tiers']}...")
+    print(f"Starting parallel generation turn 1 of {plan['variant_plan']['tiers']}...")
     start_time = time.perf_counter()
     
-    # Simulate turn logic: add input to context
+    # Turn 1
     engine.context.add_text("user", user_input)
+    result1 = await engine.generate_canon_pack(user_input, system_prompt, plan)
     
-    # We call generate_canon_pack directly
-    result = await engine.generate_canon_pack(user_input, system_prompt, plan)
-    
+    # Turn 2: Verify persistence
+    print("\nStarting parallel generation turn 2...")
+    user_input2 = "The hero explores the altar."
+    engine.context.add_text("model", result1)
+    engine.context.add_text("user", user_input2)
+    result2 = await engine.generate_canon_pack(user_input2, system_prompt, plan)
+
     end_time = time.perf_counter()
     duration = end_time - start_time
     
     print("\n" + "=" * 50)
-    print(f"GENERATION COMPLETE in {duration:.2f}s")
+    print(f"MULTI-TURN GENERATION COMPLETE in {duration:.2f}s")
     print("=" * 50)
-    print(f"Result (first 200 chars):\n{result[:200]}...")
+    print(f"Result 1 (first 100 chars): {result1[:100]}...")
+    print(f"Result 2 (first 100 chars): {result2[:100]}...")
     print("=" * 50)
 
 if __name__ == "__main__":

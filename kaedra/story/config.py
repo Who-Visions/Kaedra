@@ -13,6 +13,16 @@ class EngineResponse:
     text: str
     metadata: Dict[str, Any] = field(default_factory=dict)
 
+@dataclass
+class BeatResponse:
+    """API response model for a story beat."""
+    id: str
+    content: str
+    questions: list[str]
+    timestamp: float
+    tension: float
+    pov: str
+
 # === MODE ENUM ===
 class Mode(Enum):
     NORMAL = "normal"

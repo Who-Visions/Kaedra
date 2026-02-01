@@ -1,4 +1,7 @@
-from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
+try:
+    from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
+except ImportError:
+    LocalSmartTurnAnalyzerV3 = None
 import numpy as np
 
 class SmartVadManager:

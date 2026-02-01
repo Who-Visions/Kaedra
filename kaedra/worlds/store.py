@@ -8,9 +8,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, List, Optional
 
-# Default to creating the directory if missing
-WORLD_ROOT = Path("lore/worlds")
-if not WORLD_ROOT.exists():
+from kaedra.core.config import KAEDRA_HOME
+
+# Default to creating the directory in standard home if missing
+WORLD_ROOT = KAEDRA_HOME / "lore" / "worlds"
+try:
+    WORLD_ROOT.mkdir(parents=True, exist_ok=True)
+except Exception as e:
+    # Fallback if KAEDRA_HOME is read-only
+    import tempfile
+    WORLD_ROOT = Path(tempfile.gettempdir()) / "kaedra" / "worlds"
     WORLD_ROOT.mkdir(parents=True, exist_ok=True)
 
 @dataclass

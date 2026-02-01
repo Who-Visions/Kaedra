@@ -1,7 +1,7 @@
 import asyncio
 import sys
 import time
-import msvcrt
+# import msvcrt removed (Windows-only), handled dynamically in smart_input
 from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
@@ -81,9 +81,13 @@ class EngineUI:
         Smart Input with Heuristic Paste Detection.
         If newline is followed immediately (<50ms) by more input, it's a paste.
         """
+        # Platform-specific interactive input (Windows only)
+        if sys.platform != "win32":
+            self.console.print(prompt_markup, end="")
+            return input()
+
         try:
             import msvcrt
-            import sys
         except ImportError:
             self.console.print(prompt_markup, end="")
             return input()

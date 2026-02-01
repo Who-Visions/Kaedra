@@ -23,7 +23,7 @@ import firebase_admin
 from firebase_admin import credentials
 
 # Global Config Import (Moved up for init)
-from kaedra.core.config import PROJECT_ID, LOCATION, MODEL_LOCATION, AGENT_RESOURCE_NAME
+from kaedra.core.config import PROJECT_ID, LOCATION, MODEL_LOCATION, AGENT_RESOURCE_NAME, KAEDRA_HOME
 
 # -------------------------------------------------------------------------
 # LAZY FIREBASE INITIALIZATION (Reduces cold start from 60s to ~5s)
@@ -41,15 +41,23 @@ def _ensure_firebase():
         return
     
     try:
-        _cred = credentials.Certificate("kaedra/secrets/service_account.json")
-        firebase_admin.initialize_app(_cred)
-        
-        from google.cloud import firestore as gc_firestore
+        sa_path = Path("kaedra/secrets/service_account.json")
+        if sa_path.exists():
+            _cred = credentials.Certificate(str(sa_path))
+            firebase_admin.initialize_app(_cred)
+            from google.cloud import firestore as gc_firestore
+            creds = _cred.get_credential()
+        else:
+            # Fallback to Application Default Credentials (Production Cloud)
+            print(f"[!] service_account.json not found. Attempting Application Default Credentials...")
+            firebase_admin.initialize_app()
+            from google.cloud import firestore as gc_firestore
+            creds = None # Client will pick up ADC automatically
         
         # 1. Chat DB
         db = gc_firestore.Client(
             project=PROJECT_ID,
-            credentials=_cred.get_credential(),
+            credentials=creds,
             database="kaedra-chat"
         )
         
@@ -57,7 +65,7 @@ def _ensure_firebase():
         try:
             db_memory = gc_firestore.Client(
                 project=PROJECT_ID,
-                credentials=_cred.get_credential(),
+                credentials=creds,
                 database="kaedra-memory"
             )
             print(f"[+] Firebase lazy-init: Chat & Memory databases connected.")
@@ -160,9 +168,17 @@ app.add_middleware(
 )
 
 # Uploads Configuration
-UPLOAD_DIR = Path("kaedra/api/uploads")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+UPLOAD_DIR = KAEDRA_HOME / "api" / "uploads"
+try:
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+except Exception as e:
+    print(f"[WARN] Failed to create UPLOAD_DIR: {e}")
+    # Fallback to temp dir if home fails
+    import tempfile
+    UPLOAD_DIR = Path(tempfile.gettempdir()) / "kaedra_uploads"
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):

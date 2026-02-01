@@ -161,25 +161,41 @@ class KaedraMassValidation(unittest.IsolatedAsyncioTestCase):
         from kaedra.story.chain import StoryChainer
         chainer = StoryChainer()
         self.assertIsNotNone(chainer.client)
-    def test_44_generator_factory_parallel_logic(self):
-        # Verify result variable is initialized in loop
-        self.assertTrue(True)
+    async def test_44_generator_factory_parallel_logic(self):
+        # Verify parallel tier matching
+        tiers = self.engine._build_tiers()
+        self.assertIn("low", tiers)
+        self.assertIn("high", tiers)
+        self.assertGreaterEqual(tiers["high"].budget, tiers["low"].budget)
+
     def test_45_judge_config_thinking_budget(self):
-        # Value checked: 1024
-        self.assertTrue(True)
+        # We verify that TierSpec objects are correctly built
+        tiers = self.engine._build_tiers()
+        self.assertIsInstance(tiers["ultra"].budget, int)
+
     def test_46_story_chainer_steps_exist(self):
         from kaedra.story.chain import StoryChainer
         self.assertTrue(hasattr(StoryChainer, "chain_generation"))
+
     def test_47_engine_lazy_audio(self):
-        # Audio is lazy
         self.assertIsNone(self.engine._audio)
+
     def test_48_engine_lazy_visual(self):
-        # Visual is lazy
         self.assertIsNone(self.engine._visual)
+
     def test_49_engine_logging_available(self):
         self.assertTrue(hasattr(self.engine, "_init_log"))
-    def test_50_final_validation_suite_completeness(self):
-        self.assertEqual(self.__class__.__name__, "KaedraMassValidation")
+
+    def test_50_dynamic_budget_scaling(self):
+        # Set tension to 1.0 (climax)
+        self.engine.tension.current = 1.0
+        tiers_climax = self.engine._build_tiers()
+        
+        # Reset tension to 0.2 (base)
+        self.engine.tension.current = 0.2
+        tiers_base = self.engine._build_tiers()
+        
+        self.assertGreater(tiers_climax["high"].budget, tiers_base["high"].budget)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

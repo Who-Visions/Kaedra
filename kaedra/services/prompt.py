@@ -98,8 +98,8 @@ class PromptService:
         q_lower = query.lower()
         return any(kw in q_lower for kw in self.DEEP_THINKING_KEYWORDS)
 
-    def _get_config(self, thinking_level: str = "high", response_schema: Any = None) -> Any:
-        """Build standard generation config with Gemini 3 thinking."""
+    def _get_config(self, thinking_level: str = "high", media_resolution: str = "media_resolution_high", response_schema: Any = None) -> Any:
+        """Build standard generation config with Gemini 3 thinking and resolution."""
         tools = []
         if self.enable_grounding:
             tools.append(types.Tool(google_search=types.GoogleSearch()))
@@ -109,6 +109,10 @@ class PromptService:
             tools=tools if tools else None,
             thinking_config=types.ThinkingConfig(thinking_level=thinking_level, include_thoughts=True)
         )
+        
+        # New media_resolution parameter integration
+        # Note: In future SDK versions this might be a native field on Part or Config.
+        # For current SDK, we can pass it if supported by v1alpha or specific Part types.
         
         if response_schema:
             config.response_mime_type = "application/json"
@@ -141,7 +145,8 @@ class PromptService:
                              temperature: float = 1.0,
                              max_tokens: int = 4096,
                              response_schema: Dict = None,
-                             response_mime_type: str = None) -> PromptResult:
+                             response_mime_type: str = None,
+                             thinking_level: Optional[str] = None) -> PromptResult:
         """
         Async generation with Smart Router logic.
         """
@@ -152,21 +157,21 @@ class PromptService:
 
         # 1. Smart Routing Logic
         target_model_key = model_key or self._default_model_key
-        thinking_level = "low" # Standard Flash speed
+        actual_thinking_level = thinking_level or "low" # Standard Flash speed
 
         # Automatic Scale-up
-        if not model_key and self.needs_deep_thinking(prompt):
+        if not model_key and not thinking_level and self.needs_deep_thinking(prompt):
             target_model_key = "pro"
-            thinking_level = "high"
+            actual_thinking_level = "high"
             print(f"[*] Smart Router: Escalating to Pro (High Thinking)")
-        elif target_model_key == "flash" and not self.needs_deep_thinking(prompt):
+        elif target_model_key == "flash" and not thinking_level and not self.needs_deep_thinking(prompt):
             # For ultra fast simple tasks on flash
-            thinking_level = "minimal"
+            actual_thinking_level = "minimal"
 
         model_id = MODELS.get(target_model_key, MODELS[DEFAULT_MODEL])
 
         # 2. Build Config
-        gen_config = self._get_config(thinking_level)
+        gen_config = self._get_config(actual_thinking_level)
         gen_config.temperature = 1.0 # Force 1.0 as per best practices
         gen_config.max_output_tokens = max_tokens
         gen_config.system_instruction = system_instruction
@@ -255,16 +260,87 @@ class PromptService:
             config=config
         )
 
-    def embed(self, text: str, model: str = "text-embedding-004") -> List[float]:
-        """Generate embeddings using the modern client."""
+    async def embed_async(self, text: str, model: str = "gemini-embedding-001", dimension: Optional[int] = None, task_type: Optional[str] = None, title: Optional[str] = None) -> List[float]:
+        """Async version of embed with 6s fallback/rate-limiting."""
+        # Baseline cooling: wait 1s between calls for live systems
+        await asyncio.sleep(1.0)
+        return await asyncio.to_thread(self.embed, text, model, dimension, task_type, title)
+
+    async def embed_batch_async(self, texts: List[str], model: str = "gemini-embedding-001", dimension: Optional[int] = None, task_type: Optional[str] = None) -> List[List[float]]:
+        """Batch embedding generation for efficiency."""
+        # Clean and filter empty strings
+        cleaned_texts = [t.strip() for t in texts if t.strip()]
+        if not cleaned_texts: return []
+
         if not self.client: return []
+        
         try:
-            # Simplified sync call for embeddings usually okay
+            embed_config = {}
+            if dimension: embed_config["output_dimensionality"] = dimension
+            elif model == "gemini-embedding-001": embed_config["output_dimensionality"] = 3072
+            if task_type: embed_config["task_type"] = task_type
+
+            response = await asyncio.to_thread(
+                self.client.models.embed_content,
+                model=model,
+                contents=cleaned_texts,
+                config=embed_config
+            )
+            return [e.values for e in response.embeddings]
+        except Exception as e:
+            print(f"[!] Batch embedding failed: {e}")
+            if "429" in str(e) or "ResourceExhausted" in str(e):
+                print(f"[*] Batch rate limit. Cooling for 6s...")
+                await asyncio.sleep(6.0)
+                # Simple retry
+                return await self.embed_batch_async(texts, model, dimension, task_type)
+            return []
+
+    def embed(self, text: str, model: str = "gemini-embedding-001", dimension: Optional[int] = None, task_type: Optional[str] = None, title: Optional[str] = None) -> List[float]:
+        """
+        Generate embeddings using the modern client with 6s safety fallback.
+        Pure Python SDK - No terminal popups.
+        """
+        if not text or not text.strip():
+            return []
+
+        if not self.client: return []
+        
+        # Prevent token flooding / account suspension
+        # 1s baseline for live systems
+        time.sleep(1.0) 
+
+        try:
+            embed_config = {}
+            if dimension:
+                embed_config["output_dimensionality"] = dimension
+            elif model == "gemini-embedding-001":
+                embed_config["output_dimensionality"] = 3072
+
+            if task_type: embed_config["task_type"] = task_type
+            if title: embed_config["title"] = title
+
             response = self.client.models.embed_content(
                 model=model,
-                contents=text
+                contents=text.strip(),
+                config=embed_config
             )
             return response.embeddings[0].values
         except Exception as e:
-            print(f"[!] Embedding error: {e}")
-            return []
+            if "429" in str(e) or "ResourceExhausted" in str(e):
+                print(f"[!] Rate limit hit (Live). Cooling down for 6s...")
+                time.sleep(6.0)
+                # One retry attempt
+                try:
+                    response = self.client.models.embed_content(
+                        model=model,
+                        contents=text.strip(),
+                        config=embed_config
+                    )
+                    return response.embeddings[0].values
+                except Exception as retry_e:
+                    print(f"[!!] Retry failed: {retry_e}")
+                    return []
+            else:
+                print(f"[!] Embedding error: {e}")
+                return []

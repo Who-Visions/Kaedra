@@ -7,6 +7,7 @@ import time
 import uuid
 from datetime import datetime
 from typing import Optional
+from pathlib import Path
 
 import nest_asyncio
 import pytz
@@ -23,7 +24,16 @@ from kaedra.services.memory import MemoryService
 from kaedra.services.storage_utils import get_storage_client
 from kaedra.tools.wispr import get_flow_context
 from kaedra.tools.invoices import invoice_action
+from kaedra.tools.notion import (
+    notion_create_database, notion_update_database, notion_retrieve_database,
+    notion_query_database, notion_search_page, notion_read_page, 
+    notion_append_to_page, notion_create_page,
+    notion_create_comment, notion_retrieve_comment, notion_list_comments,
+    notion_create_file_upload, notion_complete_file_upload, notion_retrieve_file_upload, notion_list_file_uploads,
+    notion_list_users, notion_retrieve_user, notion_retrieve_bot_user
+)
 from .base import BaseAgent, AgentResponse
+from kaedra.core.agent_types import AgentThread, ChatMessage
 
 
 KAEDRA_PROFILE = """You are KAEDRA, a shadow tactician and strategic intelligence partner for Who Visions LLC.
@@ -103,10 +113,16 @@ class KaedraAgent(BaseAgent):
         if self._genai_client:
             return
 
+        from kaedra.core.config import PROJECT_ID
         if genai:
             try:
-                self._genai_client = genai.Client(vertexai=True, location='us-central1')
-                print("[✅] KaedraAgent: GenAI Client initialized (Vertex AI)")
+                # Gemini 3 Preview models require global endpoint for dynamic routing
+                self._genai_client = genai.Client(
+                    vertexai=True, 
+                    project=PROJECT_ID,
+                    location='global'
+                )
+                print("[✅] KaedraAgent: GenAI Client initialized (Global)")
             except (RuntimeError, ValueError) as err:
                 print(f"[!] KaedraAgent: Failed to initialize GenAI Client: {err}")
                 self._genai_client = None
@@ -166,7 +182,40 @@ Use this when the user asks about invoices, revenue, payments, or billing.
 To generate an image based on a description, output:
 [TOOL: generate_image(prompt="detailed description of the visual")]
 
+[TOOL: generate_image(prompt="detailed description of the visual")]
+
 Use this when the user wants to see something or requests an image/visualization.
+
+[NOTION INTELLIGENCE]
+You have full access to the Notion workspace via the following tools.
+When filtering or sorting, use valid Python dictionaries/lists in the tool call.
+
+1. Search/Read:
+[TOOL: notion_search_page(query="search term")]
+[TOOL: notion_read_page(page_identifier="Page Title or ID")]
+
+2. Database Querying (Power Tool):
+[TOOL: notion_query_database(database_id="...", filter_obj={...}, sorts=[...], limit=10)]
+
+Filter Examples (Python Syntax):
+- Filter by Checkbox: `{"property": "Done", "checkbox": {"equals": True}}`
+- Filter by Select: `{"property": "Status", "select": {"equals": "Active"}}`
+- compound: `{"and": [{"property": "Cat", "select": {"equals": "A"}}, {"property": "Val", "number": {"greater_than": 5}}]}`
+
+Sort Examples:
+- Sort by Property: `[{"property": "Name", "direction": "ascending"}]`
+- Sort by Time: `[{"property": "last_edited_time", "direction": "descending"}]`
+
+3. Content Creation/Update:
+[TOOL: notion_append_to_page(page_identifier="...", text="...")]
+[TOOL: notion_create_page(title="...", parent_id="...", properties={...})]
+[TOOL: notion_create_database(parent_id="...", title="...", properties={...})]
+
+4. Comments & Discussions:
+[TOOL: notion_create_comment(rich_text=[{"text": {"content": "Hello"}}], page_id="...")]
+[TOOL: notion_list_comments(block_id="...")]
+
+Use these tools to retrieve context, check status, or log information into Notion.
 """
 
     def query(self, message: str) -> dict:
@@ -193,60 +242,204 @@ Use this when the user wants to see something or requests an image/visualization
             "latency_ms": response.latency_ms
         }
 
-    async def run(self, query: str, context: str = None) -> AgentResponse:
+    async def run(self, query: str, thread: Optional[AgentThread] = None, context: str = None) -> AgentResponse:
         """
-        Process a query with full KAEDRA personality.
-
-        Args:
-            query: User's input
-            context: Additional context (e.g., from memory)
-
-        Returns:
-            AgentResponse with KAEDRA's response
+        Process a query with full KAEDRA personality and hierarchical memory.
         """
+        # 1. Initialize Thread if missing (Transient session)
+        if thread is None:
+            thread = AgentThread()
+        
+        # Add user query to thread history
+        thread.add_message("user", query)
+
         est = pytz.timezone('US/Eastern')
         now = datetime.now(est)
         current_time = now.strftime('%I:%M %p EST')
         current_date = now.strftime('%A, %B %d, %Y')
 
-        # Build context
+        # 2. Build Context Layers
         full_context = [f"[CURRENT TIME]\nDate: {current_date}\nTime: {current_time}"]
+        
+        # Layer A: External Hierarchical Memory (BigQuery Vector + Note-taking)
+        external_context = await self._get_external_context(thread)
+        if external_context:
+            full_context.append(external_context)
+
+        # Layer B: Legacy Recall (Managed Bank)
         memory_context = self._recall_memories(query)
         if memory_context:
             full_context.append(f"[RECALLED MEMORY]\n{memory_context}")
+        
+        # Layer C: Recent History (Short-term context)
+        recent_context = self._recall_recent(limit=5)
+        if recent_context:
+            full_context.append(f"[RECENT HISTORY]\n{recent_context}")
+
         if context:
             full_context.append(f"[ADDITIONAL CONTEXT]\n{context}")
 
         combined_context = "\n\n".join(full_context)
         start_time = time.time()
+        
+        # Check for Multimodal Input (Attachments)
+        attachment_match = re.search(r'\[Attachment: (.*?)\]', query)
+        if attachment_match and self.genai_client:
+            # ... (Existing Multimodal Logic) ...
+            file_url = attachment_match.group(1).strip()
+            filename = file_url.split('/')[-1]
+            local_path = Path("kaedra/api/uploads") / filename
+            
+            if local_path.exists():
+                print(f"[*] detected multimodal input: {filename}")
+                result_content = await self._run_multimodal(query, local_path, combined_context)
+                
+                latency = (time.time() - start_time) * 1000
+                response_obj = AgentResponse(
+                    content=result_content,
+                    agent_name=self.name,
+                    model="gemini-3-flash-preview",
+                    latency_ms=latency
+                )
+                
+                # Update Thread & Trigger Reflection
+                thread.add_message("assistant", response_obj.content)
+                if self.context_provider:
+                    await self.context_provider.invoked_async(thread, response_obj.content)
+                
+                return response_obj
+
+        # 3. Standard Generation
         result = await self.prompt.generate_async(self._build_prompt(query, combined_context))
 
-        # --- Tool Execution Logic ---
+        # --- Tool Execution Logic --- (Simplified for brevity, assuming standard handlers exist)
         tool_executed = False
-        
-        # Wispr Tool
-        if "[TOOL: get_flow_context" in result.text:
-            result = await self._handle_wispr_tool(query, result.text, combined_context)
-            tool_executed = True
-
-        # Invoice Tool
-        if not tool_executed and "[TOOL: invoice_action" in result.text:
-            result = await self._handle_invoice_tool(query, result.text, combined_context)
-            tool_executed = True
-
-        # Image Tool
-        if not tool_executed and "[TOOL: generate_image" in result.text:
-            result = await self._handle_image_tool(query, result.text, combined_context)
+        if "[TOOL:" in result.text:
+            # Tool handling logic remains same...
+            if "[TOOL: get_flow_context" in result.text:
+                result = await self._handle_wispr_tool(query, result.text, combined_context)
+                tool_executed = True
+            elif "[TOOL: invoice_action" in result.text:
+                result = await self._handle_invoice_tool(query, result.text, combined_context)
+                tool_executed = True
+            elif "[TOOL: notion_" in result.text:
+                result = await self._handle_notion_tool(query, result.text, combined_context)
+                tool_executed = True
+            elif "[TOOL: generate_image" in result.text:
+                result = await self._handle_image_tool(query, result.text, combined_context)
 
         latency = (time.time() - start_time) * 1000
-        return AgentResponse(
+        response_obj = AgentResponse(
             content=result.text,
             agent_name=self.name,
             model=result.model,
             latency_ms=latency
         )
 
-    async def _handle_wispr_tool(self, query: str, result_text: str, context: str):
+        # 4. Final Updates: Thread Management & Reflection
+        thread.add_message("assistant", response_obj.content)
+        
+        if self.context_provider:
+            # Post-Chat Reflection Loop (Atomic Note-taking in BigQuery)
+            await self.context_provider.invoked_async(thread, response_obj.content)
+
+        # Legacy Memory Sync (Managed Bank)
+        if self.memory:
+            try:
+                self.memory.insert(query, role="user")
+                self.memory.insert(response_obj.content, role="assistant")
+                self.memory.consolidate()
+            except Exception as mem_err:
+                print(f"[!] legacy memory persistence failed: {mem_err}")
+
+        return response_obj
+
+    async def _handle_notion_tool(self, query: str, result_text: str, context: str):
+        """Parse and execute Notion tools."""
+        import ast
+        
+        # Regex to capture function name and arguments string
+        match = re.search(r'\[TOOL: (notion_[a-z_]+)\((.*?)\)\]', result_text, re.DOTALL)
+        if not match:
+            return types.GenerateContentResponse(text=result_text)
+
+        func_name = match.group(1)
+        args_str = match.group(2)
+        
+        print(f"[*] Executing Notion Tool: {func_name}...")
+
+        try:
+            # Safe evaluation of arguments string to dictionary
+            # We wrap args in "dict(...)" to parse keywords
+            # Use ast.literal_eval for safety, but it requires valid python literals
+            # We might need a bit more flexibility for the LLM output, but let's try strict first.
+            # If literal_eval fails, falling back to eval with restricted globals is an option for a local agent.
+            
+            # Prepare args string to be a valid dictionary literal if possible, or function args
+            # Actually, easiest is to assume LLM outputs `arg=val, arg2=val`
+            # We can construct a proxy call string `dict(arg=val, ...)`
+            eval_str = f"dict({args_str})"
+            kwargs = eval(eval_str, {"__builtins__": None}, {"True": True, "False": False, "None": None})
+            
+            tool_result = None
+            if func_name == "notion_search_page":
+                tool_result = notion_search_page(**kwargs)
+            elif func_name == "notion_read_page":
+                tool_result = notion_read_page(**kwargs)
+            elif func_name == "notion_query_database":
+                tool_result = notion_query_database(**kwargs)
+            elif func_name == "notion_append_to_page":
+                tool_result = notion_append_to_page(**kwargs)
+            elif func_name == "notion_create_page":
+                tool_result = notion_create_page(**kwargs)
+            elif func_name == "notion_create_database":
+                tool_result = notion_create_database(**kwargs)
+            elif func_name == "notion_update_database":
+                tool_result = notion_update_database(**kwargs)
+            elif func_name == "notion_retrieve_database":
+                tool_result = notion_retrieve_database(**kwargs)
+            elif func_name == "notion_create_comment":
+                tool_result = notion_create_comment(**kwargs)
+            elif func_name == "notion_retrieve_comment":
+                tool_result = notion_retrieve_comment(**kwargs)
+            elif func_name == "notion_list_comments":
+                tool_result = notion_list_comments(**kwargs)
+            # File Upload tools
+            elif func_name == "notion_create_file_upload":
+                tool_result = notion_create_file_upload(**kwargs)
+            elif func_name == "notion_complete_file_upload":
+                tool_result = notion_complete_file_upload(**kwargs)
+            elif func_name == "notion_retrieve_file_upload":
+                tool_result = notion_retrieve_file_upload(**kwargs)
+            elif func_name == "notion_list_file_uploads":
+                tool_result = notion_list_file_uploads(**kwargs)
+            # User tools
+            elif func_name == "notion_list_users":
+                tool_result = notion_list_users(**kwargs)
+            elif func_name == "notion_retrieve_user":
+                tool_result = notion_retrieve_user(**kwargs)
+            elif func_name == "notion_retrieve_bot_user":
+                tool_result = notion_retrieve_bot_user(**kwargs)
+            else:
+                return types.GenerateContentResponse(text=f"Unknown notion tool: {func_name}")
+
+            # Formatting result
+            if isinstance(tool_result, (dict, list)):
+                res_str = json.dumps(tool_result, indent=2)
+            else:
+                res_str = str(tool_result)
+
+            # Truncate if too long (Notion content can be huge)
+            if len(res_str) > 5000:
+                res_str = res_str[:5000] + "... [TRUNCATED]"
+
+            new_context = f"Notion Tool Output ({func_name}):\n{res_str}"
+            follow_up = f"{query}\n\n[SYSTEM] Tool Output:\n{new_context}"
+            return self.prompt.generate(self._build_prompt(follow_up, context))
+
+        except Exception as err:
+            print(f"[!] Notion Tool Execution Error: {err}")
+            return types.GenerateContentResponse(text=result_text + f"\n[SYSTEM ERROR: {err}]")
         """Parse and execute Wispr Flow context search."""
         match = re.search(r'\[TOOL: get_flow_context\((.*?)\)\]', result_text)
         if not match:
@@ -326,7 +519,50 @@ Use this when the user wants to see something or requests an image/visualization
             return types.GenerateContentResponse(text=result_text)
         except (ValueError, KeyError) as arg_err:
             print(f"[!] Image Tool Arg Error: {arg_err}")
+            print(f"[!] Image Tool Arg Error: {arg_err}")
             return types.GenerateContentResponse(text=result_text)
+
+    async def _run_multimodal(self, query: str, file_path: Path, context: str) -> str:
+        """Execute multimodal request with Gemini 3."""
+        try:
+            with open(file_path, "rb") as f:
+                image_bytes = f.read()
+
+            # Determine mime type (basic)
+            mime_type = "image/jpeg"
+            if file_path.suffix.lower() == ".png":
+                mime_type = "image/png"
+            elif file_path.suffix.lower() == ".webp":
+                mime_type = "image/webp"
+
+            prompt_text = f"You are Kaedra. Respond to the user's input based on the image.\n\nCONTEXT:\n{context}\n\nUSER INPUT:\n{query}"
+            
+            # Use Part with media_resolution for Gemini 3
+            image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
+            # In current SDK versions, media_resolution may be passed as a dictionary for the PART
+            # or in the GenerateContentConfig. We'll set it on the part ifsupported.
+            # Using dictionary form for safety with preview SDK.
+            try:
+                image_part.media_resolution = {"level": "media_resolution_high"}
+            except:
+                pass
+
+            response = self.genai_client.models.generate_content(
+                model="gemini-3-flash-preview",
+                contents=[
+                    image_part,
+                    types.Part(text=prompt_text)
+                ],
+                config=types.GenerateContentConfig(
+                    system_instruction=self.profile,
+                    temperature=1.0,
+                    thinking_config=types.ThinkingConfig(thinking_level="high", include_thoughts=True)
+                )
+            )
+            return response.text
+        except Exception as e:
+            print(f"[!] Multimodal Error: {e}")
+            return f"Error analyzing image: {e}"
 
     def generate_image(self, prompt: str, model_id: str = "gemini-3-pro-image-preview"):
         """

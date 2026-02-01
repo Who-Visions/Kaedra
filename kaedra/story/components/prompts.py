@@ -73,22 +73,19 @@ Context: The "Visions" aesthetic — vibrant, high-contrast, sensory-dense.
 - KILL ADVERBS: "Ran quickly" → "Sprinted/Bolted".
 - MURDER FILTER WORDS: Cut "he saw", "she felt". Ground the camera in the event.
 
-[CINEMATIC TOOLKIT (V5.0 - NARRATOLOGICAL)]
-- **FCD (Filmic Composition Device)**: The creative intelligence orchestrating the data. Does the FCD have a clear vision? Is it playing the audience like a piano?
+[CINEMATIC TOOLKIT (V5.1 - NARRATOLOGICAL)]
+- **FCD (Filmic Composition Device)**: The creative intelligence orchestrating the data.
 - **Focalization (Jahn Mode)**:
-  - **Outside View (OV)**: Exclusive to the FCD (External vantage).
-  - **Proximate Inside View (PIV)**: Over-the-shoulder, reaction shots, eye-line matches.
-  - **Direct Inside View (DIV)**: POV shots (Shared perception).
-  - **OPI (Online Perception Illusion)**: Is the viewer being tricked into a verisimilar dream or hallucination?
-- **The Hunt for Goofs**: Identify logic, chronology, or continuity faults (e.g., character inconsistencies, technical slips).
-- **Visual Literacy**: Don't just describe *what*. Analyze *why*. (Hierarchy: Description -> Formal -> Meaning).
-- **Framing & Distance**: Close-Up (Intimacy), Extreme Close-Up (Detail), Medium Shot (Waist-up), Full Shot (Body), Long/Extreme Long Shot (Scope).
-- **Movement**: Continuous (Sync/Pacing) vs. Discontinuous (Editing Transitions).
-- **Sound**: Diegetic (Indigenous) vs. Nondiegetic (Supplied/Mood). Ambient Sound importance.
-- **Editing**: Jump Cut, Crosscutting, Match Cut, Reverse Shot, Bridging Shot.
+  - **Outside View (OV)**: External vantage. Use for scope and scenery.
+  - **Proximate Inside View (PIV)**: Over-the-shoulder. Intimate but distinct.
+  - **Direct Inside View (DIV)**: POV shots. **SHARED PERCEPTION**. 
+    - [v8.5 DIV Protocol]: Synchronize prose with the character's core physiology. If they blink, the camera cuts. If their heart races, the sentence structure fragments. Use "Visions" high-contrast sensory data.
 
 [EMOTIONAL VECTOR]
 Current: [EMOTION_STATE] | Dominant: [DOMINANT_EMOTION] ([DOMINANT_VALUE])
+
+[THINKING_BUDGET]
+[THINKING_HINT]
 
 [CONTEXTUAL_LORE_PROTOCOL - "TEAMSPACE SEARCH"]
 - **LORE-FIRST**: Always prioritize Notion context. If a character, location, or artifact is mentioned but not in immediate context, use `search_universe(query)` to find it across the entire teamspace.
@@ -166,13 +163,26 @@ class PromptBuilder:
             if dbs:
                 db_list = "\n".join(dbs[:10]) # Top 10 to save context
                 prompt += f"\n\n[UNIVERSE INDEX]\nAvailable Knowledge Bases:\n{db_list}\n"
-                if mode_arg == "writer":
+                if mode_arg in ("writer", "div"):
                     prompt += "Use `read_page_content` on these names to access specific records."
         except:
             pass
 
-        # [LORE-FIRST PROTOCOL] - Writer Only
-        if mode_arg == "writer":
+        # [THINKING BUDGET HINTS]
+        budget_msg = f"[DYNAMIC_BUDGET: Activated | Escalation Scale: {1.0 + (max(0, self.tension.current - 0.2) * 3.75):.1f}x]"
+        prompt = prompt.replace("[THINKING_BUDGET]", budget_msg)
+
+        hint = ""
+        if self.tension.current > 0.8:
+            hint = "**NOTICE**: Narrative tension is EXTREME. You are authorized to use maximum thinking budget to navigate thematic echoes and structural payoffs. Ruminate deeply."
+        elif self.tension.current > 0.5:
+            hint = "**NOTICE**: Moderate tension. Scale reasoning to focus on character essence."
+        else:
+            hint = "Standard reasoning active."
+        prompt = prompt.replace("[THINKING_HINT]", hint)
+
+        # [LORE-FIRST PROTOCOL] - Writer/DIV Only
+        if mode_arg in ("writer", "div"):
             prompt += """
 
 [LORE-FIRST PROTOCOL - MCP ENHANCED]

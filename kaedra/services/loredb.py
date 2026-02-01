@@ -80,6 +80,7 @@ class LoreDB:
         self.world_id = self.world_path.name
         
         # Check for writability (Crucial for Cloud Run)
+        from kaedra.core.config import KAEDRA_HOME
         try:
             # Ensure folder exists or can be created
             self.world_path.mkdir(parents=True, exist_ok=True)
@@ -89,9 +90,8 @@ class LoreDB:
             test_file.unlink()
         except (OSError, PermissionError, IOError):
             import os
-            import tempfile
-            print(f"⚠️ [LoreDB] Path {self.world_path} is NOT writable. Falling back to /tmp/kaedra/lore.")
-            self.world_path = Path(tempfile.gettempdir()) / "kaedra" / "lore" / "worlds" / self.world_id
+            print(f"⚠️ [LoreDB] Path {self.world_path} is NOT writable. Falling back to {KAEDRA_HOME}/lore.")
+            self.world_path = KAEDRA_HOME / "lore" / "worlds" / self.world_id
             self.world_path.mkdir(parents=True, exist_ok=True)
 
         self.db_path = self.world_path / "lore.db"

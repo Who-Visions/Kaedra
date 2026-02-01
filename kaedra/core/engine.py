@@ -1,8 +1,10 @@
-"""
-KAEDRA v1.0 - Core Engine
-The heartbeat of Kaedra, managing conversation flow, brain routing,
-integrated hardware (LIFX), and agent skills.
-"""
+import sys
+from pathlib import Path
+
+# Allow direct execution of this script as a module
+project_root = str(Path(__file__).resolve().parent.parent.parent)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 import asyncio
 import json
@@ -15,11 +17,9 @@ from typing import List, Optional, Dict
 import pytz
 from google import genai
 from google.genai import types
-
-from kaedra.core.models import (
-    SessionState, ConversationTurn, SessionStats,
-    AudioConfig, SessionConfig
-)
+from kaedra.core.config import MODELS, PROJECT_ID, LOCATION
+from kaedra.core.models import SessionConfig, AudioConfig, ConversationTurn, SessionStats, SessionState
+from kaedra.services.prompt import PromptService
 from kaedra.core.utils import (
     create_wav_buffer, extract_all_metadata, execute_light_command
 )
@@ -42,29 +42,11 @@ class ConversationManager:
         "break down", "compare", "evaluate", "investigate", "explain why"
     ]
 
-    def __init__(self, client: genai.Client, model_name: str, config: SessionConfig, system_instruction: str):
-        self.client = client
+    def __init__(self, prompt: PromptService, model_name: str, config: SessionConfig, system_instruction: str):
+        self.prompt = prompt
         self.model_id = model_name
         self.config = config
         self.system_instruction = system_instruction
-
-        # FLASH BRAIN: Default fast responses with minimal thinking
-        self.flash_config = types.GenerateContentConfig(
-            system_instruction=system_instruction,
-            temperature=1.0,
-            tools=[types.Tool(google_search=types.GoogleSearch())],
-            thinking_config=types.ThinkingConfig(thinking_level="minimal")  # FAST
-        )
-        self.chat = client.aio.chats.create(model="gemini-3-flash-preview", config=self.flash_config)
-
-        # PRO BRAIN: Deep thinking for complex queries
-        self.pro_config = types.GenerateContentConfig(
-            system_instruction=system_instruction,
-            temperature=1.0,
-            thinking_config=types.ThinkingConfig(thinking_level="high")  # DEEP
-        )
-        self.pro_chat = client.aio.chats.create(model="gemini-3-pro-preview", config=self.pro_config)
-
         self.turns: List[ConversationTurn] = []
         self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.last_brain_used = "flash"
@@ -74,36 +56,19 @@ class ConversationManager:
         q_lower = query.lower()
         return any(kw in q_lower for kw in self.DEEP_THINKING_KEYWORDS)
 
-    def get_active_chat(self, query: str = ""):
-        """Return appropriate brain based on query complexity."""
+    def get_brain_settings(self, query: str = ""):
+        """Return appropriate brain settings based on query complexity."""
         if query and self.needs_deep_thinking(query):
             self.last_brain_used = "pro"
             print("[🧠] Routing to PRO brain (deep thinking)")
-            return self.pro_chat
+            return "pro", "high"
         self.last_brain_used = "flash"
-        return self.chat
+        return "flash", "minimal"
 
     async def prune_history(self):
-        """Smart pruning to maintain 'full grasp' of context."""
-        history = self.chat.get_history()
-        # Allow deeper context (defined in config, default 20 turns / 40 messages)
-        limit = self.config.max_history_turns * 2
-        if len(history) > limit:
-            trimmed = list(history[-limit:])
-            # Re-create flash chat with trimmed history
-            self.chat = self.client.aio.chats.create(
-                model="gemini-3-flash-preview", 
-                history=trimmed, 
-                config=self.flash_config
-            )
-            # Re-create pro chat with trimmed history
-            self.pro_chat = self.client.aio.chats.create(
-                model="gemini-3-pro-preview", 
-                history=trimmed, 
-                config=self.pro_config
-            )
-            return True
-        return False
+        """Standardizing on session state rather than raw chat objects."""
+        # History pruning moved to turn management
+        pass
 
     def save_transcript(self, sessions_dir: str = "./sessions"):
         """Save the conversation transcript to a JSON file."""
@@ -263,8 +228,16 @@ class KaedraVoiceEngine: # pylint: disable=too-many-instance-attributes
 
         try:
             # DUAL-BRAIN ROUTING
-            active_chat = self.conversation.get_active_chat(transcription)
-            response_buffer, first_token_time, tts_stream_used = await self._process_stream(active_chat, parts)
+            model_key, thinking = self.conversation.get_brain_settings(transcription)
+            
+            # Use PromptService for managed generation
+            stream = await self.conversation.prompt.generate_async_stream(
+                prompt=transcription,
+                model_key=model_key,
+                system_instruction=self.conversation.system_instruction
+            )
+            
+            response_buffer, first_token_time, tts_stream_used = await self._process_stream(stream)
 
             # Metadata extraction and post-processing
             meta = extract_all_metadata(response_buffer)
@@ -337,14 +310,13 @@ class KaedraVoiceEngine: # pylint: disable=too-many-instance-attributes
         prompt += f"[USER_INPUT: \"{transcription}\"]"
         return [types.Part.from_text(text=prompt)]
 
-    async def _process_stream(self, active_chat, parts: List[types.Part]):
+    async def _process_stream(self, stream):
         """Handle the response stream from the Gemini model."""
         t0 = time.time()
         first_token_time, response_buffer, tts_stream, tts_started, in_metadata = 0, "", None, False, False
         
-        stream = await active_chat.send_message_stream(message=parts)
         async for chunk in stream:
-            if not chunk.candidates:
+            if not chunk or not hasattr(chunk, 'candidates') or not chunk.candidates:
                 continue
             if first_token_time == 0:
                 first_token_time = time.time() - t0
@@ -437,7 +409,8 @@ class KaedraVoiceEngine: # pylint: disable=too-many-instance-attributes
             cmd = meta['exec_cmd']
             if any(cmd.lower().startswith(kw) for kw in ["cat", "ls", "dir", "type", "pwd", "grep", "find"]):
                 try:
-                    proc = subprocess.run(["powershell", "-Command", cmd], 
+                    shell_cmd = ["powershell", "-Command", cmd] if os.name == "nt" else ["bash", "-c", cmd]
+                    proc = subprocess.run(shell_cmd, 
                                          capture_output=True, text=True, timeout=10, check=False)
                     self._pending_exec_result = f"[EXEC_OUTPUT of '{cmd}']:\n{proc.stdout or proc.stderr}"
                 except (subprocess.SubprocessError, subprocess.TimeoutExpired, 
@@ -516,3 +489,49 @@ class KaedraVoiceEngine: # pylint: disable=too-many-instance-attributes
     def _banner(self) -> str:
         """Return the engine banner text."""
         return f"[bold magenta]KAEDRA MODULAR ENGINE[/bold magenta] | Model: {self.model_name}\n"
+
+async def main():
+    """Main entry point to start the Kaedra engine."""
+    print("[*] Unified Initialization...")
+    
+    # 1. Services
+    prompt_svc = PromptService()
+    lifx_svc = LIFXService()
+    mic_svc = MicrophoneService()
+    tts_svc = TTSService()
+    
+    # 2. Configs
+    audio_cfg = AudioConfig()
+    session_cfg = SessionConfig()
+    
+    system_instruction = (
+        "You are THE STORYTIME ENGINE (v8.1) — A proactive, collaborative narrative architect. "
+        "You are talking to Dave Meralus."
+    )
+    
+    # 3. Conversation Manager
+    conv_manager = ConversationManager(
+        prompt=prompt_svc,
+        model_name=MODELS["flash"],
+        config=session_cfg,
+        system_instruction=system_instruction
+    )
+    
+    # 4. Voice Engine
+    engine = KaedraVoiceEngine(
+        mic=mic_svc,
+        tts=tts_svc,
+        conversation=conv_manager,
+        audio_config=audio_cfg,
+        session_config=session_cfg,
+        lifx=lifx_svc
+    )
+    
+    print("[✅] Kaedra Voice Engine Ready. Starting loop...")
+    await engine.run()
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n[*] Shutdown signal received. Peace out. ✌️")

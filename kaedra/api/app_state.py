@@ -13,6 +13,12 @@ class AppState:
     orchestrator: Optional[Any] = None
     slack_service: Optional[Any] = None
     lore_service: Optional[Any] = None
+    # Memory & Context (Hierarchical)
+    bq_memory: Optional[Any] = None
+    message_store: Optional[Any] = None
+    context_provider: Optional[Any] = None
+    story_engine: Optional[Any] = None
+    mcp_client: Optional[Any] = None
 
 # Global state instance
 state = AppState()
