@@ -77,12 +77,9 @@ Icon = {
 
 # The Fleet Roster - Cloud Run endpoints
 FLEET_CLOUDRUN = {
-    "DAV1D": "https://dav1d-322812104986.us-central1.run.app",
-    "RHEA": "https://rhea-noir-145241643240.us-central1.run.app",
-    "VISIONS": "https://visions-assistant-service-885670388176.us-central1.run.app",
-    "KAEDRA": "https://kaedra-69017097813.us-central1.run.app",
-    "BANDIT": "https://bandit-849984150802.us-central1.run.app",
-    "IRIS": "https://mineral-subject-487519-v6.us-central1.run.app"
+    "VISIONS": "https://visions-assistant-service-3ip3bho7mq-uc.a.run.app",
+    "KAEDRA": "https://kaedra-agent-api-5zt6obkpbq-uc.a.run.app",
+    "IRIS": "https://iris-agent-service-5zt6obkpbq-uc.a.run.app"
 }
 
 # Local Swarm Shard Ports
