@@ -131,7 +131,7 @@ gmail_status = "OFFLINE"
 
 # Time calculations
 now = datetime.now()
-local_time = now.strftime('%Y-%m-%d %H:%M:%S %z')
+local_time = now.strftime('%Y-%m-%d %I:%M:%S %p %z')
 time_zone = time.tzname[0] if time.daylight == 0 else time.tzname[1]
 day_num = now.day
 ord_suffix = 'th' if 11 <= day_num <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(day_num % 10, 'th')
@@ -1354,7 +1354,7 @@ try:
             last_memory_file = os.path.relpath(latest_transcript, brain_dir)
             mtime = os.path.getmtime(latest_transcript)
             t_dt = datetime.fromtimestamp(mtime)
-            last_memory_time = t_dt.strftime('%Y-%m-%d %H:%M:%S %z')
+            last_memory_time = t_dt.strftime('%Y-%m-%d %I:%M:%S %p %z')
             
             age_td = datetime.now() - t_dt
             if age_td.total_seconds() < 60:
@@ -1562,7 +1562,7 @@ json_payload = {
     "status": "OK" if ok_overall else "WARN",
     "time": local_time,
     "timezone": time_zone,
-    "boot_time": boot_time.strftime('%Y-%m-%d %H:%M:%S %z') if boot_time else "",
+    "boot_time": boot_time.strftime('%Y-%m-%d %I:%M:%S %p %z') if boot_time else "",
     "host": host_name,
     "user": user_name,
     "python_version": python_version,
