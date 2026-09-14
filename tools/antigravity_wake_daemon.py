@@ -44,9 +44,9 @@ def file_hash(path_str):
 def main():
     initial = get_snapshot()
     start_time = time.time()
-    # Watch for up to 600 seconds (10 minutes)
-    while time.time() - start_time < 600:
-        time.sleep(2)
+    # Watch for up to 1800 seconds (30 minutes)
+    while time.time() - start_time < 1800:
+        time.sleep(5)
         current = get_snapshot()
         new_or_modified = [p for p, m in current.items() if p not in initial or m > initial[p]]
         
@@ -59,6 +59,15 @@ def main():
                 target = str(data.get("target") or "antigravity").lower()
                 text = str(data.get("text") or data.get("message") or data.get("goal") or data.get("content") or "")
                 round_num = data.get("round")
+                status = str(data.get("status") or "").lower()
+                
+                # Filter out closed status-only relay watch notifications with no direct targeted ask
+                if source == "relay-watch" and ("(closed)" in text or status == "closed") and target in ("local", "@all", "all", "?", ""):
+                    continue
+
+                # Filter out raw synthetic test heartbeat echoes with no substantive payload
+                if text.strip().lower() in ("ok", "ping", "pong", "test") and "relay" not in source:
+                    continue
                 
                 f_hash = file_hash(path_str)
                 if f_hash and f_hash in SEEN_HASHES:

@@ -766,17 +766,46 @@ def run_diagnostics(silent=False):
                 break
 
     local_ip = get_local_ip()
+    # Import 3-layer telemetry evaluator
+    try:
+        from nougen_shards.telemetry_model import evaluate_node_health, NodeState, get_planned_intent
+    except ImportError:
+        evaluate_node_health = None
+        NodeState = None
+        get_planned_intent = lambda name: None
+
     for name, (ip, port) in resolved_peers.items():
-        status = ping_host(ip, port)
+        is_ping = (ping_host(ip, port) != "OFFLINE")
         has_ssh = False
         if ip in ip_services and 22 in ip_services[ip].get("ports", {}):
             has_ssh = True
         elif port == 22:
             has_ssh = True
             
-        if "ONLINE" in status and has_ssh:
-            status = test_bidirectional_ssh(ip, local_ip)
+        status = "OFFLINE"
+        if is_ping:
+            status = "ONLINE (PORT SAFE)" if (ip in ip_services and port in ip_services[ip].get("ports", {})) else "ONLINE"
+            if has_ssh:
+                status = test_bidirectional_ssh(ip, local_ip)
+        else:
+            # Check planned downtime intent
+            intent = get_planned_intent(name.split()[0])
+            if intent and intent.get("active"):
+                status = f"OFFLINE_EXPECTED ({intent.get('reason', 'user_declared')})"
+            else:
+                status = "OFFLINE_UNEXPECTED"
+                
         local_peers[f"{name} ({ip})"] = status
+
+        if evaluate_node_health:
+            ports_map = ip_services.get(ip, {}).get("ports", {})
+            evaluate_node_health(
+                node_name=name.split()[0].lower(),
+                host_ping=is_ping,
+                lan_ip=ip,
+                ports_open={port: (port in ports_map)},
+                observer="phoebus"
+            )
 
     # Step 6: Cloud Run segments
     if not silent: show_tqdm_spinner("Auditing Cloud Run fleet segments", cycles=1)
@@ -1213,7 +1242,9 @@ def run_diagnostics(silent=False):
             warnings.append(f"Local swarm shard {shard_name} is INACTIVE / GHOST.")
 
     for peer_name, peer_status in local_peers.items():
-        if "OFFLINE" in peer_status:
+        if "OFFLINE_UNEXPECTED" in peer_status:
+            warnings.append(f"Mesh neighbor {peer_name} is OFFLINE_UNEXPECTED (Heartbeat expired / unreachable).")
+        elif "OFFLINE" in peer_status and "EXPECTED" not in peer_status:
             warnings.append(f"Mesh neighbor {peer_name} is OFFLINE.")
 
     offline_clouds = [name for name, status in cloud_status.items() if "OFFLINE" in status]
@@ -1466,7 +1497,16 @@ except Exception:
     print(f"- {Icon['Router']} **Physical Default Gateway:** {Colors.RED}Not resolved{Colors.RESET}")
 
 for peer_name, peer_status in local_peers.items():
-    color_tag = Colors.GREEN if "ONLINE" in peer_status and "BLOCKED" not in peer_status and "UNVERIFIED" not in peer_status else (Colors.YELLOW if "BLOCKED" in peer_status or "UNVERIFIED" in peer_status else Colors.GRAY)
+    if "ONLINE" in peer_status and "BLOCKED" not in peer_status and "UNVERIFIED" not in peer_status:
+        color_tag = Colors.GREEN
+    elif "OFFLINE_EXPECTED" in peer_status:
+        color_tag = Colors.DARK_CYAN
+    elif "OFFLINE_UNEXPECTED" in peer_status:
+        color_tag = Colors.YELLOW
+    elif "BLOCKED" in peer_status or "UNVERIFIED" in peer_status:
+        color_tag = Colors.YELLOW
+    else:
+        color_tag = Colors.GRAY
     print(f"- {Icon['Server']} **{peer_name}:** {color_tag}{peer_status}{Colors.RESET}")
 
 if ssh_processes:
