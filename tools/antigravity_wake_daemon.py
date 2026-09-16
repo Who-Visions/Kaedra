@@ -133,6 +133,9 @@ def main() -> int:
                         GLOBAL_SEEN_HASHES.add(f_hash)
                     continue
 
+                if source in ("phoebus/antigravity", "antigravity", "phoebus") and target in ("chatgpt-app/g-whoentertains", "claude-app/g-whoentertains", "all", "bandit", "yuki", "iris", "kaedra", "dav1d", "rhea"):
+                    if f_hash: GLOBAL_SEEN_HASHES.add(f_hash)
+                    continue
                 # Filter out raw test echoes with no substantive payload
                 if text.strip().lower() in ("ok", "ping", "pong", "test") and "relay" not in source:
                     if f_hash:
