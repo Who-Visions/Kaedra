@@ -141,6 +141,18 @@ def audit_msgnode() -> dict:
     return {"msgnode_live": live, "data": status_data}
 
 
+def audit_and_refresh_personas() -> dict:
+    """Refreshes active personas from 9-DB cluster into ~/.nougen/shards/personas.json."""
+    try:
+        p_tool = HOME / "The Observatory" / "NouGen" / "nougenshards" / "tools" / "persona_daily.py"
+        if p_tool.exists():
+            res = subprocess.run([sys.executable, str(p_tool)], capture_output=True, text=True, timeout=30)
+            return {"ok": res.returncode == 0, "output": res.stdout.strip()}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+    return {"ok": False, "reason": "persona_daily tool not found"}
+
+
 def main():
     log("Starting fleet 20-minute execution run...")
     
@@ -155,14 +167,19 @@ def main():
     # 3. MsgNode Audit
     mn = audit_msgnode()
     log(f"MsgNode (:8766): {'ONLINE' if mn['msgnode_live'] else 'OFFLINE'}")
+
+    # 4. Persona Engine Hook & Refresh
+    pr = audit_and_refresh_personas()
+    log(f"Persona Grid Rebuild: {'SUCCESS' if pr.get('ok') else 'STANDBY'} ({pr.get('reason') or pr.get('output', '')[:60]})")
     
-    # 4. Save Last Run Snapshot
+    # 5. Save Last Run Snapshot
     snapshot = {
         "timestamp": time.time(),
         "time_str": time.strftime("%Y-%m-%d %H:%M:%S"),
         "inbox_processed": inbox_res["processed_count"],
         "tier0_status": t0,
         "msgnode_status": mn,
+        "persona_status": pr,
         "node": "phoebus",
         "agent": "antigravity"
     }

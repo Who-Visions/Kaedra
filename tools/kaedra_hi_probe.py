@@ -360,7 +360,7 @@ def test_bidirectional_ssh(host_ip, local_ip):
                 f"curl -s -I http://{local_ip}:11434/"
             )
             ssh_cmd = [
-                "ssh", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=2",
+                "ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=2",
                 "-i", key_path,
                 f"{user}@{host_ip}",
                 test_cmd
@@ -1363,7 +1363,9 @@ show_tqdm_bar("Kaedra liveness complete", width=24, delay_ms=5)
 
 # Safety System Audits
 constitution_path = "/Users/kushboygroup/.gemini/GEMINI.md"
-vault_dir = "/Users/kushboygroup/The Observatory/mempalace"
+# Canonical Vault directory (.nougen or /nougen)
+vault_candidates = ["/nougen", os.path.expanduser("~/.nougen")]
+vault_dir = next((p for p in vault_candidates if os.path.exists(p)), os.path.expanduser("~/.nougen"))
 coach_playbook_path = "/Users/kushboygroup/The Observatory/antigravity-coach/SKILL.md"
 
 constitution_verified = os.path.exists(constitution_path)
