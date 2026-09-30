@@ -88,7 +88,10 @@ def should_ack(sender: str, text: str) -> bool:
     guard written for the legacy 'nougen-phoebus'.
     """
     body = (text or "").strip()
-    if body.upper().startswith("ACK W9Q4"):
+    # An ACK anywhere in the text, not only at the start: relay-watch and other
+    # forwarders wrap it ("relay leg ... [NouGenMsg -> @x] ACK W9Q4 ..."), and a
+    # wrapped ACK would otherwise re-trigger the next one.
+    if "ACK W9Q4" in body.upper():
         return False
     if _sender_node(sender) in ("", "unknown", OWN_NODE):
         return False
