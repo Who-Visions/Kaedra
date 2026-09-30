@@ -67,6 +67,34 @@ def send_fleet_msg(target: str, text: str) -> bool:
         return False
 
 
+OWN_NODE = (os.environ.get("NOUGEN_MACHINE") or "phoebus").strip().lower()
+
+
+def _sender_node(sender: str) -> str:
+    """Node part of any sender label: 'nougen-phoebus', 'phoebus-agy' -> 'phoebus'."""
+    s = (sender or "").strip().lower()
+    for prefix in ("nougenmsg-", "nougen-"):
+        if s.startswith(prefix):
+            s = s[len(prefix):]
+    return s.split("-")[0].split("/")[0]
+
+
+def should_ack(sender: str, text: str) -> bool:
+    """Reply to handshake / roll-call requests, never to ACKs and never to ourselves.
+
+    The ACK itself contains the handshake token, so without both guards each ACK
+    re-triggers the next one every cycle. The own-node check compares the NODE,
+    not the exact label: lane-aware labels ('phoebus-agy') must not slip past a
+    guard written for the legacy 'nougen-phoebus'.
+    """
+    body = (text or "").strip()
+    if body.upper().startswith("ACK W9Q4"):
+        return False
+    if _sender_node(sender) in ("", "unknown", OWN_NODE):
+        return False
+    return "W9Q4" in body or "SESSION WAKE" in body or "roll call" in body.lower()
+
+
 def process_inbox() -> dict:
     """Scans and digests incoming pings."""
     inbox_dirs = [AGY_INBOX, GEMINI_INBOX]
@@ -89,11 +117,10 @@ def process_inbox() -> dict:
                 text = (data.get("text") or str(data.get("payload", ""))).strip()
                 
                 # Check for handshake / roll call requests
-                if "W9Q4" in text or "SESSION WAKE" in text or "roll call" in text.lower():
+                if should_ack(sender, text):
                     log(f"Handling wake/handshake from {sender}: {text[:60]}")
-                    if sender and sender != "nougen-phoebus":
-                        target_node = sender.replace("nougen-", "")
-                        send_fleet_msg(target_node, f"ACK W9Q4 | phoebus/antigravity | Session: {SESSION_ID} | Status: ONLINE")
+                    send_fleet_msg(_sender_node(sender),
+                                   f"ACK W9Q4 | phoebus/antigravity | Session: {SESSION_ID} | Status: ONLINE")
                 
                 recent_msgs.append({
                     "file": p.name,
