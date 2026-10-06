@@ -527,3 +527,16 @@ procs:
 *Thread-Based Engineering • A2A Protocol • Visual AI • Hardware Control*
 
 </div>
+
+<!-- nougen:fleet-role:begin (generated from NouGenRelay fleet/manifest.json; edit the manifest, not this block) -->
+## Fleet role
+
+| | |
+|---|---|
+| Role | Kaedra (Python) |
+| Kind | genesis_core |
+| Status | canonical |
+| Canonical for | kaedra |
+| Visibility | public |
+
+<!-- nougen:fleet-role:end -->
