@@ -37,7 +37,7 @@ def log(msg: str):
 
 def check_blade_ssh() -> dict:
     cmd = [
-        "ssh", "-o", "ConnectTimeout=5", "-o", "BatchMode=yes", BLADE_HOST,
+        "ssh", "-o", "ConnectTimeout=5", "-o", "BatchMode=yes", "-o", "AddressFamily=inet", BLADE_HOST,
         "powershell -Command \"Get-Process | Where-Object { $_.ProcessName -match 'agy|bun|node|ollama' } | Measure-Object | Select-Object -ExpandProperty Count\""
     ]
     try:

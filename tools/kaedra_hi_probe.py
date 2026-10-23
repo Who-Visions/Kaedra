@@ -346,30 +346,32 @@ def get_local_ip():
 def test_bidirectional_ssh(host_ip, local_ip):
     users = ["super", "kushboygroup"]
     keys = [
-        os.path.expanduser("~/.ssh/id_ed25519_who_tester"),
-        os.path.expanduser("~/.ssh/kaedra_swarm_key")
+        os.path.expanduser("~/.ssh/kaedra_swarm_key"),
+        os.path.expanduser("~/.ssh/id_ed25519_who_tester")
     ]
+    
+    test_cmd = (
+        f"powershell -Command \"try {{ \$s = New-Object System.Net.Sockets.TcpClient; \$s.Connect('{local_ip}', 22); \$s.Close(); 'BIDIRECTIONAL_OK' }} catch {{ 'BACK_BLOCKED' }}\" 2>\$null || "
+        f"nc -w 1 -z {local_ip} 22 2>/dev/null || "
+        f"curl -s -I --connect-timeout 1 http://{local_ip}:8766/ 2>/dev/null"
+    )
     
     for user in users:
         for key_path in keys:
             if not os.path.exists(key_path):
                 continue
-            test_cmd = (
-                f"powershell -Command \"Test-NetConnection -ComputerName {local_ip} -Port 11434 -InformationLevel Quiet\" || "
-                f"nc -w 1 -z {local_ip} 11434 || "
-                f"curl -s -I http://{local_ip}:11434/"
-            )
             ssh_cmd = [
-                "ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=2",
+                "ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=no",
+                "-o", "ConnectTimeout=3", "-o", "AddressFamily=inet",
                 "-i", key_path,
                 f"{user}@{host_ip}",
                 test_cmd
             ]
             try:
-                res = subprocess.run(ssh_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=2.5)
+                res = subprocess.run(ssh_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=6.0)
                 if res.returncode == 0:
                     out = res.stdout.strip().upper()
-                    if "TRUE" in out or "SUCCESS" in out or "200 OK" in out or not out:
+                    if "BIDIRECTIONAL_OK" in out or "TRUE" in out or "SUCCESS" in out or "200 OK" in out or not out:
                         return "ONLINE (BIDIRECTIONAL SAFE)"
                     else:
                         return "ONLINE (BACK-PORT BLOCKED)"
