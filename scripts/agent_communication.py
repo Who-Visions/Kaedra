@@ -23,10 +23,8 @@ from pathlib import Path
 env_hq_root = os.getenv("HQ_WHOART_ROOT")
 if env_hq_root:
     HQ_ROOT = env_hq_root
-elif os.name == 'nt':
-    HQ_ROOT = "C:/Users/super/Watchtower/HQ_WhoArt"
 else:
-    HQ_ROOT = "/mnt/c/Users/super/Watchtower/HQ_WhoArt"
+    HQ_ROOT = str(Path.home() / "Watchtower" / "HQ_WhoArt")
 
 # Agent Locations (HQ_WhoArt system)
 AGENT_PATHS = {
