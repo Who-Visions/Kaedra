@@ -95,3 +95,5 @@ Thumbs.db
 debug_*.py
 test_*.py
 verify_*.py
+.env
+.env.*
