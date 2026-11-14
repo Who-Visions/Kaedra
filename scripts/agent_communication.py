@@ -12,22 +12,29 @@ Enables Kaedra to communicate with other agents on the system:
 """
 
 import os
+import sys
 import json
 import subprocess
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 from pathlib import Path
 
+# Detect platform and environment variables for HQ_WhoArt path
+env_hq_root = os.getenv("HQ_WHOART_ROOT")
+if env_hq_root:
+    HQ_ROOT = env_hq_root
+else:
+    HQ_ROOT = str(Path.home() / "Watchtower" / "HQ_WhoArt")
 
 # Agent Locations (HQ_WhoArt system)
 AGENT_PATHS = {
-    "blade": "/mnt/c/Users/super/Watchtower/HQ_WhoArt/agents/blade_agent.py",
-    "claude": "/mnt/c/Users/super/Watchtower/HQ_WhoArt/agents/claude_agent.py",
-    "gemini": "/mnt/c/Users/super/Watchtower/HQ_WhoArt/agents/gemini_agent.py",
-    "vision": "/mnt/c/Users/super/Watchtower/HQ_WhoArt/agents/vision_agent.py",
-    "antigravity": "/mnt/c/Users/super/Watchtower/HQ_WhoArt/agents/antigravity_agent.py",
-    "codex": "/mnt/c/Users/super/Watchtower/HQ_WhoArt/agents/codex_agent.py",
-    "operator": "/mnt/c/Users/super/Watchtower/HQ_WhoArt/agents/operator_agent.py",
+    "blade": os.path.join(HQ_ROOT, "agents", "blade_agent.py"),
+    "claude": os.path.join(HQ_ROOT, "agents", "claude_agent.py"),
+    "gemini": os.path.join(HQ_ROOT, "agents", "gemini_agent.py"),
+    "vision": os.path.join(HQ_ROOT, "agents", "vision_agent.py"),
+    "antigravity": os.path.join(HQ_ROOT, "agents", "antigravity_agent.py"),
+    "codex": os.path.join(HQ_ROOT, "agents", "codex_agent.py"),
+    "operator": os.path.join(HQ_ROOT, "agents", "operator_agent.py"),
 }
 
 
@@ -37,7 +44,7 @@ class AgentCommunicator:
     def __init__(self):
         """Initialize agent communicator."""
         self.message_history: List[Dict] = []
-        self.hq_root = "/mnt/c/Users/super/Watchtower/HQ_WhoArt"
+        self.hq_root = HQ_ROOT
 
     def send_message(
         self,
@@ -81,10 +88,12 @@ class AgentCommunicator:
             result["error"] = f"Agent file not found: {agent_path}"
             return result
 
+        python_exe = os.getenv("AGENT_PYTHON_EXEC") or sys.executable or ('python' if os.name == 'nt' else 'python3')
+
         try:
             # Execute agent with message
             process = subprocess.run(
-                ['python3', agent_path, message],
+                [python_exe, agent_path, message],
                 capture_output=True,
                 text=True,
                 timeout=timeout,
