@@ -1,37 +1,44 @@
-# 🌑 KAEDRA StoryEngine v7.15
+<!-- nougen-readme-compiler: v1 -->
 
-<div align="center">
+<!-- nougen-readme-compiler: extensions: footer -->
 
-```
-██╗  ██╗ █████╗ ███████╗██████╗ ██████╗  █████╗ 
-██║ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔══██╗
-█████╔╝ ███████║█████╗  ██║  ██║██████╔╝███████║
-██╔═██╗ ██╔══██║██╔══╝  ██║  ██║██╔══██╗██╔══██║
-██║  ██╗██║  ██║███████╗██████╔╝██║  ██║██║  ██║
-╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
-```
+# 🌙 KAEDRA StoryEngine
 
-**🎬 Elite Narrative Intelligence & Cinematic Universe Architect**
+Elite Narrative Intelligence & Cinematic Universe Architect for the VeilVerse cinematic universe.
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Vertex AI](https://img.shields.io/badge/Vertex%20AI-Gemini%203-orange)](https://cloud.google.com/vertex-ai)
-[![Rich UI](https://img.shields.io/badge/Console-Rich%20Live-purple)](https://github.com/Textualize/rich)
-[![Voice](https://img.shields.io/badge/Voice-Wispr%20Flow-green)](https://www.wispr.ai/)
-[![Lights](https://img.shields.io/badge/Hardware-LIFX%20%2B%20Razer-red)](#-hardware-integration)
+[![Python 3.10+](<https://img.shields.io/badge/python-3.10+-blue.svg>)](<https://www.python.org/downloads/>) [![Vertex AI Gemini 3](<https://img.shields.io/badge/Vertex%20AI-Gemini%203-orange>)](<https://cloud.google.com/vertex-ai>) [![Rich UI](<https://img.shields.io/badge/Console-Rich%20Live-purple>)](<https://github.com/Textualize/rich>) [![Voice Wispr Flow](<https://img.shields.io/badge/Voice-Wispr%20Flow-green>)](<https://www.wispr.ai/>)
 
-[Features](#-core-features) • [Commands](#-writing-commands) • [Tools](#-engine-tools) • [Services](#-services) • [Agents](#-agents) • [Hardware](#-hardware-integration) • [Quick Start](#-quick-start)
+## 📚 Contents
+- [Overview](#overview)
+- [Core Features](#core-features)
+- [Writing Commands](#writing-commands)
+- [Engine Tools](#engine-tools)
+- [Services](#services)
+- [Agents](#agents)
+- [Hardware Integration](#hardware-integration)
+- [World Registry](#world-registry)
+- [Universe Automations](#universe-automations)
+- [Architecture](#architecture)
+- [Quick Start](#quick-start)
+- [FastAPI Server & A2A Protocol](#fastapi-server-a2a-protocol)
+- [Thread-Based Engineering](#thread-based-engineering)
+- [Skill Packs](#skill-packs)
+- [Visual Services](#visual-services)
+- [Observability](#observability)
+- [Deployment](#deployment)
+- [Performance](#performance)
+- [Configuration](#configuration)
+- [License](#license)
 
-</div>
-
----
-
-## 🎯 What is KAEDRA?
+## 🧠 Overview
 
 KAEDRA is a **Story Engine** and **Universe Architect** for deep narrative work. She orchestrates creative writing sessions, manages complex lore databases, controls ambient lighting, and automates the production pipeline for the **VeilVerse** cinematic universe.
 
----
+Version: **v7.15** (per the previous README). KAEDRA is more than a writing tool — it is a complete AI Agent Framework: thread-based engineering, a FastAPI server with Google's Agent-to-Agent (A2A) protocol, visual AI, and hardware control.
 
-## 🔥 Core Features
+Note: `pyproject.toml` describes the package as version 0.0.6, “KAEDRA - Shadow Tactician AI Assistant” — that description and version do not match the README; see the PR notes.
+
+## ✨ Core Features
 
 | Feature | Description |
 |---------|-------------|
@@ -40,28 +47,26 @@ KAEDRA is a **Story Engine** and **Universe Architect** for deep narrative work.
 | 🤖 **Universe Automations** | Self-cleaning database (Canon, Timeline, Power scoring) |
 | 🎤 **Voice Dictation** | Wispr Flow integration for hands-free writing |
 | 💡 **Ambient Lighting** | LIFX bulbs + Razer Blade 15 keyboard sync |
-| 📟 **Rich Live UI** | "Writer Friendly" console with persistent footer |
-| 🌙 **Night Mode** | Adaptive lighting with safety caps (11PM-8AM) |
+| 📟 **Rich Live UI** | “Writer Friendly” console with persistent footer |
+| 🌙 **Night Mode** | Adaptive lighting with safety caps (11PM–8AM) |
 | ⚡ **Smart Input** | Paste detection and raw terminal handling |
 
----
+## 📌 Writing Commands
 
-## 🎮 Writing Commands
+Use the `:` prefix for commands. Natural language for writing.
 
-Use `:` prefix for commands. Natural language for writing.
-
-### 📝 Writing Flow
+### Writing Flow
 
 | Command | Description |
 |---------|-------------|
 | `:next` | ⏭️ Advance to next Scene (resets Tension) |
 | `:pov [name]` | 👁️ Switch Point of View |
-| `:freeze` | ❄️ Enter "Bullet Time" mode |
+| `:freeze` | ❄️ Enter “Bullet Time” mode |
 | `:god` | 🌍 Enter Worldbuilding/Lore mode |
 | `:emotion [emo] [val]` | 💫 Pulse specific emotion |
 | `:quit` | 💾 Save and Exit |
 
-### 🤖 Automation
+### Automation
 
 | Command | Description |
 |---------|-------------|
@@ -73,7 +78,7 @@ Use `:` prefix for commands. Natural language for writing.
 | `:roadmap add` | 📅 Sync to Google Tasks |
 | `:roadmap sync` | 🔗 Sync to Notion + Drive |
 
-### 💡 Hardware
+### Hardware
 
 | Command | Description |
 |---------|-------------|
@@ -82,13 +87,11 @@ Use `:` prefix for commands. Natural language for writing.
 | `:voice on` | 🎤 Enable voice dictation |
 | `:voice off` | 🔇 Disable voice dictation |
 
----
+## 📌 Engine Tools
 
-## 🛠️ Engine Tools
+AI-callable functions available during generation.
 
-AI-callable functions available during generation:
-
-### 📚 Lore & Notion
+### Lore & Notion
 
 | Tool | Purpose |
 |------|---------|
@@ -99,7 +102,7 @@ AI-callable functions available during generation:
 | `read_local_lore` | 📁 Read local JSON lore files |
 | `propose_canon_update` | 💡 Suggest lore changes |
 
-### 🎬 Screenwriting
+### Screenwriting
 
 | Tool | Purpose |
 |------|---------|
@@ -108,64 +111,60 @@ AI-callable functions available during generation:
 | `adjust_emotion` | 💫 Pulse emotional state |
 | `clean_timeline_data` | 📅 Auto-tag timeline eras |
 
-### 🌍 World Building
+### World Building
 
 | Tool | Purpose |
 |------|---------|
 | `ingest_youtube_content` | 📺 Extract YouTube transcripts |
 | `worldforge_from_youtube` | 🌱 Create worlds from videos |
 
----
+## 📌 Services
 
-## 🔌 Services
-
-### 💡 Hardware Control
+### Hardware Control
 
 | Service | Description |
 |---------|-------------|
-| `lifx.py` (27KB) | 💡 LIFX bulb control (colors, effects, scenes) |
-| `razer.py` (13KB) | ⌨️ Razer Chroma keyboard (per-key matrix, fire effect) |
+| `lifx.py` | 💡 LIFX bulb control (colors, effects, scenes) |
+| `razer.py` | ⌨️ Razer Chroma keyboard (per-key matrix, fire effect) |
 
-### 🎤 Voice & Audio
-
-| Service | Description |
-|---------|-------------|
-| `wispr.py` (8KB) | 🎤 Wispr Flow Desktop integration (dictation) |
-| `wispr_cloud.py` (5KB) | ☁️ Wispr Cloud API |
-| `tts.py` (15KB) | 🔊 Text-to-Speech (Gemini TTS) |
-| `tts_chatterbox.py` (7KB) | 🗣️ Chatterbox TTS alternative |
-| `mic.py` (7KB) | 🎙️ Microphone input handling |
-| `vad.py` (1KB) | 🔈 Voice Activity Detection |
-| `transcription.py` (3KB) | ✍️ Speech-to-text conversion |
-
-### 📋 Productivity
+### Voice & Audio
 
 | Service | Description |
 |---------|-------------|
-| `notion.py` (15KB) | 📓 Notion API integration |
-| `google_workspace.py` (5KB) | 📅 Google Calendar/Tasks API |
-| `invoices.py` (43KB) | 💰 Invoice generation & tracking |
+| `wispr.py` | 🎤 Wispr Flow Desktop integration (dictation) |
+| `wispr_cloud.py` | ☁️ Wispr Cloud API |
+| `tts.py` | 🔊 Text-to-Speech (Gemini TTS) |
+| `tts_chatterbox.py` | 🗣️ Chatterbox TTS alternative |
+| `mic.py` | 🎙️ Microphone input handling |
+| `vad.py` | 🔈 Voice Activity Detection |
+| `transcription.py` | ✍️ Speech-to-text conversion |
 
-### 🌐 Research & Media
-
-| Service | Description |
-|---------|-------------|
-| `video.py` (11KB) | 🎬 Video ingestion & analysis |
-| `web.py` (5KB) | 🌍 Web scraping & content extraction |
-| `research.py` (5KB) | 🔍 Research aggregation |
-| `memory.py` (9KB) | 🧠 Long-term memory management |
-
-### ⚙️ Core
+### Productivity
 
 | Service | Description |
 |---------|-------------|
-| `prompt.py` (12KB) | 📝 Gemini 3 Smart Router & Thought Extraction |
-| `logging.py` (7KB) | 📊 Session logging (JSON turns) |
-| `fast_flow.py` (6KB) | ⚡ Fast streaming responses |
+| `notion.py` | 📓 Notion API integration |
+| `google_workspace.py` | 📅 Google Calendar/Tasks API |
+| `invoices.py` | 💰 Invoice generation & tracking |
 
----
+### Research & Media
 
-## 🤖 Agents
+| Service | Description |
+|---------|-------------|
+| `video.py` | 🎬 Video ingestion & analysis |
+| `web.py` | 🌍 Web scraping & content extraction |
+| `research.py` | 🔍 Research aggregation |
+| `memory.py` | 🧠 Long-term memory management |
+
+### Core
+
+| Service | Description |
+|---------|-------------|
+| `prompt.py` | 📝 Gemini 3 Smart Router & Thought Extraction |
+| `logging.py` | 📊 Session logging (JSON turns) |
+| `fast_flow.py` | ⚡ Fast streaming responses |
+
+## 📌 Agents
 
 Multi-agent system with specialized personas:
 
@@ -176,11 +175,9 @@ Multi-agent system with specialized personas:
 | 🌑 **Kaedra** | Story Persona | Narrative intelligence and writing |
 | 🌙 **Nyx** | Dark Persona | Alternative creative voice |
 
----
+## 📌 Hardware Integration
 
-## 🎨 Hardware Integration
-
-### 💡 LIFX Smart Lights
+### LIFX Smart Lights
 
 | Feature | Description |
 |---------|-------------|
@@ -191,7 +188,7 @@ Multi-agent system with specialized personas:
 | Day Mode | 4500K warm white @ 60% |
 | Selector | Target specific groups/zones |
 
-### ⌨️ Razer Blade 15 Keyboard
+### Razer Blade 15 Keyboard
 
 | Feature | Description |
 |---------|-------------|
@@ -202,14 +199,9 @@ Multi-agent system with specialized personas:
 | ChromaLink | 5 virtual LEDs for 3rd party devices |
 | Breathing | Two-color pulse effect |
 
-**Requirements:**
+**Requirements:** Razer Synapse 4 Beta (fixes REST API errors); enable “Kaedra Story Engine” in Chroma Apps.
 
-- Razer Synapse 4 Beta (fixes REST API errors)
-- Enable "Kaedra Story Engine" in Chroma Apps
-
----
-
-## 🌍 World Registry
+## 📌 World Registry
 
 Each world is a self-contained folder in `lore/worlds/`:
 
@@ -223,30 +215,26 @@ lore/worlds/world_id/
 └── notifications.md    # 🔔 System Alerts
 ```
 
----
+## 📌 Universe Automations
 
-## 🤖 Universe Automations
+Trigger with `:automate`.
 
-Trigger with `:automate` command:
-
-### 📦 Production Pipeline
+### Production Pipeline
 
 - **Canon Promotion**: `Concept` → `In Development`
 - **Release Closeout**: `Released` → `Completed` + `Phase 1` tag
 
-### ✅ Consistency Checks
+### Consistency Checks
 
 - **Timeline Validator**: Auto-tag Era (Ancient, Classical, Modern, Future)
-- **Power Scoring**: Calculate `Importance Score` (30-95) from Power Level
+- **Power Scoring**: Calculate `Importance Score` (30–95) from Power Level
 - **Retcon Safety**: Rename + deactivate retconned entries
 
-### 🔗 Connection & Media
+### Connection & Media
 
 - **Major Characters**: Alert for connection review
 - **Media Alerts**: Ping social scheduler on release
-- **Ingestion**: Move "Approved" ideas to Bible
-
----
+- **Ingestion**: Move “Approved” ideas to Bible
 
 ## 🏗️ Architecture
 
@@ -261,7 +249,6 @@ kaedra/
 │   ├── doctrine.py       # Writing Doctrine (MICE, Barthes, etc.)
 │   ├── worldforge.py     # World Building Tools
 │   └── tools/            # AI-Callable Functions
-│
 ├── 🔌 services/          # External Integrations (19 modules)
 ├── 🤖 agents/            # AI Personas (Blade, Council, Kaedra, Nyx)
 ├── 🌍 worlds/            # Universe Management
@@ -269,7 +256,26 @@ kaedra/
 └── 📋 strategies/        # Generation Strategies
 ```
 
----
+### Core Modules
+
+| Module | Purpose |
+|--------|---------|
+| `threads.py` | 🧵 Thread-based engineering (6 thread types) |
+| `engine.py` | ⚡ Core reasoning engine |
+| `tools.py` | 🛠️ Tool execution framework |
+| `config.py` | ⚙️ Environment & credentials |
+| `google_tools.py` | 🔌 Google API integrations |
+| `validation.py` | ✅ Stop-hook validators |
+| `skills.py` | 🎯 Skill registration & routing |
+
+### AI Routing
+
+| Module | Purpose |
+|--------|---------|
+| `prompts.py` | 📝 System prompts & persona management |
+| `router.py` | 🔀 Smart model routing (Flash/Pro) |
+| `retry.py` | 🔄 Exponential backoff & fallbacks |
+| `isolation.py` | 🔒 Sandboxed execution |
 
 ## 🚀 Quick Start
 
@@ -295,31 +301,7 @@ python -m kaedra.story.engine --voice
 2. Start writing naturally
 3. Use `:automate` to clean your lore database
 
----
-
-## 🎨 Brand
-
-**Who Visions LLC** | Strategic AI Intelligence
-
-- 📸 **Instagram**: [@aiwithdav3](https://instagram.com/aiwithdav3)
-- 🎬 **YouTube**: [Ai with Dav3](https://youtube.com/aiwithdav3)
-- 🌐 **Website**: [WhoVisions.com](https://WhoVisions.com)
-
----
-
-## 📜 License
-
-Proprietary - Who Visions LLC © 2026
-
----
-
-## 🚀 Beyond The Story Engine
-
-> **KAEDRA is more than a writing tool—it's a complete AI Agent Framework.**
-
----
-
-## 🌐 FastAPI Server & A2A Protocol
+## 📌 FastAPI Server & A2A Protocol
 
 KAEDRA exposes a production-ready **FastAPI server** supporting Google's Agent-to-Agent (A2A) protocol:
 
@@ -328,7 +310,7 @@ KAEDRA exposes a production-ready **FastAPI server** supporting Google's Agent-t
 uvicorn kaedra.api.main:app --host 0.0.0.0 --port 8080
 ```
 
-### 📡 API Endpoints
+### API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -343,17 +325,15 @@ uvicorn kaedra.api.main:app --host 0.0.0.0 --port 8080
 | `/query` | POST | 🧠 Reasoning engine query |
 | `/metrics` | GET | 📈 Prometheus metrics |
 
-### 🔑 Authentication
+### Authentication
 
 - Google Cloud IAM (Cloud Run)
 - API Key header (`X-API-Key`)
 - Service Account tokens
 
----
+## 📌 Thread-Based Engineering
 
-## 🧵 Thread-Based Engineering
-
-**NEW: Implements Andy Devdan's framework + Geoffrey Huntley's Ralph Wiggum pattern.**
+Implements Andy Devdan's framework + Geoffrey Huntley's Ralph Wiggum pattern.
 
 ```python
 from kaedra.core.threads import create_ralph, create_lthread, create_pthread
@@ -371,7 +351,7 @@ pthread = create_pthread(max_concurrent=5)
 results = await pthread.run_parallel(agents, prompts)
 ```
 
-### 🧵 Thread Types
+### Thread Types
 
 | Thread | Class | Purpose |
 |--------|-------|---------|
@@ -382,7 +362,7 @@ results = await pthread.run_parallel(agents, prompts)
 | 🏃 **L-Thread** | `LThreadRunner` | Long-duration with validation |
 | 🔄 **Ralph** | `RalphRunner` | Infinite loop (ghuntley.com) |
 
-### ✅ Validation Hooks
+### Validation Hooks
 
 | Validator | Purpose |
 |-----------|---------|
@@ -391,9 +371,7 @@ results = await pthread.run_parallel(agents, prompts)
 | `validate_tests()` | Run pytest |
 | `validate_all()` | Combine validators |
 
----
-
-## 🎯 Skill Packs
+## 📌 Skill Packs
 
 Modular capabilities organized by domain:
 
@@ -406,45 +384,16 @@ Modular capabilities organized by domain:
 | 🔍 **Introspective** | Self-analysis, debugging |
 | ⚙️ **Default** | Core agent capabilities |
 
----
-
-## 🧠 Core Modules
-
-### 🔧 Engine & Infrastructure
-
-| Module | Size | Purpose |
-|--------|------|---------|
-| `threads.py` | 24KB | 🧵 Thread-based engineering (6 thread types) |
-| `engine.py` | 22KB | ⚡ Core reasoning engine |
-| `tools.py` | 18KB | 🛠️ Tool execution framework |
-| `config.py` | 11KB | ⚙️ Environment & credentials |
-| `google_tools.py` | 12KB | 🔌 Google API integrations |
-| `validation.py` | 10KB | ✅ Stop-hook validators |
-| `skills.py` | 10KB | 🎯 Skill registration & routing |
-
-### 🤖 AI Routing
-
-| Module | Purpose |
-|--------|---------|
-| `prompts.py` | 📝 System prompts & persona management |
-| `router.py` | 🔀 Smart model routing (Flash/Pro) |
-| `retry.py` | 🔄 Exponential backoff & fallbacks |
-| `isolation.py` | 🔒 Sandboxed execution |
-
----
-
-## 🖼️ Visual Services
+## 📌 Visual Services
 
 | Capability | Model | Description |
 |------------|-------|-------------|
 | 🖼️ **Image Gen** | Imagen 3 | High-quality image generation |
 | 🎬 **Video Gen** | Veo 3 | 8-second video clips |
-| 👁️ **Vision** | Gemini 3 | Image analysis & understanding |
+| 👁️ **Vision** | Gemini 3 | Image analysis and understanding |
 | 🔍 **OCR** | Vertex AI | Document text extraction |
 
----
-
-## 📊 Observability
+## 📌 Observability
 
 | Feature | Description |
 |---------|-------------|
@@ -453,9 +402,7 @@ Modular capabilities organized by domain:
 | 💰 **Cost Tracking** | Per-request token/$ tracking |
 | 🔍 **Tracing** | Request correlation IDs |
 
----
-
-## 🐳 Deployment Options
+## 🚢 Deployment
 
 | Platform | Status | Notes |
 |----------|--------|-------|
@@ -464,9 +411,7 @@ Modular capabilities organized by domain:
 | 🖥️ **Local** | ✅ Dev | `uvicorn` or `story.engine` |
 | 🐳 **Docker** | ✅ Available | Multi-stage build |
 
----
-
-## ⚡ Performance
+## 📌 Performance
 
 | Metric | Value |
 |--------|-------|
@@ -476,9 +421,7 @@ Modular capabilities organized by domain:
 | 🤖 **Agents** | 4 personas |
 | 🧵 **Thread Types** | 6 patterns |
 
----
-
-## 🔧 Configuration
+## ⚙️ Configuration
 
 ### Environment Variables
 
@@ -493,23 +436,7 @@ export NOTION_API_KEY="your-notion-key"
 export WISPR_API_KEY="your-wispr-key"
 ```
 
-### mprocs (Parallel Agents)
-
-```yaml
-# mprocs.yaml - P-Thread Configuration
-procs:
-  agent1:
-    shell: "while :; do cat PROMPT.md | claude-code; done"
-  agent2:
-    shell: "while :; do cat PROMPT.md | claude-code; done"
-  pylint:
-    shell: "py -3.12 -m pylint kaedra --score=y"
-    autostart: false
-```
-
----
-
-## 🎓 Thread Engineering Resources
+### Thread Engineering Resources
 
 | Resource | Link |
 |----------|------|
@@ -518,12 +445,17 @@ procs:
 | 🔧 **mprocs** | [github.com/pvolok/mprocs](https://github.com/pvolok/mprocs) |
 | 📦 **repomirror** | [repomirror.md](https://github.com/repomirrorhq/repomirror) |
 
----
+## 📄 License
 
-<div align="center">
+Proprietary — Who Visions LLC © 2026 (per the previous README). No `LICENSE` file was found in the repository, and `pyproject.toml` declares MIT — that conflict needs the owner to resolve it.
+
+## 🔗 Links
+
+- [Instagram — @aiwithdav3](<https://instagram.com/aiwithdav3>)
+- [YouTube — Ai with Dav3](<https://youtube.com/aiwithdav3>)
+- [Website — WhoVisions.com](<https://WhoVisions.com>)
+- [Kaedra on GitHub](<https://github.com/Who-Visions/Kaedra>)
 
 **🌑 KAEDRA — From Story Engine to Full AI Agent Framework**
 
 *Thread-Based Engineering • A2A Protocol • Visual AI • Hardware Control*
-
-</div>
