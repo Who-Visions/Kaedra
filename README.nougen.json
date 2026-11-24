@@ -1,0 +1,153 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Who-Visions/NouGenShards/main/schemas/readme-manifest.schema.json",
+  "schema_version": 1,
+  "project": {
+    "title": "KAEDRA StoryEngine",
+    "description": "Elite Narrative Intelligence & Cinematic Universe Architect for the VeilVerse cinematic universe.",
+    "emoji": "🌙"
+  },
+  "table_of_contents": true,
+  "badges": [
+    {
+      "label": "Python 3.10+",
+      "image": "https://img.shields.io/badge/python-3.10+-blue.svg",
+      "url": "https://www.python.org/downloads/"
+    },
+    {
+      "label": "Vertex AI Gemini 3",
+      "image": "https://img.shields.io/badge/Vertex%20AI-Gemini%203-orange",
+      "url": "https://cloud.google.com/vertex-ai"
+    },
+    {
+      "label": "Rich UI",
+      "image": "https://img.shields.io/badge/Console-Rich%20Live-purple",
+      "url": "https://github.com/Textualize/rich"
+    },
+    {
+      "label": "Voice Wispr Flow",
+      "image": "https://img.shields.io/badge/Voice-Wispr%20Flow-green",
+      "url": "https://www.wispr.ai/"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Overview",
+      "content": "KAEDRA is a **Story Engine** and **Universe Architect** for deep narrative work. She orchestrates creative writing sessions, manages complex lore databases, controls ambient lighting, and automates the production pipeline for the **VeilVerse** cinematic universe.\n\nVersion: **v7.15** (per the previous README). KAEDRA is more than a writing tool — it is a complete AI Agent Framework: thread-based engineering, a FastAPI server with Google's Agent-to-Agent (A2A) protocol, visual AI, and hardware control.\n\nNote: `pyproject.toml` describes the package as version 0.0.6, “KAEDRA - Shadow Tactician AI Assistant” — that description and version do not match the README; see the PR notes.",
+      "emoji": "auto"
+    },
+    {
+      "title": "Core Features",
+      "content": "| Feature | Description |\n|---------|-------------|\n| 🧠 **Multi-Tier AI** | Gemini 3 Pro/Flash with Smart Routing and Thinking Levels |\n| 📜 **World Registry** | Multi-save system with persistent world states |\n| 🤖 **Universe Automations** | Self-cleaning database (Canon, Timeline, Power scoring) |\n| 🎤 **Voice Dictation** | Wispr Flow integration for hands-free writing |\n| 💡 **Ambient Lighting** | LIFX bulbs + Razer Blade 15 keyboard sync |\n| 📟 **Rich Live UI** | “Writer Friendly” console with persistent footer |\n| 🌙 **Night Mode** | Adaptive lighting with safety caps (11PM–8AM) |\n| ⚡ **Smart Input** | Paste detection and raw terminal handling |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Writing Commands",
+      "content": "Use the `:` prefix for commands. Natural language for writing.\n\n### Writing Flow\n\n| Command | Description |\n|---------|-------------|\n| `:next` | ⏭️ Advance to next Scene (resets Tension) |\n| `:pov [name]` | 👁️ Switch Point of View |\n| `:freeze` | ❄️ Enter “Bullet Time” mode |\n| `:god` | 🌍 Enter Worldbuilding/Lore mode |\n| `:emotion [emo] [val]` | 💫 Pulse specific emotion |\n| `:quit` | 💾 Save and Exit |\n\n### Automation\n\n| Command | Description |\n|---------|-------------|\n| `:automate` | 🔄 Run Universe Automations (Canon, Timeline, Power) |\n| `:roadmap new` | 📋 Create project roadmap template |\n| `:roadmap tasks` | ✅ Generate milestone tasks |\n| `:roadmap diag` | 🔍 25 Expert Roadblock Checks |\n| `:roadmap names` | 🎭 Character Authenticity Protocol |\n| `:roadmap add` | 📅 Sync to Google Tasks |\n| `:roadmap sync` | 🔗 Sync to Notion + Drive |\n\n### Hardware\n\n| Command | Description |\n|---------|-------------|\n| `:lights fire` | 🔥 Fire atmosphere (LIFX flame + Razer sparks) |\n| `:lights restore` | ☀️ Restore baseline lighting |\n| `:voice on` | 🎤 Enable voice dictation |\n| `:voice off` | 🔇 Disable voice dictation |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Engine Tools",
+      "content": "AI-callable functions available during generation.\n\n### Lore & Notion\n\n| Tool | Purpose |\n|------|---------|\n| `read_page_content` | 📖 Read Notion page content |\n| `list_universe_pages` | 📂 List all lore pages |\n| `update_page_content` | ✏️ Edit Notion page |\n| `run_lore_automations` | ⚙️ Canon promotion, retcon safety |\n| `read_local_lore` | 📁 Read local JSON lore files |\n| `propose_canon_update` | 💡 Suggest lore changes |\n\n### Screenwriting\n\n| Tool | Purpose |\n|------|---------|\n| `consult_director` | 🎥 Screenwriting guidance (structure, character, twist, etc.) |\n| `set_engine_mode` | 🎭 Switch writing mode |\n| `adjust_emotion` | 💫 Pulse emotional state |\n| `clean_timeline_data` | 📅 Auto-tag timeline eras |\n\n### World Building\n\n| Tool | Purpose |\n|------|---------|\n| `ingest_youtube_content` | 📺 Extract YouTube transcripts |\n| `worldforge_from_youtube` | 🌱 Create worlds from videos |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Services",
+      "content": "### Hardware Control\n\n| Service | Description |\n|---------|-------------|\n| `lifx.py` | 💡 LIFX bulb control (colors, effects, scenes) |\n| `razer.py` | ⌨️ Razer Chroma keyboard (per-key matrix, fire effect) |\n\n### Voice & Audio\n\n| Service | Description |\n|---------|-------------|\n| `wispr.py` | 🎤 Wispr Flow Desktop integration (dictation) |\n| `wispr_cloud.py` | ☁️ Wispr Cloud API |\n| `tts.py` | 🔊 Text-to-Speech (Gemini TTS) |\n| `tts_chatterbox.py` | 🗣️ Chatterbox TTS alternative |\n| `mic.py` | 🎙️ Microphone input handling |\n| `vad.py` | 🔈 Voice Activity Detection |\n| `transcription.py` | ✍️ Speech-to-text conversion |\n\n### Productivity\n\n| Service | Description |\n|---------|-------------|\n| `notion.py` | 📓 Notion API integration |\n| `google_workspace.py` | 📅 Google Calendar/Tasks API |\n| `invoices.py` | 💰 Invoice generation & tracking |\n\n### Research & Media\n\n| Service | Description |\n|---------|-------------|\n| `video.py` | 🎬 Video ingestion & analysis |\n| `web.py` | 🌍 Web scraping & content extraction |\n| `research.py` | 🔍 Research aggregation |\n| `memory.py` | 🧠 Long-term memory management |\n\n### Core\n\n| Service | Description |\n|---------|-------------|\n| `prompt.py` | 📝 Gemini 3 Smart Router & Thought Extraction |\n| `logging.py` | 📊 Session logging (JSON turns) |\n| `fast_flow.py` | ⚡ Fast streaming responses |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Agents",
+      "content": "Multi-agent system with specialized personas:\n\n| Agent | Role | Description |\n|-------|------|-------------|\n| 🗡️ **Blade** | System AI | Core orchestration and tool execution |\n| 👥 **Council** | Multi-Agent | Collaborative decision-making |\n| 🌑 **Kaedra** | Story Persona | Narrative intelligence and writing |\n| 🌙 **Nyx** | Dark Persona | Alternative creative voice |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Hardware Integration",
+      "content": "### LIFX Smart Lights\n\n| Feature | Description |\n|---------|-------------|\n| Color Control | HSB + Kelvin temperature |\n| Flame Effect | Flickering fire ambiance |\n| Breathe/Pulse | Rhythmic color cycling |\n| Night Mode | Auto-dim after 11PM (35% red) |\n| Day Mode | 4500K warm white @ 60% |\n| Selector | Target specific groups/zones |\n\n### Razer Blade 15 Keyboard\n\n| Feature | Description |\n|---------|-------------|\n| Static Colors | Solid color across all keys |\n| Per-Key Matrix | 8x24 grid control (CHROMA_CUSTOM2) |\n| Fire Animation | 🔥 Flickering sparks (threaded) |\n| Wave Effect | Color sweep across keyboard |\n| ChromaLink | 5 virtual LEDs for 3rd party devices |\n| Breathing | Two-color pulse effect |\n\n**Requirements:** Razer Synapse 4 Beta (fixes REST API errors); enable “Kaedra Story Engine” in Chroma Apps.",
+      "emoji": "auto"
+    },
+    {
+      "title": "World Registry",
+      "content": "Each world is a self-contained folder in `lore/worlds/`:\n\n```\nlore/worlds/world_id/\n├── world.json          # 🎭 Manifest (Mode, Scene, POV, Tension)\n├── world_bible.json    # 📖 Characters, Lore, Locations\n├── timeline.json       # 📅 Chronological Events\n├── canon.json          # ✅ Established Truths\n├── ingestion.json      # 📥 Incoming Ideas Queue\n└── notifications.md    # 🔔 System Alerts\n```",
+      "emoji": "auto"
+    },
+    {
+      "title": "Universe Automations",
+      "content": "Trigger with `:automate`.\n\n### Production Pipeline\n\n- **Canon Promotion**: `Concept` → `In Development`\n- **Release Closeout**: `Released` → `Completed` + `Phase 1` tag\n\n### Consistency Checks\n\n- **Timeline Validator**: Auto-tag Era (Ancient, Classical, Modern, Future)\n- **Power Scoring**: Calculate `Importance Score` (30–95) from Power Level\n- **Retcon Safety**: Rename + deactivate retconned entries\n\n### Connection & Media\n\n- **Major Characters**: Alert for connection review\n- **Media Alerts**: Ping social scheduler on release\n- **Ingestion**: Move “Approved” ideas to Bible",
+      "emoji": "auto"
+    },
+    {
+      "title": "Architecture",
+      "content": "```\nkaedra/\n├── 🧠 core/              # Core config & models\n├── 📜 story/             # Story Engine Logic\n│   ├── engine.py         # Main Event Loop (2400+ lines)\n│   ├── emotions.py       # Emotional Simulation\n│   ├── tension.py        # Narrative Tension Curve\n│   ├── lights.py         # LIFX + Razer Integration\n│   ├── doctrine.py       # Writing Doctrine (MICE, Barthes, etc.)\n│   ├── worldforge.py     # World Building Tools\n│   └── tools/            # AI-Callable Functions\n├── 🔌 services/          # External Integrations (19 modules)\n├── 🤖 agents/            # AI Personas (Blade, Council, Kaedra, Nyx)\n├── 🌍 worlds/            # Universe Management\n├── 🛠️ skills/            # Agent Capabilities\n└── 📋 strategies/        # Generation Strategies\n```\n\n### Core Modules\n\n| Module | Purpose |\n|--------|---------|\n| `threads.py` | 🧵 Thread-based engineering (6 thread types) |\n| `engine.py` | ⚡ Core reasoning engine |\n| `tools.py` | 🛠️ Tool execution framework |\n| `config.py` | ⚙️ Environment & credentials |\n| `google_tools.py` | 🔌 Google API integrations |\n| `validation.py` | ✅ Stop-hook validators |\n| `skills.py` | 🎯 Skill registration & routing |\n\n### AI Routing\n\n| Module | Purpose |\n|--------|---------|\n| `prompts.py` | 📝 System prompts & persona management |\n| `router.py` | 🔀 Smart model routing (Flash/Pro) |\n| `retry.py` | 🔄 Exponential backoff & fallbacks |\n| `isolation.py` | 🔒 Sandboxed execution |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Quick Start",
+      "content": "### Prerequisites\n\n- Python 3.10+\n- Google Cloud Vertex AI credentials\n- LIFX Token (optional)\n- Razer Synapse 4 Beta (optional)\n- Wispr Flow Desktop (optional)\n\n### Launch\n\n```bash\n# Enter the Story Engine\npython -m kaedra.story.engine\n\n# Or with voice mode\npython -m kaedra.story.engine --voice\n```\n\n1. Select **N** to create a new world (or select existing)\n2. Start writing naturally\n3. Use `:automate` to clean your lore database",
+      "emoji": "auto"
+    },
+    {
+      "title": "FastAPI Server & A2A Protocol",
+      "content": "KAEDRA exposes a production-ready **FastAPI server** supporting Google's Agent-to-Agent (A2A) protocol:\n\n```bash\n# Launch the API server\nuvicorn kaedra.api.main:app --host 0.0.0.0 --port 8080\n```\n\n### API Endpoints\n\n| Endpoint | Method | Description |\n|----------|--------|-------------|\n| `/` | GET | 🏠 Health check |\n| `/agent.json` | GET | 🤖 A2A Agent Card |\n| `/.well-known/agent.json` | GET | 🔍 A2A Discovery |\n| `/v1/models` | GET | 📊 Available models |\n| `/a2a` | POST | 💬 Agent-to-Agent messaging |\n| `/generate` | POST | ✨ Text generation |\n| `/generate/image` | POST | 🖼️ Image generation (Imagen) |\n| `/generate/video` | POST | 🎬 Video generation (Veo 3) |\n| `/query` | POST | 🧠 Reasoning engine query |\n| `/metrics` | GET | 📈 Prometheus metrics |\n\n### Authentication\n\n- Google Cloud IAM (Cloud Run)\n- API Key header (`X-API-Key`)\n- Service Account tokens",
+      "emoji": "auto"
+    },
+    {
+      "title": "Thread-Based Engineering",
+      "content": "Implements Andy Devdan's framework + Geoffrey Huntley's Ralph Wiggum pattern.\n\n```python\nfrom kaedra.core.threads import create_ralph, create_lthread, create_pthread\n\n# Ralph Wiggum Pattern (infinite loop)\nralph = create_ralph(\"PROMPT.md\", my_agent, timeout_hours=24)\nresult = await ralph.run()\n\n# L-Thread (validation loop)\nlthread = create_lthread(agent_fn, validator_fn, max_iterations=100)\nresult = await lthread.run(\"Fix all issues\")\n\n# P-Thread (parallel execution)\npthread = create_pthread(max_concurrent=5)\nresults = await pthread.run_parallel(agents, prompts)\n```\n\n### Thread Types\n\n| Thread | Class | Purpose |\n|--------|-------|---------|\n| 📎 **Base** | `BaseThread` | Prompt → Work → Review |\n| 🔀 **P-Thread** | `PThreadRunner` | Parallel execution (5 concurrent) |\n| ⛓️ **C-Thread** | `CThreadRunner` | Chained phases with checkpoints |\n| 🔗 **F-Thread** | `FThreadRunner` | Fusion/best-of-N pattern |\n| 🏃 **L-Thread** | `LThreadRunner` | Long-duration with validation |\n| 🔄 **Ralph** | `RalphRunner` | Infinite loop (ghuntley.com) |\n\n### Validation Hooks\n\n| Validator | Purpose |\n|-----------|---------|\n| `validate_command()` | Run shell commands |\n| `validate_pylint()` | Check Pylint score |\n| `validate_tests()` | Run pytest |\n| `validate_all()` | Combine validators |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Skill Packs",
+      "content": "Modular capabilities organized by domain:\n\n| Skill Pack | Description |\n|------------|-------------|\n| 🎬 **Universe** | Story engine, lore management, world building |\n| 💰 **Financial** | Invoice generation, payment tracking |\n| 📷 **Photography** | Image analysis, visual processing |\n| 🎖️ **Tactical** | System operations, deployment |\n| 🔍 **Introspective** | Self-analysis, debugging |\n| ⚙️ **Default** | Core agent capabilities |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Visual Services",
+      "content": "| Capability | Model | Description |\n|------------|-------|-------------|\n| 🖼️ **Image Gen** | Imagen 3 | High-quality image generation |\n| 🎬 **Video Gen** | Veo 3 | 8-second video clips |\n| 👁️ **Vision** | Gemini 3 | Image analysis and understanding |\n| 🔍 **OCR** | Vertex AI | Document text extraction |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Observability",
+      "content": "| Feature | Description |\n|---------|-------------|\n| 📈 **Prometheus** | `/metrics` endpoint |\n| 📝 **JSON Logs** | Structured session logging |\n| 💰 **Cost Tracking** | Per-request token/$ tracking |\n| 🔍 **Tracing** | Request correlation IDs |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Deployment",
+      "content": "| Platform | Status | Notes |\n|----------|--------|-------|\n| ☁️ **Cloud Run** | ✅ Production | Auto-scaling, IAM auth |\n| 🧠 **Reasoning Engine** | ✅ Deployed | Vertex AI managed |\n| 🖥️ **Local** | ✅ Dev | `uvicorn` or `story.engine` |\n| 🐳 **Docker** | ✅ Available | Multi-stage build |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Performance",
+      "content": "| Metric | Value |\n|--------|-------|\n| 🎯 **Pylint Score** | 7.91/10 |\n| 📦 **Total Modules** | 80+ Python files |\n| 🔌 **Services** | 26 integrations |\n| 🤖 **Agents** | 4 personas |\n| 🧵 **Thread Types** | 6 patterns |",
+      "emoji": "auto"
+    },
+    {
+      "title": "Configuration",
+      "content": "### Environment Variables\n\n```bash\n# Required\nexport GOOGLE_CLOUD_PROJECT=\"your-project\"\nexport GOOGLE_APPLICATION_CREDENTIALS=\"path/to/credentials.json\"\n\n# Optional\nexport LIFX_TOKEN=\"your-lifx-token\"\nexport NOTION_API_KEY=\"your-notion-key\"\nexport WISPR_API_KEY=\"your-wispr-key\"\n```\n\n### Thread Engineering Resources\n\n| Resource | Link |\n|----------|------|\n| 🎬 **Andy Devdan Video** | [Agent Threads](https://www.youtube.com/watch?v=-WBHNFAB0OE) |\n| 📖 **Ralph Wiggum** | [ghuntley.com/ralph](https://ghuntley.com/ralph/) |\n| 🔧 **mprocs** | [github.com/pvolok/mprocs](https://github.com/pvolok/mprocs) |\n| 📦 **repomirror** | [repomirror.md](https://github.com/repomirrorhq/repomirror) |",
+      "emoji": "auto"
+    },
+    {
+      "title": "License",
+      "content": "Proprietary — Who Visions LLC © 2026 (per the previous README). No `LICENSE` file was found in the repository, and `pyproject.toml` declares MIT — that conflict needs the owner to resolve it.",
+      "emoji": "auto"
+    }
+  ],
+  "links": [
+    {
+      "label": "Instagram — @aiwithdav3",
+      "url": "https://instagram.com/aiwithdav3"
+    },
+    {
+      "label": "YouTube — Ai with Dav3",
+      "url": "https://youtube.com/aiwithdav3"
+    },
+    {
+      "label": "Website — WhoVisions.com",
+      "url": "https://WhoVisions.com"
+    },
+    {
+      "label": "Kaedra on GitHub",
+      "url": "https://github.com/Who-Visions/Kaedra"
+    }
+  ],
+  "footer": "**🌑 KAEDRA — From Story Engine to Full AI Agent Framework**\n\n*Thread-Based Engineering • A2A Protocol • Visual AI • Hardware Control*"
+}
